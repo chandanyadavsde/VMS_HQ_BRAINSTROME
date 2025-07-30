@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react'
 import AlternativeWindCard from './components/AlternativeWindCard.jsx'
+import ApprovalCard from './components/ApprovalCard.jsx'
 
 function App() {
   const [activeSection, setActiveSection] = useState('wbs')
   const [isScrolled, setIsScrolled] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedPlant, setSelectedPlant] = useState('all')
 
   const sections = [
     { id: 'wbs', name: 'WBS', component: AlternativeWindCard },
-    { id: 'approvals', name: 'Approvals', component: null },
+    { id: 'approvals', name: 'Approvals', component: ApprovalCard },
     { id: 'masters', name: 'Masters', component: null }
+  ]
+
+  const plants = [
+    { id: 'all', name: 'All Plants' },
+    { id: 'mumbai', name: 'Mumbai' },
+    { id: 'delhi', name: 'Delhi' },
+    { id: 'bangalore', name: 'Bangalore' },
+    { id: 'chennai', name: 'Chennai' }
   ]
 
   const ActiveComponent = sections.find(s => s.id === activeSection)?.component
@@ -106,9 +116,9 @@ function App() {
 
       {/* Main Content with Conditional Top Spacing */}
       <div className={`${isScrolled ? 'pt-16' : 'pt-8'} p-4`}>
-        {/* Search Box */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20 w-full max-w-2xl">
+        {/* Search Box with Integrated Plant Filter */}
+        <div className="flex justify-center mb-6">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 max-w-4xl w-full">
             <div className="flex items-center space-x-3 px-4 py-2">
               {/* Search Icon */}
               <div className="flex-shrink-0">
@@ -128,48 +138,66 @@ function App() {
               
               {/* Search Actions */}
               <div className="flex items-center space-x-2">
-                <button className="px-3 py-1 rounded-lg bg-white/10 text-white text-xs hover:bg-white/20 transition-colors">
-                  Filter
-                </button>
                 <button className="px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs hover:from-cyan-600 hover:to-blue-600 transition-all">
                   Search
                 </button>
               </div>
             </div>
+
+            {/* Plant Filter - Inside Search Box */}
+            <div className="pt-3 border-t border-white/20">
+              <div className="flex flex-wrap gap-2">
+                {plants.map((plant) => (
+                  <button
+                    key={plant.id}
+                    onClick={() => setSelectedPlant(plant.id)}
+                    className={`px-3 py-1 rounded-lg font-medium text-sm transition-all ${
+                      selectedPlant === plant.id
+                        ? 'bg-white/20 text-white shadow-lg'
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {plant.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Section Display */}
-        <div className="flex items-center justify-center">
-          {activeSection === 'wbs' && <ActiveComponent />}
-          
-          {activeSection === 'approvals' && (
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 max-w-4xl">
-              <div className="text-center">
-                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-4">Approval Workflows</h3>
-                <p className="text-blue-200 text-lg mb-6">Manage project approvals, authorizations, and workflow processes</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-                    <h4 className="text-lg font-semibold text-white mb-2">Pending Approvals</h4>
-                    <p className="text-blue-200 text-sm">Review and approve pending requests</p>
+        {/* Approval Section - Stats Only */}
+        {activeSection === 'approvals' && (
+          <div className="mb-8">
+            {/* Approval Stats */}
+            <div className="flex justify-center mb-6">
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+                <div className="flex items-center space-x-8">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-cyan-400">15</div>
+                    <div className="text-xs text-cyan-200">Total Pending</div>
                   </div>
-                  <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-                    <h4 className="text-lg font-semibold text-white mb-2">Approval History</h4>
-                    <p className="text-blue-200 text-sm">Track completed approvals and decisions</p>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-emerald-400">8</div>
+                    <div className="text-xs text-cyan-200">Approved Today</div>
                   </div>
-                  <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-                    <h4 className="text-lg font-semibold text-white mb-2">Workflow Rules</h4>
-                    <p className="text-blue-200 text-sm">Configure approval workflows and rules</p>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-amber-400">3</div>
+                    <div className="text-xs text-cyan-200">Overdue</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-400">67%</div>
+                    <div className="text-xs text-cyan-200">Avg. Progress</div>
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
+
+        {/* Section Display */}
+        <div className="flex items-center justify-center">
+          {activeSection === 'wbs' && <AlternativeWindCard />}
+          {activeSection === 'approvals' && <ApprovalCard selectedPlant={selectedPlant} />}
           
           {activeSection === 'masters' && (
             <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 max-w-4xl">
@@ -210,7 +238,7 @@ function App() {
               "Work Breakdown Structure - Wind Farm Project Management & Monitoring with detailed stage tracking and energy output visualization."
             }
             {activeSection === 'approvals' && 
-              "Process Approvals & Authorizations - Manage project approvals, authorizations, and workflow processes with comprehensive tracking and decision management."
+              "Vehicle Approval System - Manage vehicle approvals, driver verification, and safety checklist completion with comprehensive tracking and decision management."
             }
             {activeSection === 'masters' && 
               "Master Data Management - Configure core data, project templates, user management, and system settings for comprehensive project administration."

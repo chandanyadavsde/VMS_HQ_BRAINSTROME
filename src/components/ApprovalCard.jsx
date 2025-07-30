@@ -1,0 +1,966 @@
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Car, User, CheckSquare, FileText, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Truck, UserCheck, ClipboardCheck, Calendar, Image, FileText as DocumentIcon } from 'lucide-react'
+
+const ApprovalCard = ({ selectedPlant = 'all' }) => {
+  const [activeSection, setActiveSection] = useState(null)
+  const [activeVehicle, setActiveVehicle] = useState(null)
+  const [reviewMessage, setReviewMessage] = useState('')
+  
+  // Real data structure
+  const [approvals, setApprovals] = useState([
+    {
+      _id: "686b93e4f22cee76e3080bce",
+      custrecord_vehicle_number: "MH12AB1241",
+      currentPlant: "pune",
+      custrecord_vehicle_type_ag: "Lattice Tower",
+      custrecord_age_of_vehicle: "5 Years",
+      custrecord_owner_name_ag: "Ramesh Patil",
+      custrecord_owner_no_ag: "+91‑9876543210",
+      custrecord_chassis_number: "CH‑123456",
+      custrecord_engine_number_ag: "EN‑987654",
+      custrecord_rc_no: "RC‑778899",
+      custrecord_rc_start_date: "2023-03-01T00:00:00.000Z",
+      custrecord_insurance_company_name_ag: "ICICI Lombard",
+      custrecord_insurance_number_ag: "INS‑552233",
+      custrecord_insurance_start_date_ag: "2024-02-01T00:00:00.000Z",
+      custrecord_insurance_end_date_ag: "2029-02-14T00:00:00.000Z",
+      custrecord_permit_start_date: "2025-06-01T00:00:00.000Z",
+      custrecord_permit_end_date: "2025-12-01T00:00:00.000Z",
+      custrecord_puc_number: "PUC‑112233",
+      custrecord_puc_start_date_ag: "2025-06-01T00:00:00.000Z",
+      custrecord_puc_end_date_ag: "2025-12-01T00:00:00.000Z",
+      custrecord_tms_vehicle_fit_cert_vld_upto: "2027-05-31T00:00:00.000Z",
+      custrecord_vehicle_master_gps_available: true,
+      custrecord_vendor_name_ag: {
+        id: "VEN001",
+        name: "ABC Logistics",
+        isInactive: false
+      },
+      custrecord_create_by: "shekhar.deshmukh",
+      custrecord_rc_doc_attach: [
+        {
+          url: "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1751880676218-Email Template-1.png",
+          fileName: "Email Template-1.png",
+          mimeType: "image/png",
+          uploadedAt: "2025-07-07T09:31:16.539Z"
+        }
+      ],
+      custrecord_insurance_attachment_ag: [
+        {
+          url: "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1751880676219-Email Template-1.png",
+          fileName: "Email Template-1.png",
+          mimeType: "image/png",
+          uploadedAt: "2025-07-07T09:31:16.527Z"
+        }
+      ],
+      custrecord_permit_attachment_ag: [
+        {
+          url: "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1751880676219-Email Template-1.png",
+          fileName: "Email Template-1.png",
+          mimeType: "image/png",
+          uploadedAt: "2025-07-07T09:31:16.852Z"
+        }
+      ],
+      custrecord_puc_attachment_ag: [
+        {
+          url: "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1751880676219-Email Template-1.png",
+          fileName: "Email Template-1.png",
+          mimeType: "image/png",
+          uploadedAt: "2025-07-07T09:31:16.428Z"
+        }
+      ],
+      custrecord_tms_vehicle_fit_cert_attach: [
+        {
+          url: "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1751880676219-Email Template-1.png",
+          fileName: "Email Template-1.png",
+          mimeType: "image/png",
+          uploadedAt: "2025-07-07T09:31:16.485Z"
+        }
+      ],
+      assignedDriver: null, // No driver assigned
+      checklist: {
+        checklistItems: [
+          {
+            question: "Safety equipment check",
+            answer: "",
+            comment: "sadcasdc"
+          },
+          {
+            question: "Overall condition check",
+            answer: "",
+            comment: "sadascdsad"
+          }
+        ],
+        date: "2025-07-23T10:20:33.388068",
+        filledAt: "2025-07-23T04:52:46.821Z",
+        filledBy: "api",
+        name: "Lattice Tower Form"
+      },
+      approved_by_hq: "pending"
+    },
+    {
+      _id: "686b93e4f22cee76e3080bcf",
+      custrecord_vehicle_number: "DL01CD5678",
+      currentPlant: "delhi",
+      custrecord_vehicle_type_ag: "Mahindra Bolero",
+      custrecord_age_of_vehicle: "3 Years",
+      custrecord_owner_name_ag: "Amit Singh",
+      custrecord_owner_no_ag: "+91‑8765432109",
+      custrecord_chassis_number: "CH‑654321",
+      custrecord_engine_number_ag: "EN‑123456",
+      custrecord_rc_no: "RC‑112233",
+      custrecord_rc_start_date: "2022-01-01T00:00:00.000Z",
+      custrecord_insurance_company_name_ag: "HDFC Ergo",
+      custrecord_insurance_number_ag: "INS‑998877",
+      custrecord_insurance_start_date_ag: "2023-01-01T00:00:00.000Z",
+      custrecord_insurance_end_date_ag: "2028-01-01T00:00:00.000Z",
+      custrecord_permit_start_date: "2024-01-01T00:00:00.000Z",
+      custrecord_permit_end_date: "2024-12-31T00:00:00.000Z",
+      custrecord_puc_number: "PUC‑445566",
+      custrecord_puc_start_date_ag: "2024-01-01T00:00:00.000Z",
+      custrecord_puc_end_date_ag: "2024-12-31T00:00:00.000Z",
+      custrecord_tms_vehicle_fit_cert_vld_upto: "2026-12-31T00:00:00.000Z",
+      custrecord_vehicle_master_gps_available: false,
+      custrecord_vendor_name_ag: {
+        id: "VEN002",
+        name: "XYZ Transport",
+        isInactive: false
+      },
+      custrecord_create_by: "admin.user",
+      custrecord_rc_doc_attach: [],
+      custrecord_insurance_attachment_ag: [],
+      custrecord_permit_attachment_ag: [],
+      custrecord_puc_attachment_ag: [],
+      custrecord_tms_vehicle_fit_cert_attach: [],
+      assignedDriver: null, // No driver assigned
+      checklist: null, // No checklist done
+      approved_by_hq: "pending"
+    }
+  ])
+
+  const filteredApprovals = selectedPlant === 'all' 
+    ? approvals 
+    : approvals.filter(approval => approval.currentPlant.toLowerCase() === selectedPlant)
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A'
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
+
+  const getDocumentStatus = (endDate) => {
+    if (!endDate) return 'pending'
+    const today = new Date()
+    const end = new Date(endDate)
+    if (end < today) return 'expired'
+    if (end < new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)) return 'expiring'
+    return 'valid'
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'valid': return 'text-emerald-400'
+      case 'expired': return 'text-red-400'
+      case 'expiring': return 'text-yellow-400'
+      case 'pending': return 'text-amber-400'
+      default: return 'text-slate-400'
+    }
+  }
+
+  const getStatusBgColor = (status) => {
+    switch (status) {
+      case 'valid': return 'bg-emerald-500/20'
+      case 'expired': return 'bg-red-500/20'
+      case 'expiring': return 'bg-yellow-500/20'
+      case 'pending': return 'bg-amber-500/20'
+      default: return 'bg-slate-500/20'
+    }
+  }
+
+  const handleApprovalAction = (approvalId, section, action) => {
+    setApprovals(prev => prev.map(approval => {
+      if (approval._id === approvalId) {
+        return { ...approval, approved_by_hq: action }
+      }
+      return approval
+    }))
+    setActiveSection(null)
+    setActiveVehicle(null)
+    setReviewMessage('')
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        {filteredApprovals.map((approval) => (
+          <motion.div
+            key={approval._id}
+            className="relative bg-gradient-to-br from-cyan-900 via-blue-900 to-indigo-900 rounded-3xl p-6 cursor-pointer overflow-hidden"
+            style={{ 
+              background: 'linear-gradient(135deg, #0c4a6e 0%, #1e40af 50%, #3730a3 100%)'
+            }}
+            whileHover={{ 
+              scale: 1.02,
+              boxShadow: "0 25px 50px rgba(0,0,0,0.4)"
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 overflow-hidden">
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-3 h-3 bg-cyan-400/30 rounded-full blur-sm"
+                  style={{
+                    left: `${20 + (i * 20)}%`,
+                    top: `${30 + (i * 15)}%`,
+                  }}
+                  animate={{
+                    y: [0, -15, 0],
+                    opacity: [0.3, 0.6, 0.3],
+                    scale: [1, 1.1, 1],
+                  }}
+                  transition={{
+                    duration: 3 + Math.random() * 2,
+                    repeat: Infinity,
+                    delay: Math.random() * 2,
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Main Content */}
+            <div className="relative z-10 h-full flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white">{approval.custrecord_vehicle_number}</h3>
+                  <p className="text-cyan-200 text-sm">{approval.custrecord_vehicle_type_ag} • {approval.currentPlant}</p>
+                </div>
+                
+                {/* Status Badge */}
+                <div className={`${getStatusBgColor(approval.approved_by_hq)} text-white text-xs px-2 py-1 rounded-full`}>
+                  {approval.approved_by_hq}
+                </div>
+              </div>
+
+              {/* Progress Ring */}
+              <div className="flex justify-center mb-4">
+                <div className="relative">
+                  <svg className="w-16 h-16 transform -rotate-90">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      stroke="rgba(255,255,255,0.1)"
+                      strokeWidth="3"
+                      fill="none"
+                    />
+                    <motion.circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      stroke="url(#approvalGradient)"
+                      strokeWidth="3"
+                      fill="none"
+                      strokeDasharray={`${2 * Math.PI * 28}`}
+                      strokeDashoffset={`${2 * Math.PI * 28 * 0.25}`}
+                      initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
+                      animate={{ strokeDashoffset: 2 * Math.PI * 28 * 0.25 }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                    />
+                    <defs>
+                      <linearGradient id="approvalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#06b6d4" />
+                        <stop offset="50%" stopColor="#3b82f6" />
+                        <stop offset="100%" stopColor="#8b5cf6" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  
+                  {/* Inner Content */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="text-lg font-bold text-white">25%</div>
+                    <div className="text-xs text-cyan-200">Complete</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sub-Cards Grid */}
+              <div className="grid grid-cols-1 gap-3 flex-1">
+                {/* Vehicle Details Sub-Card */}
+                <motion.div
+                  className="relative p-3 rounded-xl bg-white/10 border border-white/10 cursor-pointer"
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+                  }}
+                  onClick={() => {
+                    setActiveVehicle(approval._id)
+                    setActiveSection('vehicle')
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-full bg-cyan-500/20">
+                      <div className="text-cyan-400">
+                        <Truck className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-white font-semibold text-sm">Vehicle Details</h4>
+                      <p className="text-cyan-200 text-xs">{approval.custrecord_vehicle_number}</p>
+                    </div>
+                    <div className="text-xs text-cyan-200">Available</div>
+                  </div>
+                </motion.div>
+
+                {/* Driver Details Sub-Card */}
+                <motion.div
+                  className={`relative p-3 rounded-xl border border-white/10 cursor-pointer ${
+                    approval.assignedDriver ? 'bg-white/10' : 'bg-gray-500/20'
+                  }`}
+                  whileHover={approval.assignedDriver ? { 
+                    scale: 1.05,
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+                  } : {}}
+                  onClick={() => {
+                    if (approval.assignedDriver) {
+                      setActiveVehicle(approval._id)
+                      setActiveSection('driver')
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`p-2 rounded-full ${
+                      approval.assignedDriver ? 'bg-cyan-500/20' : 'bg-gray-500/20'
+                    }`}>
+                      <div className={approval.assignedDriver ? 'text-cyan-400' : 'text-gray-400'}>
+                        <UserCheck className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-white font-semibold text-sm">Driver Details</h4>
+                      <p className="text-cyan-200 text-xs">
+                        {approval.assignedDriver ? 'Driver Assigned' : 'No Driver Available'}
+                      </p>
+                    </div>
+                    <div className={`text-xs ${approval.assignedDriver ? 'text-cyan-200' : 'text-gray-400'}`}>
+                      {approval.assignedDriver ? 'Available' : 'Not Available'}
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Checklist Sub-Card */}
+                <motion.div
+                  className={`relative p-3 rounded-xl border border-white/10 cursor-pointer ${
+                    approval.checklist ? 'bg-white/10' : 'bg-gray-500/20'
+                  }`}
+                  whileHover={approval.checklist ? { 
+                    scale: 1.05,
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+                  } : {}}
+                  onClick={() => {
+                    if (approval.checklist) {
+                      setActiveVehicle(approval._id)
+                      setActiveSection('checklist')
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`p-2 rounded-full ${
+                      approval.checklist ? 'bg-cyan-500/20' : 'bg-gray-500/20'
+                    }`}>
+                      <div className={approval.checklist ? 'text-cyan-400' : 'text-gray-400'}>
+                        <ClipboardCheck className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-white font-semibold text-sm">Safety Checklist</h4>
+                      <p className="text-cyan-200 text-xs">
+                        {approval.checklist ? `${approval.checklist.checklistItems.length} Items` : 'No Checklist Done'}
+                      </p>
+                    </div>
+                    <div className={`text-xs ${approval.checklist ? 'text-cyan-200' : 'text-gray-400'}`}>
+                      {approval.checklist ? 'Available' : 'Not Done'}
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Modal - Outside the card structure */}
+      <AnimatePresence>
+        {activeVehicle && activeSection && (
+          <motion.div
+            className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              className="bg-black/95 border border-white/20 rounded-3xl p-6 max-w-5xl w-full h-[85vh] flex flex-col"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {(() => {
+                const currentApproval = approvals.find(a => a._id === activeVehicle)
+                if (!currentApproval) return null
+                
+                const getSectionData = () => {
+                  switch (activeSection) {
+                    case 'vehicle':
+                      return {
+                        title: 'Vehicle Details',
+                        icon: <Truck className="w-8 h-8" />,
+                        data: currentApproval
+                      }
+                    case 'driver':
+                      return {
+                        title: 'Driver Details',
+                        icon: <UserCheck className="w-8 h-8" />,
+                        data: currentApproval
+                      }
+                    case 'checklist':
+                      return {
+                        title: 'Safety Checklist',
+                        icon: <ClipboardCheck className="w-8 h-8" />,
+                        data: currentApproval
+                      }
+                    default:
+                      return null
+                  }
+                }
+                
+                const sectionData = getSectionData()
+                if (!sectionData) return null
+                
+                return (
+                  <div className="h-full flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                      <div className="flex items-center gap-4">
+                        <div className="p-4 rounded-2xl bg-cyan-500/20">
+                          <div className="text-cyan-400">
+                            {sectionData.icon}
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold text-white mb-1">{sectionData.title}</h3>
+                          <p className="text-cyan-200 text-base">{currentApproval.custrecord_vehicle_number} • {currentApproval.custrecord_vehicle_type_ag}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setActiveSection(null)
+                          setActiveVehicle(null)
+                          setReviewMessage('')
+                        }}
+                        className="text-white/70 hover:text-white transition-colors text-xl p-2 hover:bg-white/10 rounded-full"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 overflow-y-auto scrollbar-hide min-h-0">
+                      {activeSection === 'vehicle' && (
+                        <div className="space-y-4">
+                          {/* Basic Vehicle Information */}
+                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+                            <h4 className="text-white font-bold text-lg mb-3">Basic Vehicle Information</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">Vehicle Number</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_vehicle_number}</p>
+                              </div>
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">Current Plant</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.currentPlant}</p>
+                              </div>
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">Vehicle Type</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_vehicle_type_ag}</p>
+                              </div>
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">Age of Vehicle</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_age_of_vehicle}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Technical Details */}
+                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+                            <h4 className="text-white font-bold text-lg mb-3">Technical Details</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">Engine Number</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_engine_number_ag}</p>
+                              </div>
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">Chassis Number</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_chassis_number}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Documentation */}
+                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+                            <h4 className="text-white font-bold text-lg mb-3">Documentation</h4>
+                            <div className="space-y-3">
+                              {/* RC Document */}
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="text-white font-semibold text-base">RC Document</h5>
+                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(getDocumentStatus(currentApproval.custrecord_rc_start_date))} ${getStatusColor(getDocumentStatus(currentApproval.custrecord_rc_start_date))}`}>
+                                    {getDocumentStatus(currentApproval.custrecord_rc_start_date)}
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">RC Number</p>
+                                    <p className="text-white font-semibold text-sm">{currentApproval.custrecord_rc_no}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">Start Date</p>
+                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_rc_start_date)}</p>
+                                  </div>
+                                </div>
+                                {currentApproval.custrecord_rc_doc_attach && currentApproval.custrecord_rc_doc_attach.length > 0 && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <Image className="w-4 h-4 text-cyan-400" />
+                                    <button 
+                                      onClick={() => window.open(currentApproval.custrecord_rc_doc_attach[0].url, '_blank')}
+                                      className="text-cyan-200 text-xs hover:text-cyan-400 underline"
+                                    >
+                                      {currentApproval.custrecord_rc_doc_attach[0].fileName}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Insurance */}
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="text-white font-semibold text-base">Insurance</h5>
+                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(getDocumentStatus(currentApproval.custrecord_insurance_end_date_ag))} ${getStatusColor(getDocumentStatus(currentApproval.custrecord_insurance_end_date_ag))}`}>
+                                    {getDocumentStatus(currentApproval.custrecord_insurance_end_date_ag)}
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">Company</p>
+                                    <p className="text-white font-semibold text-sm">{currentApproval.custrecord_insurance_company_name_ag}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">Policy Number</p>
+                                    <p className="text-white font-semibold text-sm">{currentApproval.custrecord_insurance_number_ag}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">Start Date</p>
+                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_insurance_start_date_ag)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">End Date</p>
+                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_insurance_end_date_ag)}</p>
+                                  </div>
+                                </div>
+                                {currentApproval.custrecord_insurance_attachment_ag && currentApproval.custrecord_insurance_attachment_ag.length > 0 && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <Image className="w-4 h-4 text-cyan-400" />
+                                    <button 
+                                      onClick={() => window.open(currentApproval.custrecord_insurance_attachment_ag[0].url, '_blank')}
+                                      className="text-cyan-200 text-xs hover:text-cyan-400 underline"
+                                    >
+                                      {currentApproval.custrecord_insurance_attachment_ag[0].fileName}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Permit */}
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="text-white font-semibold text-base">Permit</h5>
+                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(getDocumentStatus(currentApproval.custrecord_permit_end_date))} ${getStatusColor(getDocumentStatus(currentApproval.custrecord_permit_end_date))}`}>
+                                    {getDocumentStatus(currentApproval.custrecord_permit_end_date)}
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">Start Date</p>
+                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_permit_start_date)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">End Date</p>
+                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_permit_end_date)}</p>
+                                  </div>
+                                </div>
+                                {currentApproval.custrecord_permit_attachment_ag && currentApproval.custrecord_permit_attachment_ag.length > 0 && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <Image className="w-4 h-4 text-cyan-400" />
+                                    <button 
+                                      onClick={() => window.open(currentApproval.custrecord_permit_attachment_ag[0].url, '_blank')}
+                                      className="text-cyan-200 text-xs hover:text-cyan-400 underline"
+                                    >
+                                      {currentApproval.custrecord_permit_attachment_ag[0].fileName}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* PUC */}
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="text-white font-semibold text-base">PUC</h5>
+                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(getDocumentStatus(currentApproval.custrecord_puc_end_date_ag))} ${getStatusColor(getDocumentStatus(currentApproval.custrecord_puc_end_date_ag))}`}>
+                                    {getDocumentStatus(currentApproval.custrecord_puc_end_date_ag)}
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-3">
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">PUC Number</p>
+                                    <p className="text-white font-semibold text-sm">{currentApproval.custrecord_puc_number}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">Start Date</p>
+                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_puc_start_date_ag)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">End Date</p>
+                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_puc_end_date_ag)}</p>
+                                  </div>
+                                </div>
+                                {currentApproval.custrecord_puc_attachment_ag && currentApproval.custrecord_puc_attachment_ag.length > 0 && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <Image className="w-4 h-4 text-cyan-400" />
+                                    <button 
+                                      onClick={() => window.open(currentApproval.custrecord_puc_attachment_ag[0].url, '_blank')}
+                                      className="text-cyan-200 text-xs hover:text-cyan-400 underline"
+                                    >
+                                      {currentApproval.custrecord_puc_attachment_ag[0].fileName}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Fitness Certificate */}
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="text-white font-semibold text-base">Fitness Certificate</h5>
+                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(getDocumentStatus(currentApproval.custrecord_tms_vehicle_fit_cert_vld_upto))} ${getStatusColor(getDocumentStatus(currentApproval.custrecord_tms_vehicle_fit_cert_vld_upto))}`}>
+                                    {getDocumentStatus(currentApproval.custrecord_tms_vehicle_fit_cert_vld_upto)}
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-1 gap-3">
+                                  <div>
+                                    <p className="text-cyan-200 text-xs">Valid Until</p>
+                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_tms_vehicle_fit_cert_vld_upto)}</p>
+                                  </div>
+                                </div>
+                                {currentApproval.custrecord_tms_vehicle_fit_cert_attach && currentApproval.custrecord_tms_vehicle_fit_cert_attach.length > 0 && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <Image className="w-4 h-4 text-cyan-400" />
+                                    <button 
+                                      onClick={() => window.open(currentApproval.custrecord_tms_vehicle_fit_cert_attach[0].url, '_blank')}
+                                      className="text-cyan-200 text-xs hover:text-cyan-400 underline"
+                                    >
+                                      {currentApproval.custrecord_tms_vehicle_fit_cert_attach[0].fileName}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Vendor & Owner Information */}
+                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+                            <h4 className="text-white font-bold text-lg mb-3">Vendor & Owner Information</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">Vendor Name</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_vendor_name_ag.name}</p>
+                              </div>
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">Owner Name</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_owner_name_ag}</p>
+                              </div>
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">Owner Number</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_owner_no_ag}</p>
+                              </div>
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">Created By</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_create_by}</p>
+                              </div>
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs font-medium mb-1">GPS Available</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_vehicle_master_gps_available ? 'Yes' : 'No'}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Review Message Box - Now part of scrollable content */}
+                          <div className="bg-white/10 rounded-xl p-3 border border-white/20">
+                            <label className="block text-cyan-200 text-xs font-medium mb-1">Review Message</label>
+                            <textarea
+                              value={reviewMessage}
+                              onChange={(e) => setReviewMessage(e.target.value)}
+                              placeholder="Enter your review message here..."
+                              className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 transition-colors resize-none"
+                              rows={2}
+                              maxLength={500}
+                            />
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-cyan-200 text-xs">
+                                {reviewMessage.length}/500 characters
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons - Now part of scrollable content */}
+                          <div className="flex gap-3">
+                            <motion.button
+                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'approved')}
+                              className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-emerald-600 hover:to-green-600 transition-all shadow-lg"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <CheckCircle className="w-5 h-5 inline mr-2" />
+                              Approve {sectionData.title}
+                            </motion.button>
+                            <motion.button
+                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'rejected')}
+                              className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-red-600 hover:to-pink-600 transition-all shadow-lg"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <XCircle className="w-5 h-5 inline mr-2" />
+                              Reject {sectionData.title}
+                            </motion.button>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeSection === 'driver' && (
+                        <div className="space-y-4">
+                          <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
+                            <div className="text-center py-8">
+                              <UserCheck className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                              <h4 className="text-white font-bold text-lg mb-2">No Driver Assigned</h4>
+                              <p className="text-cyan-200 text-base">No driver has been assigned to this vehicle yet.</p>
+                            </div>
+                          </div>
+
+                          {/* Review Message Box - Now part of scrollable content */}
+                          <div className="bg-white/10 rounded-xl p-3 border border-white/20">
+                            <label className="block text-cyan-200 text-xs font-medium mb-1">Review Message</label>
+                            <textarea
+                              value={reviewMessage}
+                              onChange={(e) => setReviewMessage(e.target.value)}
+                              placeholder="Enter your review message here..."
+                              className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 transition-colors resize-none"
+                              rows={2}
+                              maxLength={500}
+                            />
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-cyan-200 text-xs">
+                                {reviewMessage.length}/500 characters
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons - Now part of scrollable content */}
+                          <div className="flex gap-3">
+                            <motion.button
+                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'approved')}
+                              className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-emerald-600 hover:to-green-600 transition-all shadow-lg"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <CheckCircle className="w-5 h-5 inline mr-2" />
+                              Approve {sectionData.title}
+                            </motion.button>
+                            <motion.button
+                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'rejected')}
+                              className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-red-600 hover:to-pink-600 transition-all shadow-lg"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <XCircle className="w-5 h-5 inline mr-2" />
+                              Reject {sectionData.title}
+                            </motion.button>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeSection === 'checklist' && currentApproval.checklist && (
+                        <div className="space-y-4">
+                          {/* Checklist Info */}
+                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-white font-bold text-lg">Checklist Information</h4>
+                              <div className="text-cyan-200 text-sm">
+                                {currentApproval.checklist.checklistItems.length} Items
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs">Checklist Name</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.checklist.name}</p>
+                              </div>
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs">Filled By</p>
+                                <p className="text-white font-semibold text-sm">{currentApproval.checklist.filledBy}</p>
+                              </div>
+                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                <p className="text-cyan-200 text-xs">Filled At</p>
+                                <p className="text-white font-semibold text-sm">{formatDate(currentApproval.checklist.filledAt)}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Checklist Items */}
+                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+                            <h4 className="text-white font-bold text-lg mb-4">Checklist Items</h4>
+                            <div className="space-y-3 max-h-60 overflow-y-auto">
+                              {currentApproval.checklist.checklistItems.map((item, index) => (
+                                <div key={index} className="p-3 bg-white/5 rounded-xl border border-white/10">
+                                  <div className="flex items-start gap-3">
+                                    <div className="w-5 h-5 bg-cyan-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                      <span className="text-cyan-400 text-xs font-bold">{index + 1}</span>
+                                    </div>
+                                    <div className="flex-1">
+                                      <h5 className="text-white font-semibold text-sm mb-2">{item.question}</h5>
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                          <p className="text-cyan-200 text-xs">Answer</p>
+                                          <p className="text-white font-medium text-xs">{item.answer || 'Not answered'}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-cyan-200 text-xs">Comment</p>
+                                          <p className="text-white font-medium text-xs">{item.comment || 'No comment'}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Review Message Box - Now part of scrollable content */}
+                          <div className="bg-white/10 rounded-xl p-3 border border-white/20">
+                            <label className="block text-cyan-200 text-xs font-medium mb-1">Review Message</label>
+                            <textarea
+                              value={reviewMessage}
+                              onChange={(e) => setReviewMessage(e.target.value)}
+                              placeholder="Enter your review message here..."
+                              className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 transition-colors resize-none"
+                              rows={2}
+                              maxLength={500}
+                            />
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-cyan-200 text-xs">
+                                {reviewMessage.length}/500 characters
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons - Now part of scrollable content */}
+                          <div className="flex gap-3">
+                            <motion.button
+                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'approved')}
+                              className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-emerald-600 hover:to-green-600 transition-all shadow-lg"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <CheckCircle className="w-5 h-5 inline mr-2" />
+                              Approve {sectionData.title}
+                            </motion.button>
+                            <motion.button
+                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'rejected')}
+                              className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-red-600 hover:to-pink-600 transition-all shadow-lg"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <XCircle className="w-5 h-5 inline mr-2" />
+                              Reject {sectionData.title}
+                            </motion.button>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeSection === 'checklist' && !currentApproval.checklist && (
+                        <div className="space-y-4">
+                          <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
+                            <div className="text-center py-8">
+                              <ClipboardCheck className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                              <h4 className="text-white font-bold text-lg mb-2">No Checklist Done</h4>
+                              <p className="text-cyan-200 text-base">No checklist has been completed for this vehicle yet.</p>
+                            </div>
+                          </div>
+
+                          {/* Review Message Box - Now part of scrollable content */}
+                          <div className="bg-white/10 rounded-xl p-3 border border-white/20">
+                            <label className="block text-cyan-200 text-xs font-medium mb-1">Review Message</label>
+                            <textarea
+                              value={reviewMessage}
+                              onChange={(e) => setReviewMessage(e.target.value)}
+                              placeholder="Enter your review message here..."
+                              className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 transition-colors resize-none"
+                              rows={2}
+                              maxLength={500}
+                            />
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-cyan-200 text-xs">
+                                {reviewMessage.length}/500 characters
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons - Now part of scrollable content */}
+                          <div className="flex gap-3">
+                            <motion.button
+                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'approved')}
+                              className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-emerald-600 hover:to-green-600 transition-all shadow-lg"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <CheckCircle className="w-5 h-5 inline mr-2" />
+                              Approve {sectionData.title}
+                            </motion.button>
+                            <motion.button
+                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'rejected')}
+                              className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-red-600 hover:to-pink-600 transition-all shadow-lg"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <XCircle className="w-5 h-5 inline mr-2" />
+                              Reject {sectionData.title}
+                            </motion.button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
+
+export default ApprovalCard 
