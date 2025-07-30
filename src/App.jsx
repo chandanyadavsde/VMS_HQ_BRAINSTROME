@@ -116,7 +116,7 @@ function App() {
 
       {/* Main Content with Conditional Top Spacing */}
       <div className={`${isScrolled ? 'pt-16' : 'pt-8'} p-4`}>
-        {/* Search Box with Integrated Plant Filter */}
+        {/* Search Box with Integrated Plant Filter and Stats */}
         <div className="flex justify-center mb-6">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 max-w-4xl w-full">
             <div className="flex items-center space-x-3 px-4 py-2">
@@ -144,22 +144,47 @@ function App() {
               </div>
             </div>
 
-            {/* Plant Filter - Inside Search Box */}
+            {/* Plant Filter and Stats Row */}
             <div className="pt-3 border-t border-white/20">
-              <div className="flex flex-wrap gap-2">
-                {plants.map((plant) => (
-                  <button
-                    key={plant.id}
-                    onClick={() => setSelectedPlant(plant.id)}
-                    className={`px-3 py-1 rounded-lg font-medium text-sm transition-all ${
-                      selectedPlant === plant.id
-                        ? 'bg-white/20 text-white shadow-lg'
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    {plant.name}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between">
+                {/* Plant Filter - Left Side */}
+                <div className="flex flex-wrap gap-1">
+                  {plants.map((plant) => (
+                    <button
+                      key={plant.id}
+                      onClick={() => setSelectedPlant(plant.id)}
+                      className={`px-2 py-1 rounded-md font-medium text-xs transition-all ${
+                        selectedPlant === plant.id
+                          ? 'bg-white/20 text-white shadow-lg'
+                          : 'text-white/70 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {plant.name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Approval Stats - Right Side */}
+                {activeSection === 'approvals' && (
+                  <div className="flex items-center space-x-4">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-cyan-400">15</div>
+                      <div className="text-xs text-cyan-200">Pending</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-emerald-400">8</div>
+                      <div className="text-xs text-cyan-200">Approved</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-amber-400">3</div>
+                      <div className="text-xs text-cyan-200">Overdue</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-blue-400">67%</div>
+                      <div className="text-xs text-cyan-200">Progress</div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -168,29 +193,7 @@ function App() {
         {/* Approval Section - Stats Only */}
         {activeSection === 'approvals' && (
           <div className="mb-8">
-            {/* Approval Stats */}
-            <div className="flex justify-center mb-6">
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-                <div className="flex items-center space-x-8">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-cyan-400">15</div>
-                    <div className="text-xs text-cyan-200">Total Pending</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-emerald-400">8</div>
-                    <div className="text-xs text-cyan-200">Approved Today</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-amber-400">3</div>
-                    <div className="text-xs text-cyan-200">Overdue</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-400">67%</div>
-                    <div className="text-xs text-cyan-200">Avg. Progress</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Approval Stats - Now moved to search bar, so this section is empty */}
           </div>
         )}
 

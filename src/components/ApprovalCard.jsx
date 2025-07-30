@@ -136,6 +136,224 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
       assignedDriver: null, // No driver assigned
       checklist: null, // No checklist done
       approved_by_hq: "pending"
+    },
+    {
+      _id: "686b93e4f22cee76e3080bd0",
+      custrecord_vehicle_number: "KA02EF9012",
+      currentPlant: "bangalore",
+      custrecord_vehicle_type_ag: "Tata 407",
+      custrecord_age_of_vehicle: "4 Years",
+      custrecord_owner_name_ag: "Kumar Patel",
+      custrecord_owner_no_ag: "+91‑7654321098",
+      custrecord_chassis_number: "CH‑789012",
+      custrecord_engine_number_ag: "EN‑345678",
+      custrecord_rc_no: "RC‑334455",
+      custrecord_rc_start_date: "2021-06-01T00:00:00.000Z",
+      custrecord_insurance_company_name_ag: "Bajaj Allianz",
+      custrecord_insurance_number_ag: "INS‑776655",
+      custrecord_insurance_start_date_ag: "2024-03-01T00:00:00.000Z",
+      custrecord_insurance_end_date_ag: "2029-03-01T00:00:00.000Z",
+      custrecord_permit_start_date: "2024-06-01T00:00:00.000Z",
+      custrecord_permit_end_date: "2024-12-31T00:00:00.000Z",
+      custrecord_puc_number: "PUC‑778899",
+      custrecord_puc_start_date_ag: "2024-06-01T00:00:00.000Z",
+      custrecord_puc_end_date_ag: "2024-12-31T00:00:00.000Z",
+      custrecord_tms_vehicle_fit_cert_vld_upto: "2026-06-30T00:00:00.000Z",
+      custrecord_vehicle_master_gps_available: true,
+      custrecord_vendor_name_ag: {
+        id: "VEN003",
+        name: "DEF Logistics",
+        isInactive: false
+      },
+      custrecord_create_by: "manager.user",
+      custrecord_rc_doc_attach: [],
+      custrecord_insurance_attachment_ag: [],
+      custrecord_permit_attachment_ag: [],
+      custrecord_puc_attachment_ag: [],
+      custrecord_tms_vehicle_fit_cert_attach: [],
+      assignedDriver: {
+        name: "Rajesh Kumar",
+        license: "DL-1122334455",
+        contact: "+91 6543210987",
+        expiry: "2025-12-31"
+      },
+      checklist: {
+        checklistItems: [
+          {
+            question: "Safety equipment check",
+            answer: "Yes",
+            comment: "All equipment present"
+          },
+          {
+            question: "Overall condition check",
+            answer: "Yes",
+            comment: "Good condition"
+          }
+        ],
+        date: "2025-07-23T10:20:33.388068",
+        filledAt: "2025-07-23T04:52:46.821Z",
+        filledBy: "api",
+        name: "Tata 407 Form"
+      },
+      approved_by_hq: "pending"
+    },
+    {
+      _id: "686b93e4f22cee76e3080bd1",
+      custrecord_vehicle_number: "TN03GH3456",
+      currentPlant: "chennai",
+      custrecord_vehicle_type_ag: "Eicher Pro",
+      custrecord_age_of_vehicle: "2 Years",
+      custrecord_owner_name_ag: "Lakshmi Narayanan",
+      custrecord_owner_no_ag: "+91‑6543210987",
+      custrecord_chassis_number: "CH‑456789",
+      custrecord_engine_number_ag: "EN‑567890",
+      custrecord_rc_no: "RC‑556677",
+      custrecord_rc_start_date: "2023-01-01T00:00:00.000Z",
+      custrecord_insurance_company_name_ag: "United India Insurance",
+      custrecord_insurance_number_ag: "INS‑443322",
+      custrecord_insurance_start_date_ag: "2024-01-01T00:00:00.000Z",
+      custrecord_insurance_end_date_ag: "2029-01-01T00:00:00.000Z",
+      custrecord_permit_start_date: "2024-06-01T00:00:00.000Z",
+      custrecord_permit_end_date: "2024-12-31T00:00:00.000Z",
+      custrecord_puc_number: "PUC‑889900",
+      custrecord_puc_start_date_ag: "2024-06-01T00:00:00.000Z",
+      custrecord_puc_end_date_ag: "2024-12-31T00:00:00.000Z",
+      custrecord_tms_vehicle_fit_cert_vld_upto: "2027-01-31T00:00:00.000Z",
+      custrecord_vehicle_master_gps_available: true,
+      custrecord_vendor_name_ag: {
+        id: "VEN004",
+        name: "GHI Transport",
+        isInactive: false
+      },
+      custrecord_create_by: "supervisor.user",
+      custrecord_rc_doc_attach: [],
+      custrecord_insurance_attachment_ag: [],
+      custrecord_permit_attachment_ag: [],
+      custrecord_puc_attachment_ag: [],
+      custrecord_tms_vehicle_fit_cert_attach: [],
+      assignedDriver: {
+        name: "Arun Kumar",
+        license: "DL-2233445566",
+        contact: "+91 5432109876",
+        expiry: "2025-08-15"
+      },
+      checklist: {
+        checklistItems: [
+          {
+            question: "Safety equipment check",
+            answer: "Yes",
+            comment: "Complete"
+          },
+          {
+            question: "Overall condition check",
+            answer: "Yes",
+            comment: "Excellent"
+          }
+        ],
+        date: "2025-07-23T10:20:33.388068",
+        filledAt: "2025-07-23T04:52:46.821Z",
+        filledBy: "api",
+        name: "Eicher Pro Form"
+      },
+      approved_by_hq: "pending"
+    },
+    {
+      _id: "686b93e4f22cee76e3080bd2",
+      custrecord_vehicle_number: "MH04IJ7890",
+      currentPlant: "mumbai",
+      custrecord_vehicle_type_ag: "Force Traveller",
+      custrecord_age_of_vehicle: "1 Year",
+      custrecord_owner_name_ag: "Priya Desai",
+      custrecord_owner_no_ag: "+91‑5432109876",
+      custrecord_chassis_number: "CH‑234567",
+      custrecord_engine_number_ag: "EN‑678901",
+      custrecord_rc_no: "RC‑778899",
+      custrecord_rc_start_date: "2024-01-01T00:00:00.000Z",
+      custrecord_insurance_company_name_ag: "National Insurance",
+      custrecord_insurance_number_ag: "INS‑221100",
+      custrecord_insurance_start_date_ag: "2024-02-01T00:00:00.000Z",
+      custrecord_insurance_end_date_ag: "2029-02-01T00:00:00.000Z",
+      custrecord_permit_start_date: "2024-06-01T00:00:00.000Z",
+      custrecord_permit_end_date: "2024-12-31T00:00:00.000Z",
+      custrecord_puc_number: "PUC‑990011",
+      custrecord_puc_start_date_ag: "2024-06-01T00:00:00.000Z",
+      custrecord_puc_end_date_ag: "2024-12-31T00:00:00.000Z",
+      custrecord_tms_vehicle_fit_cert_vld_upto: "2028-02-29T00:00:00.000Z",
+      custrecord_vehicle_master_gps_available: false,
+      custrecord_vendor_name_ag: {
+        id: "VEN005",
+        name: "JKL Logistics",
+        isInactive: false
+      },
+      custrecord_create_by: "admin.user",
+      custrecord_rc_doc_attach: [],
+      custrecord_insurance_attachment_ag: [],
+      custrecord_permit_attachment_ag: [],
+      custrecord_puc_attachment_ag: [],
+      custrecord_tms_vehicle_fit_cert_attach: [],
+      assignedDriver: null,
+      checklist: null,
+      approved_by_hq: "pending"
+    },
+    {
+      _id: "686b93e4f22cee76e3080bd3",
+      custrecord_vehicle_number: "DL05KL1234",
+      currentPlant: "delhi",
+      custrecord_vehicle_type_ag: "Ashok Leyland Dost",
+      custrecord_age_of_vehicle: "3 Years",
+      custrecord_owner_name_ag: "Suresh Verma",
+      custrecord_owner_no_ag: "+91‑4321098765",
+      custrecord_chassis_number: "CH‑345678",
+      custrecord_engine_number_ag: "EN‑789012",
+      custrecord_rc_no: "RC‑889900",
+      custrecord_rc_start_date: "2022-03-01T00:00:00.000Z",
+      custrecord_insurance_company_name_ag: "HDFC Ergo",
+      custrecord_insurance_number_ag: "INS‑110099",
+      custrecord_insurance_start_date_ag: "2024-03-01T00:00:00.000Z",
+      custrecord_insurance_end_date_ag: "2029-03-01T00:00:00.000Z",
+      custrecord_permit_start_date: "2024-06-01T00:00:00.000Z",
+      custrecord_permit_end_date: "2024-12-31T00:00:00.000Z",
+      custrecord_puc_number: "PUC‑001122",
+      custrecord_puc_start_date_ag: "2024-06-01T00:00:00.000Z",
+      custrecord_puc_end_date_ag: "2024-12-31T00:00:00.000Z",
+      custrecord_tms_vehicle_fit_cert_vld_upto: "2027-03-31T00:00:00.000Z",
+      custrecord_vehicle_master_gps_available: true,
+      custrecord_vendor_name_ag: {
+        id: "VEN006",
+        name: "MNO Transport",
+        isInactive: false
+      },
+      custrecord_create_by: "manager.user",
+      custrecord_rc_doc_attach: [],
+      custrecord_insurance_attachment_ag: [],
+      custrecord_permit_attachment_ag: [],
+      custrecord_puc_attachment_ag: [],
+      custrecord_tms_vehicle_fit_cert_attach: [],
+      assignedDriver: {
+        name: "Vikram Singh",
+        license: "DL-3344556677",
+        contact: "+91 3210987654",
+        expiry: "2025-10-20"
+      },
+      checklist: {
+        checklistItems: [
+          {
+            question: "Safety equipment check",
+            answer: "Yes",
+            comment: "All present"
+          },
+          {
+            question: "Overall condition check",
+            answer: "Yes",
+            comment: "Good"
+          }
+        ],
+        date: "2025-07-23T10:20:33.388068",
+        filledAt: "2025-07-23T04:52:46.821Z",
+        filledBy: "api",
+        name: "Ashok Leyland Dost Form"
+      },
+      approved_by_hq: "pending"
     }
   ])
 
@@ -195,7 +413,7 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
         {filteredApprovals.map((approval) => (
           <motion.div
             key={approval._id}
