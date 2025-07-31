@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Car, User, CheckSquare, FileText, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Truck, UserCheck, ClipboardCheck, Calendar, Image, FileText as DocumentIcon } from 'lucide-react'
+import { getThemeColors } from '../utils/theme.js'
 
-const ApprovalCard = ({ selectedPlant = 'all' }) => {
+const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
   const [activeSection, setActiveSection] = useState(null)
   const [activeVehicle, setActiveVehicle] = useState(null)
   const [reviewMessage, setReviewMessage] = useState('')
+  const themeColors = getThemeColors(currentTheme)
   
   // Real data structure
   const [approvals, setApprovals] = useState([
@@ -415,16 +417,12 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
         {filteredApprovals.map((approval) => (
-          <motion.div
-            key={approval._id}
-            className="relative bg-gradient-to-br from-cyan-900 via-blue-900 to-indigo-900 rounded-3xl p-6 cursor-pointer overflow-hidden"
+          <motion.div key={approval._id}
+            className={`relative bg-gradient-to-br ${themeColors.cardGradient} rounded-3xl p-6 cursor-pointer overflow-hidden`}
             style={{ 
-              background: 'linear-gradient(135deg, #0c4a6e 0%, #1e40af 50%, #3730a3 100%)'
+              background: themeColors.cardBackground
             }}
-            whileHover={{ 
-              scale: 1.02,
-              boxShadow: "0 25px 50px rgba(0,0,0,0.4)"
-            }}
+            whileHover={{ scale: 1.02, boxShadow: "0 25px 50px rgba(0,0,0,0.4)" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
             {/* Animated Background Elements */}
@@ -457,7 +455,7 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-white">{approval.custrecord_vehicle_number}</h3>
-                  <p className="text-cyan-200 text-sm">{approval.custrecord_vehicle_type_ag} • {approval.currentPlant}</p>
+                  <p className={`text-sm ${themeColors.accentText}`}>{approval.custrecord_vehicle_type_ag} • {approval.currentPlant}</p>
                 </div>
                 
                 {/* Status Badge */}
@@ -503,7 +501,7 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
                   {/* Inner Content */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <div className="text-lg font-bold text-white">25%</div>
-                    <div className="text-xs text-cyan-200">Complete</div>
+                    <div className="text-xs text-teal-200">Complete</div>
                   </div>
                 </div>
               </div>
@@ -523,16 +521,16 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
                   }}
                 >
                   <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-full bg-cyan-500/20">
-                      <div className="text-cyan-400">
+                    <div className="p-2 rounded-full bg-teal-500/20">
+                      <div className="text-teal-400">
                         <Truck className="w-4 h-4" />
                       </div>
                     </div>
                     <div className="flex-1">
                       <h4 className="text-white font-semibold text-sm">Vehicle Details</h4>
-                      <p className="text-cyan-200 text-xs">{approval.custrecord_vehicle_number}</p>
+                      <p className="text-teal-200 text-xs">{approval.custrecord_vehicle_number}</p>
                     </div>
-                    <div className="text-xs text-cyan-200">Available</div>
+                    <div className="text-xs text-teal-200">Available</div>
                   </div>
                 </motion.div>
 
@@ -554,19 +552,19 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
                 >
                   <div className="flex items-center gap-2">
                     <div className={`p-2 rounded-full ${
-                      approval.assignedDriver ? 'bg-cyan-500/20' : 'bg-gray-500/20'
+                      approval.assignedDriver ? 'bg-lime-500/20' : 'bg-gray-500/20'
                     }`}>
-                      <div className={approval.assignedDriver ? 'text-cyan-400' : 'text-gray-400'}>
-                        <UserCheck className="w-4 h-4" />
+                      <div className={approval.assignedDriver ? 'text-lime-400' : 'text-gray-400'}>
+                        <User className="w-4 h-4" />
                       </div>
                     </div>
                     <div className="flex-1">
                       <h4 className="text-white font-semibold text-sm">Driver Details</h4>
-                      <p className="text-cyan-200 text-xs">
-                        {approval.assignedDriver ? 'Driver Assigned' : 'No Driver Available'}
+                      <p className="text-teal-200 text-xs">
+                        {approval.assignedDriver ? approval.assignedDriver.name : 'No Driver Available'}
                       </p>
                     </div>
-                    <div className={`text-xs ${approval.assignedDriver ? 'text-cyan-200' : 'text-gray-400'}`}>
+                    <div className={`text-xs ${approval.assignedDriver ? 'text-lime-200' : 'text-gray-400'}`}>
                       {approval.assignedDriver ? 'Available' : 'Not Available'}
                     </div>
                   </div>
@@ -590,20 +588,20 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
                 >
                   <div className="flex items-center gap-2">
                     <div className={`p-2 rounded-full ${
-                      approval.checklist ? 'bg-cyan-500/20' : 'bg-gray-500/20'
+                      approval.checklist ? 'bg-lime-500/20' : 'bg-gray-500/20'
                     }`}>
-                      <div className={approval.checklist ? 'text-cyan-400' : 'text-gray-400'}>
-                        <ClipboardCheck className="w-4 h-4" />
+                      <div className={approval.checklist ? 'text-lime-400' : 'text-gray-400'}>
+                        <CheckSquare className="w-4 h-4" />
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-white font-semibold text-sm">Safety Checklist</h4>
-                      <p className="text-cyan-200 text-xs">
-                        {approval.checklist ? `${approval.checklist.checklistItems.length} Items` : 'No Checklist Done'}
+                      <h4 className="text-white font-semibold text-sm">Checklist</h4>
+                      <p className="text-teal-200 text-xs">
+                        {approval.checklist ? 'Checklist Completed' : 'No Checklist Done'}
                       </p>
                     </div>
-                    <div className={`text-xs ${approval.checklist ? 'text-cyan-200' : 'text-gray-400'}`}>
-                      {approval.checklist ? 'Available' : 'Not Done'}
+                    <div className={`text-xs ${approval.checklist ? 'text-lime-200' : 'text-gray-400'}`}>
+                      {approval.checklist ? 'Available' : 'Not Available'}
                     </div>
                   </div>
                 </motion.div>
@@ -624,7 +622,7 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
             transition={{ duration: 0.3 }}
           >
             <motion.div
-              className="bg-black/95 border border-white/20 rounded-3xl p-6 max-w-5xl w-full h-[85vh] flex flex-col"
+              className="bg-blue/95 border border-white/20 rounded-3xl p-6 max-w-5xl w-full h-[85vh] flex flex-col"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -667,14 +665,14 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
                     {/* Header */}
                     <div className="flex items-center justify-between mb-6 flex-shrink-0">
                       <div className="flex items-center gap-4">
-                        <div className="p-4 rounded-2xl bg-cyan-500/20">
-                          <div className="text-cyan-400">
+                        <div className="p-4 rounded-2xl bg-teal-500/20">
+                          <div className="text-teal-400">
                             {sectionData.icon}
                           </div>
                         </div>
                         <div>
                           <h3 className="text-2xl font-bold text-white mb-1">{sectionData.title}</h3>
-                          <p className="text-cyan-200 text-base">{currentApproval.custrecord_vehicle_number} • {currentApproval.custrecord_vehicle_type_ag}</p>
+                          <p className="text-teal-200 text-base">{currentApproval.custrecord_vehicle_number} • {currentApproval.custrecord_vehicle_type_ag}</p>
                         </div>
                       </div>
                       <button
@@ -698,19 +696,19 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
                             <h4 className="text-white font-bold text-lg mb-3">Basic Vehicle Information</h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                               <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">Vehicle Number</p>
+                                <p className="text-teal-200 text-xs font-medium mb-1">Vehicle Number</p>
                                 <p className="text-white font-semibold text-sm">{currentApproval.custrecord_vehicle_number}</p>
                               </div>
                               <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">Current Plant</p>
+                                <p className="text-teal-200 text-xs font-medium mb-1">Current Plant</p>
                                 <p className="text-white font-semibold text-sm">{currentApproval.currentPlant}</p>
                               </div>
                               <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">Vehicle Type</p>
+                                <p className="text-teal-200 text-xs font-medium mb-1">Vehicle Type</p>
                                 <p className="text-white font-semibold text-sm">{currentApproval.custrecord_vehicle_type_ag}</p>
                               </div>
                               <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">Age of Vehicle</p>
+                                <p className="text-teal-200 text-xs font-medium mb-1">Age of Vehicle</p>
                                 <p className="text-white font-semibold text-sm">{currentApproval.custrecord_age_of_vehicle}</p>
                               </div>
                             </div>
@@ -721,11 +719,11 @@ const ApprovalCard = ({ selectedPlant = 'all' }) => {
                             <h4 className="text-white font-bold text-lg mb-3">Technical Details</h4>
                             <div className="grid grid-cols-2 gap-3">
                               <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">Engine Number</p>
+                                <p className="text-teal-200 text-xs font-medium mb-1">Engine Number</p>
                                 <p className="text-white font-semibold text-sm">{currentApproval.custrecord_engine_number_ag}</p>
                               </div>
                               <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">Chassis Number</p>
+                                <p className="text-teal-200 text-xs font-medium mb-1">Chassis Number</p>
                                 <p className="text-white font-semibold text-sm">{currentApproval.custrecord_chassis_number}</p>
                               </div>
                             </div>
