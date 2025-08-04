@@ -1,7 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Car, User, CheckSquare, FileText, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Truck, UserCheck, ClipboardCheck, Calendar, Image, FileText as DocumentIcon } from 'lucide-react'
 import { getThemeColors } from '../utils/theme.js'
+
+// API Configuration
+const API_BASE_URL = "http://localhost:5000/vms/vehicle/plant"
 
 const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
   const [activeSection, setActiveSection] = useState(null)
@@ -10,386 +13,231 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
   const [showPendingModal, setShowPendingModal] = useState(false)
   const [showApprovedModal, setShowApprovedModal] = useState(false)
   const [showRejectedModal, setShowRejectedModal] = useState(false)
+  
+  // API-driven state
+  const [pendingVehicles, setPendingVehicles] = useState([])
+  const [approvedVehicles, setApprovedVehicles] = useState([])
+  const [rejectedVehicles, setRejectedVehicles] = useState([])
+  const [loading, setLoading] = useState({ pending: false, approved: false, rejected: false })
+  const [error, setError] = useState({ pending: false, approved: false, rejected: false })
+  
   const themeColors = getThemeColors(currentTheme)
   const isLightTheme = currentTheme === 'blue'
-  
-  // Real data structure
-  const [approvals, setApprovals] = useState([
-    {
-      _id: "686b93e4f22cee76e3080bce",
-      custrecord_vehicle_number: "MH12AB1241",
-      currentPlant: "pune",
-      custrecord_vehicle_type_ag: "Lattice Tower",
-      custrecord_age_of_vehicle: "5 Years",
-      custrecord_owner_name_ag: "Ramesh Patil",
-      custrecord_owner_no_ag: "+91‑9876543210",
-      custrecord_chassis_number: "CH‑123456",
-      custrecord_engine_number_ag: "EN‑987654",
-      custrecord_rc_no: "RC‑778899",
-      custrecord_rc_start_date: "2023-03-01T00:00:00.000Z",
-      custrecord_insurance_company_name_ag: "ICICI Lombard",
-      custrecord_insurance_number_ag: "INS‑552233",
-      custrecord_insurance_start_date_ag: "2024-02-01T00:00:00.000Z",
-      custrecord_insurance_end_date_ag: "2029-02-14T00:00:00.000Z",
-      custrecord_permit_start_date: "2025-06-01T00:00:00.000Z",
-      custrecord_permit_end_date: "2025-12-01T00:00:00.000Z",
-      custrecord_puc_number: "PUC‑112233",
-      custrecord_puc_start_date_ag: "2025-06-01T00:00:00.000Z",
-      custrecord_puc_end_date_ag: "2025-12-01T00:00:00.000Z",
-      custrecord_tms_vehicle_fit_cert_vld_upto: "2027-05-31T00:00:00.000Z",
-      custrecord_vehicle_master_gps_available: true,
-      custrecord_vendor_name_ag: {
-        id: "VEN001",
-        name: "ABC Logistics",
-        isInactive: false
-      },
-      custrecord_create_by: "shekhar.deshmukh",
-      custrecord_rc_doc_attach: [
-        {
-          url: "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1751880676218-Email Template-1.png",
-          fileName: "Email Template-1.png",
-          mimeType: "image/png",
-          uploadedAt: "2025-07-07T09:31:16.539Z"
-        }
-      ],
-      custrecord_insurance_attachment_ag: [
-        {
-          url: "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1751880676219-Email Template-1.png",
-          fileName: "Email Template-1.png",
-          mimeType: "image/png",
-          uploadedAt: "2025-07-07T09:31:16.527Z"
-        }
-      ],
-      custrecord_permit_attachment_ag: [
-        {
-          url: "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1751880676219-Email Template-1.png",
-          fileName: "Email Template-1.png",
-          mimeType: "image/png",
-          uploadedAt: "2025-07-07T09:31:16.852Z"
-        }
-      ],
-      custrecord_puc_attachment_ag: [
-        {
-          url: "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1751880676219-Email Template-1.png",
-          fileName: "Email Template-1.png",
-          mimeType: "image/png",
-          uploadedAt: "2025-07-07T09:31:16.428Z"
-        }
-      ],
-      custrecord_tms_vehicle_fit_cert_attach: [
-        {
-          url: "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1751880676219-Email Template-1.png",
-          fileName: "Email Template-1.png",
-          mimeType: "image/png",
-          uploadedAt: "2025-07-07T09:31:16.485Z"
-        }
-      ],
-      assignedDriver: null, // No driver assigned
-      checklist: {
-        checklistItems: [
-          {
-            question: "Safety equipment check",
-            answer: "",
-            comment: "sadcasdc"
-          },
-          {
-            question: "Overall condition check",
-            answer: "",
-            comment: "sadascdsad"
-          }
-        ],
-        date: "2025-07-23T10:20:33.388068",
-        filledAt: "2025-07-23T04:52:46.821Z",
-        filledBy: "api",
-        name: "Lattice Tower Form"
-      },
-      approved_by_hq: "pending"
-    },
-    {
-      _id: "686b93e4f22cee76e3080bcf",
-      custrecord_vehicle_number: "DL01CD5678",
-      currentPlant: "delhi",
-      custrecord_vehicle_type_ag: "Mahindra Bolero",
-      custrecord_age_of_vehicle: "3 Years",
-      custrecord_owner_name_ag: "Amit Singh",
-      custrecord_owner_no_ag: "+91‑8765432109",
-      custrecord_chassis_number: "CH‑654321",
-      custrecord_engine_number_ag: "EN‑123456",
-      custrecord_rc_no: "RC‑112233",
-      custrecord_rc_start_date: "2022-01-01T00:00:00.000Z",
-      custrecord_insurance_company_name_ag: "HDFC Ergo",
-      custrecord_insurance_number_ag: "INS‑998877",
-      custrecord_insurance_start_date_ag: "2023-01-01T00:00:00.000Z",
-      custrecord_insurance_end_date_ag: "2028-01-01T00:00:00.000Z",
-      custrecord_permit_start_date: "2024-01-01T00:00:00.000Z",
-      custrecord_permit_end_date: "2024-12-31T00:00:00.000Z",
-      custrecord_puc_number: "PUC‑445566",
-      custrecord_puc_start_date_ag: "2024-01-01T00:00:00.000Z",
-      custrecord_puc_end_date_ag: "2024-12-31T00:00:00.000Z",
-      custrecord_tms_vehicle_fit_cert_vld_upto: "2026-12-31T00:00:00.000Z",
-      custrecord_vehicle_master_gps_available: false,
-      custrecord_vendor_name_ag: {
-        id: "VEN002",
-        name: "XYZ Transport",
-        isInactive: false
-      },
-      custrecord_create_by: "admin.user",
-      custrecord_rc_doc_attach: [],
-      custrecord_insurance_attachment_ag: [],
-      custrecord_permit_attachment_ag: [],
-      custrecord_puc_attachment_ag: [],
-      custrecord_tms_vehicle_fit_cert_attach: [],
-      assignedDriver: null, // No driver assigned
-      checklist: null, // No checklist done
-      approved_by_hq: "pending"
-    },
-    {
-      _id: "686b93e4f22cee76e3080bd0",
-      custrecord_vehicle_number: "KA02EF9012",
-      currentPlant: "bangalore",
-      custrecord_vehicle_type_ag: "Tata 407",
-      custrecord_age_of_vehicle: "4 Years",
-      custrecord_owner_name_ag: "Kumar Patel",
-      custrecord_owner_no_ag: "+91‑7654321098",
-      custrecord_chassis_number: "CH‑789012",
-      custrecord_engine_number_ag: "EN‑345678",
-      custrecord_rc_no: "RC‑334455",
-      custrecord_rc_start_date: "2021-06-01T00:00:00.000Z",
-      custrecord_insurance_company_name_ag: "Bajaj Allianz",
-      custrecord_insurance_number_ag: "INS‑776655",
-      custrecord_insurance_start_date_ag: "2024-03-01T00:00:00.000Z",
-      custrecord_insurance_end_date_ag: "2029-03-01T00:00:00.000Z",
-      custrecord_permit_start_date: "2024-06-01T00:00:00.000Z",
-      custrecord_permit_end_date: "2024-12-31T00:00:00.000Z",
-      custrecord_puc_number: "PUC‑778899",
-      custrecord_puc_start_date_ag: "2024-06-01T00:00:00.000Z",
-      custrecord_puc_end_date_ag: "2024-12-31T00:00:00.000Z",
-      custrecord_tms_vehicle_fit_cert_vld_upto: "2026-06-30T00:00:00.000Z",
-      custrecord_vehicle_master_gps_available: true,
-      custrecord_vendor_name_ag: {
-        id: "VEN003",
-        name: "DEF Logistics",
-        isInactive: false
-      },
-      custrecord_create_by: "manager.user",
-      custrecord_rc_doc_attach: [],
-      custrecord_insurance_attachment_ag: [],
-      custrecord_permit_attachment_ag: [],
-      custrecord_puc_attachment_ag: [],
-      custrecord_tms_vehicle_fit_cert_attach: [],
-      assignedDriver: {
-        name: "Rajesh Kumar",
-        license: "DL-1122334455",
-        contact: "+91 6543210987",
-        expiry: "2025-12-31"
-      },
-      checklist: {
-        checklistItems: [
-          {
-            question: "Safety equipment check",
-            answer: "Yes",
-            comment: "All equipment present"
-          },
-          {
-            question: "Overall condition check",
-            answer: "Yes",
-            comment: "Good condition"
-          }
-        ],
-        date: "2025-07-23T10:20:33.388068",
-        filledAt: "2025-07-23T04:52:46.821Z",
-        filledBy: "api",
-        name: "Tata 407 Form"
-      },
-      approved_by_hq: "pending"
-    },
-    {
-      _id: "686b93e4f22cee76e3080bd1",
-      custrecord_vehicle_number: "TN03GH3456",
-      currentPlant: "chennai",
-      custrecord_vehicle_type_ag: "Eicher Pro",
-      custrecord_age_of_vehicle: "2 Years",
-      custrecord_owner_name_ag: "Lakshmi Narayanan",
-      custrecord_owner_no_ag: "+91‑6543210987",
-      custrecord_chassis_number: "CH‑456789",
-      custrecord_engine_number_ag: "EN‑567890",
-      custrecord_rc_no: "RC‑556677",
-      custrecord_rc_start_date: "2023-01-01T00:00:00.000Z",
-      custrecord_insurance_company_name_ag: "United India Insurance",
-      custrecord_insurance_number_ag: "INS‑443322",
-      custrecord_insurance_start_date_ag: "2024-01-01T00:00:00.000Z",
-      custrecord_insurance_end_date_ag: "2029-01-01T00:00:00.000Z",
-      custrecord_permit_start_date: "2024-06-01T00:00:00.000Z",
-      custrecord_permit_end_date: "2024-12-31T00:00:00.000Z",
-      custrecord_puc_number: "PUC‑889900",
-      custrecord_puc_start_date_ag: "2024-06-01T00:00:00.000Z",
-      custrecord_puc_end_date_ag: "2024-12-31T00:00:00.000Z",
-      custrecord_tms_vehicle_fit_cert_vld_upto: "2027-01-31T00:00:00.000Z",
-      custrecord_vehicle_master_gps_available: true,
-      custrecord_vendor_name_ag: {
-        id: "VEN004",
-        name: "GHI Transport",
-        isInactive: false
-      },
-      custrecord_create_by: "supervisor.user",
-      custrecord_rc_doc_attach: [],
-      custrecord_insurance_attachment_ag: [],
-      custrecord_permit_attachment_ag: [],
-      custrecord_puc_attachment_ag: [],
-      custrecord_tms_vehicle_fit_cert_attach: [],
-      assignedDriver: {
-        name: "Arun Kumar",
-        license: "DL-2233445566",
-        contact: "+91 5432109876",
-        expiry: "2025-08-15"
-      },
-      checklist: {
-        checklistItems: [
-          {
-            question: "Safety equipment check",
-            answer: "Yes",
-            comment: "Complete"
-          },
-          {
-            question: "Overall condition check",
-            answer: "Yes",
-            comment: "Excellent"
-          }
-        ],
-        date: "2025-07-23T10:20:33.388068",
-        filledAt: "2025-07-23T04:52:46.821Z",
-        filledBy: "api",
-        name: "Eicher Pro Form"
-      },
-      approved_by_hq: "pending"
-    },
-    {
-      _id: "686b93e4f22cee76e3080bd2",
-      custrecord_vehicle_number: "MH04IJ7890",
-      currentPlant: "mumbai",
-      custrecord_vehicle_type_ag: "Force Traveller",
-      custrecord_age_of_vehicle: "1 Year",
-      custrecord_owner_name_ag: "Priya Desai",
-      custrecord_owner_no_ag: "+91‑5432109876",
-      custrecord_chassis_number: "CH‑234567",
-      custrecord_engine_number_ag: "EN‑678901",
-      custrecord_rc_no: "RC‑778899",
-      custrecord_rc_start_date: "2024-01-01T00:00:00.000Z",
-      custrecord_insurance_company_name_ag: "National Insurance",
-      custrecord_insurance_number_ag: "INS‑221100",
-      custrecord_insurance_start_date_ag: "2024-02-01T00:00:00.000Z",
-      custrecord_insurance_end_date_ag: "2029-02-01T00:00:00.000Z",
-      custrecord_permit_start_date: "2024-06-01T00:00:00.000Z",
-      custrecord_permit_end_date: "2024-12-31T00:00:00.000Z",
-      custrecord_puc_number: "PUC‑990011",
-      custrecord_puc_start_date_ag: "2024-06-01T00:00:00.000Z",
-      custrecord_puc_end_date_ag: "2024-12-31T00:00:00.000Z",
-      custrecord_tms_vehicle_fit_cert_vld_upto: "2028-02-29T00:00:00.000Z",
-      custrecord_vehicle_master_gps_available: false,
-      custrecord_vendor_name_ag: {
-        id: "VEN005",
-        name: "JKL Logistics",
-        isInactive: false
-      },
-      custrecord_create_by: "admin.user",
-      custrecord_rc_doc_attach: [],
-      custrecord_insurance_attachment_ag: [],
-      custrecord_permit_attachment_ag: [],
-      custrecord_puc_attachment_ag: [],
-      custrecord_tms_vehicle_fit_cert_attach: [],
-      assignedDriver: null,
-      checklist: null,
-      approved_by_hq: "pending"
-    },
-    {
-      _id: "686b93e4f22cee76e3080bd3",
-      custrecord_vehicle_number: "DL05KL1234",
-      currentPlant: "delhi",
-      custrecord_vehicle_type_ag: "Ashok Leyland Dost",
-      custrecord_age_of_vehicle: "3 Years",
-      custrecord_owner_name_ag: "Suresh Verma",
-      custrecord_owner_no_ag: "+91‑4321098765",
-      custrecord_chassis_number: "CH‑345678",
-      custrecord_engine_number_ag: "EN‑789012",
-      custrecord_rc_no: "RC‑889900",
-      custrecord_rc_start_date: "2022-03-01T00:00:00.000Z",
-      custrecord_insurance_company_name_ag: "HDFC Ergo",
-      custrecord_insurance_number_ag: "INS‑110099",
-      custrecord_insurance_start_date_ag: "2024-03-01T00:00:00.000Z",
-      custrecord_insurance_end_date_ag: "2029-03-01T00:00:00.000Z",
-      custrecord_permit_start_date: "2024-06-01T00:00:00.000Z",
-      custrecord_permit_end_date: "2024-12-31T00:00:00.000Z",
-      custrecord_puc_number: "PUC‑001122",
-      custrecord_puc_start_date_ag: "2024-06-01T00:00:00.000Z",
-      custrecord_puc_end_date_ag: "2024-12-31T00:00:00.000Z",
-      custrecord_tms_vehicle_fit_cert_vld_upto: "2027-03-31T00:00:00.000Z",
-      custrecord_vehicle_master_gps_available: true,
-      custrecord_vendor_name_ag: {
-        id: "VEN006",
-        name: "MNO Transport",
-        isInactive: false
-      },
-      custrecord_create_by: "manager.user",
-      custrecord_rc_doc_attach: [],
-      custrecord_insurance_attachment_ag: [],
-      custrecord_permit_attachment_ag: [],
-      custrecord_puc_attachment_ag: [],
-      custrecord_tms_vehicle_fit_cert_attach: [],
-      assignedDriver: {
-        name: "Vikram Singh",
-        license: "DL-3344556677",
-        contact: "+91 3210987654",
-        expiry: "2025-10-20"
-      },
-      checklist: {
-        checklistItems: [
-          {
-            question: "Safety equipment check",
-            answer: "Yes",
-            comment: "All present"
-          },
-          {
-            question: "Overall condition check",
-            answer: "Yes",
-            comment: "Good"
-          }
-        ],
-        date: "2025-07-23T10:20:33.388068",
-        filledAt: "2025-07-23T04:52:46.821Z",
-        filledBy: "api",
-        name: "Ashok Leyland Dost Form"
-      },
-      approved_by_hq: "pending"
+
+  // API Service Functions
+  const fetchVehicles = async (plant, status, page = 1, limit = 10) => {
+    try {
+      console.log(`Fetching ${status} vehicles for plant: ${plant}`)
+      const response = await fetch(`${API_BASE_URL}/${plant}?status=${status}&page=${page}&limit=${limit}&includeDriver=true`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      console.log(`Received ${status} data:`, data)
+      return data
+    } catch (error) {
+      console.error(`Error fetching ${status} vehicles:`, error)
+      throw error
     }
-  ])
+  }
+
+  const fetchSectionData = async (status, plant = 'all') => {
+    setLoading(prev => ({ ...prev, [status]: true }))
+    setError(prev => ({ ...prev, [status]: false }))
+    
+    try {
+      const data = await fetchVehicles(plant, status, 1, 10)
+      const vehicles = data.vehicles || []
+      
+      switch (status) {
+        case 'pending':
+          setPendingVehicles(vehicles)
+          break
+        case 'approved':
+          setApprovedVehicles(vehicles)
+          break
+        case 'rejected':
+          setRejectedVehicles(vehicles)
+          break
+      }
+    } catch (error) {
+      setError(prev => ({ ...prev, [status]: true }))
+      console.error(`Error fetching ${status} vehicles:`, error)
+      
+      // Add fallback data for testing
+      const fallbackData = [
+        {
+          _id: `fallback-${status}-1`,
+          custrecord_vehicle_number: `TEST-${status.toUpperCase()}-001`,
+          currentPlant: plant,
+          custrecord_vehicle_type_ag: 'Test Vehicle',
+          custrecord_age_of_vehicle: '2 Years',
+          custrecord_owner_name_ag: 'Test Owner',
+          custrecord_owner_no_ag: '+91-9876543210',
+          custrecord_chassis_number: 'CH-TEST-001',
+          custrecord_engine_number_ag: 'EN-TEST-001',
+          custrecord_rc_no: 'RC-TEST-001',
+          custrecord_rc_start_date: '2023-01-01T00:00:00.000Z',
+          custrecord_insurance_company_name_ag: 'Test Insurance',
+          custrecord_insurance_number_ag: 'INS-TEST-001',
+          custrecord_insurance_start_date_ag: '2024-01-01T00:00:00.000Z',
+          custrecord_insurance_end_date_ag: '2029-01-01T00:00:00.000Z',
+          custrecord_permit_start_date: '2024-06-01T00:00:00.000Z',
+          custrecord_permit_end_date: '2024-12-31T00:00:00.000Z',
+          custrecord_puc_number: 'PUC-TEST-001',
+          custrecord_puc_start_date_ag: '2024-06-01T00:00:00.000Z',
+          custrecord_puc_end_date_ag: '2024-12-31T00:00:00.000Z',
+          custrecord_tms_vehicle_fit_cert_vld_upto: '2026-12-31T00:00:00.000Z',
+          custrecord_vehicle_master_gps_available: true,
+          custrecord_vendor_name_ag: { name: 'Test Vendor' },
+          custrecord_create_by: 'test.user',
+          custrecord_rc_doc_attach: [],
+          custrecord_insurance_attachment_ag: [],
+          custrecord_permit_attachment_ag: [],
+          custrecord_puc_attachment_ag: [],
+          custrecord_tms_vehicle_fit_cert_attach: [],
+          assignedDriver: status === 'pending' ? {
+            _id: "688b34f72c9c1645efc75b97",
+            approved_by_hq: "approved",
+            custrecord_driver_name: "bunty singh",
+            custrecord_driving_license_no: "LC1234754",
+            custrecord_driving_license_s_date: "2022-07-31",
+            custrecord_driver_license_e_date: "2028-07-31",
+            custrecord_driving_license_attachment: [
+              "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1753953527404-Screenshot (3).png"
+            ],
+            custrecord_license_category_ag: "Light Motor Vehicle",
+            custrecord_driver_mobile_no: "1111111154",
+            custrecord_create_by_driver_master: "shekhar.seshmukh",
+            custrecord_driving_lca_test: "passed",
+            fcm_token: "cHdpbmzAToaxhtZPdIpeEh:APA91bHIrLZ5v9gWgEx3W5pQfzE9C1YvK53Y1fXXOWLLEP1tW2P-vdJnHtV5T-t1l7zBwZqsT-9-vDcliqOAIKDKsiHoKkgVMCRzgqA5oxD1nLBwwiDcID4",
+            createdAt: "2025-07-31T09:18:47.617Z",
+            updatedAt: "2025-07-31T09:18:47.617Z"
+          } : null,
+          checklist: status === 'pending' ? {
+            checklistItems: [
+              {
+                question: 'Safety equipment check',
+                answer: 'Yes',
+                comment: 'All equipment present'
+              },
+              {
+                question: 'Overall condition check',
+                answer: 'Yes',
+                comment: 'Good condition'
+              }
+            ],
+            date: '2025-07-23T10:20:33.388068',
+            filledAt: '2025-07-23T04:52:46.821Z',
+            filledBy: 'test.user',
+            name: 'Test Checklist'
+          } : null,
+          approved_by_hq: status
+        }
+      ]
+      
+      switch (status) {
+        case 'pending':
+          setPendingVehicles(fallbackData)
+          break
+        case 'approved':
+          setApprovedVehicles(fallbackData)
+          break
+        case 'rejected':
+          setRejectedVehicles(fallbackData)
+          break
+      }
+    } finally {
+      setLoading(prev => ({ ...prev, [status]: false }))
+    }
+  }
+
+  // Load data on component mount and when plant changes
+  useEffect(() => {
+    console.log('ApprovalCard: Loading data for plant:', selectedPlant)
+    fetchSectionData('pending', selectedPlant)
+    fetchSectionData('approved', selectedPlant)
+    fetchSectionData('rejected', selectedPlant)
+  }, [selectedPlant])
+
+  // Helper function to render attachments
+  const renderAttachments = (attachments, documentType) => {
+    if (!attachments || attachments.length === 0) {
+      return (
+        <div className="mt-3 p-3 bg-white/5 rounded-lg">
+          <p className="text-gray-400 text-sm">No attachments available</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="mt-3">
+        <label className="text-teal-300 text-sm">Attachments</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
+          {attachments.map((doc, index) => {
+            const isImage = doc.mimeType?.startsWith('image/')
+            const isPDF = doc.mimeType === 'application/pdf'
+            
+            return (
+              <div key={index} className="border border-white/10 rounded-lg p-3 bg-white/5">
+                {isImage ? (
+                  <div className="space-y-2">
+                    <img 
+                      src={doc.url} 
+                      alt={doc.fileName}
+                      className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => window.open(doc.url, '_blank')}
+                    />
+                    <p className="text-white text-xs truncate">{doc.fileName}</p>
+                  </div>
+                ) : isPDF ? (
+                  <div className="space-y-2">
+                    <div className="w-full h-32 bg-red-500/20 rounded-lg flex items-center justify-center cursor-pointer hover:bg-red-500/30 transition-colors"
+                         onClick={() => window.open(doc.url, '_blank')}>
+                      <div className="text-center">
+                        <FileText className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                        <p className="text-red-400 text-xs">PDF Document</p>
+                      </div>
+                    </div>
+                    <p className="text-white text-xs truncate">{doc.fileName}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="w-full h-32 bg-gray-500/20 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-500/30 transition-colors"
+                         onClick={() => window.open(doc.url, '_blank')}>
+                      <div className="text-center">
+                        <DocumentIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-400 text-xs">Document</p>
+                      </div>
+                    </div>
+                    <p className="text-white text-xs truncate">{doc.fileName}</p>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
 
   // Helper function to get status background color
   const getStatusBgColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'approved':
-        return 'bg-emerald-500/20 text-emerald-400'
       case 'pending':
-        return 'bg-orange-500/20 text-orange-400'
+        return 'bg-yellow-500/20 text-yellow-200'
+      case 'approved':
+        return 'bg-green-500/20 text-green-200'
       case 'rejected':
-        return 'bg-red-500/20 text-red-400'
+        return 'bg-red-500/20 text-red-200'
       default:
         return 'bg-gray-500/20 text-gray-400'
     }
   }
 
-  // Filter approvals based on selected plant and status
-  const filteredApprovals = approvals.filter(approval => 
-    selectedPlant === 'all' || approval.currentPlant?.toLowerCase() === selectedPlant?.toLowerCase()
-  )
-
-  // Separate approvals by status
-  const pendingApprovals = filteredApprovals.filter(approval => approval.approved_by_hq?.toLowerCase() === 'pending')
-  const approvedApprovals = filteredApprovals.filter(approval => approval.approved_by_hq?.toLowerCase() === 'approved')
-  const rejectedApprovals = filteredApprovals.filter(approval => approval.approved_by_hq?.toLowerCase() === 'rejected')
-
   // Helper function to render a single card
-  const renderCard = (approval, index, sectionType) => (
-    <motion.div key={approval._id || `${sectionType}-${index}`}
+  const renderCard = (vehicle, index, sectionType) => (
+    <motion.div key={vehicle._id || `${sectionType}-${index}`}
       className={`relative bg-gradient-to-br ${themeColors.cardGradient} rounded-3xl p-6 cursor-pointer overflow-hidden`}
       style={{ 
         background: themeColors.cardBackground
@@ -426,13 +274,13 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-bold text-white">{approval.custrecord_vehicle_number || `Vehicle ${index + 1}`}</h3>
-            <p className={`text-sm ${themeColors.accentText}`}>{approval.custrecord_vehicle_type_ag || 'Vehicle Type'} • {approval.currentPlant || 'Plant'}</p>
+            <h3 className="text-lg font-bold text-white">{vehicle.custrecord_vehicle_number}</h3>
+            <p className={`text-sm ${themeColors.accentText}`}>{vehicle.custrecord_vehicle_type_ag} • {vehicle.currentPlant}</p>
           </div>
           
           {/* Status Badge */}
-          <div className={`${getStatusBgColor(approval.approved_by_hq || sectionType)} text-white text-xs px-2 py-1 rounded-full`}>
-            {approval.approved_by_hq || sectionType}
+          <div className={`${getStatusBgColor(vehicle.approved_by_hq || sectionType)} text-white text-xs px-2 py-1 rounded-full`}>
+            {vehicle.approved_by_hq || sectionType}
           </div>
         </div>
 
@@ -488,7 +336,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
               boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
             }}
             onClick={() => {
-              setActiveVehicle(approval._id || `${sectionType}-${index}`)
+              setActiveVehicle(vehicle._id || `${sectionType}-${index}`)
               setActiveSection('vehicle')
             }}
           >
@@ -500,7 +348,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
               </div>
               <div className="flex-1">
                 <h4 className="text-white font-semibold text-sm">Vehicle Details</h4>
-                <p className="text-teal-200 text-xs">{approval.custrecord_vehicle_number || `Vehicle ${index + 1}`}</p>
+                <p className="text-teal-200 text-xs">{vehicle.custrecord_vehicle_number}</p>
               </div>
               <div className="text-xs text-teal-200">Available</div>
             </div>
@@ -509,35 +357,35 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
           {/* Driver Details Sub-Card */}
           <motion.div
             className={`relative p-3 rounded-xl border border-white/10 cursor-pointer ${
-              approval.assignedDriver ? 'bg-white/10' : 'bg-gray-500/20'
+              vehicle.assignedDriver ? 'bg-white/10' : 'bg-gray-500/20'
             }`}
-            whileHover={approval.assignedDriver ? { 
+            whileHover={vehicle.assignedDriver ? { 
               scale: 1.05,
               boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
             } : {}}
             onClick={() => {
-              if (approval.assignedDriver) {
-                setActiveVehicle(approval._id || `${sectionType}-${index}`)
+              if (vehicle.assignedDriver) {
+                setActiveVehicle(vehicle._id || `${sectionType}-${index}`)
                 setActiveSection('driver')
               }
             }}
           >
             <div className="flex items-center gap-2">
               <div className={`p-2 rounded-full ${
-                approval.assignedDriver ? 'bg-lime-500/20' : 'bg-gray-500/20'
+                vehicle.assignedDriver ? 'bg-lime-500/20' : 'bg-gray-500/20'
               }`}>
-                <div className={approval.assignedDriver ? 'text-lime-400' : 'text-gray-400'}>
+                <div className={vehicle.assignedDriver ? 'text-lime-400' : 'text-gray-400'}>
                   <User className="w-4 h-4" />
                 </div>
               </div>
               <div className="flex-1">
                 <h4 className="text-white font-semibold text-sm">Driver Details</h4>
                 <p className="text-teal-200 text-xs">
-                  {approval.assignedDriver ? approval.assignedDriver.name : 'No Driver Available'}
+                  {vehicle.assignedDriver ? vehicle.assignedDriver.name : 'No Driver Available'}
                 </p>
               </div>
-              <div className={`text-xs ${approval.assignedDriver ? 'text-lime-200' : 'text-gray-400'}`}>
-                {approval.assignedDriver ? 'Available' : 'Not Available'}
+              <div className={`text-xs ${vehicle.assignedDriver ? 'text-lime-200' : 'text-gray-400'}`}>
+                {vehicle.assignedDriver ? 'Available' : 'Not Available'}
               </div>
             </div>
           </motion.div>
@@ -545,35 +393,35 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
           {/* Checklist Sub-Card */}
           <motion.div
             className={`relative p-3 rounded-xl border border-white/10 cursor-pointer ${
-              approval.checklist ? 'bg-white/10' : 'bg-gray-500/20'
+              vehicle.checklist && vehicle.checklist.checklistItems ? 'bg-white/10' : 'bg-gray-500/20'
             }`}
-            whileHover={approval.checklist ? { 
+            whileHover={vehicle.checklist && vehicle.checklist.checklistItems ? { 
               scale: 1.05,
               boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
             } : {}}
             onClick={() => {
-              if (approval.checklist) {
-                setActiveVehicle(approval._id || `${sectionType}-${index}`)
+              if (vehicle.checklist && vehicle.checklist.checklistItems) {
+                setActiveVehicle(vehicle._id || `${sectionType}-${index}`)
                 setActiveSection('checklist')
               }
             }}
           >
             <div className="flex items-center gap-2">
               <div className={`p-2 rounded-full ${
-                approval.checklist ? 'bg-lime-500/20' : 'bg-gray-500/20'
+                vehicle.checklist && vehicle.checklist.checklistItems ? 'bg-lime-500/20' : 'bg-gray-500/20'
               }`}>
-                <div className={approval.checklist ? 'text-lime-400' : 'text-gray-400'}>
+                <div className={vehicle.checklist && vehicle.checklist.checklistItems ? 'text-lime-400' : 'text-gray-400'}>
                   <CheckSquare className="w-4 h-4" />
                 </div>
               </div>
               <div className="flex-1">
                 <h4 className="text-white font-semibold text-sm">Checklist</h4>
                 <p className="text-teal-200 text-xs">
-                  {approval.checklist ? 'Checklist Completed' : 'No Checklist Done'}
+                  {vehicle.checklist && vehicle.checklist.checklistItems ? 'Checklist Completed' : 'No Checklist Done'}
                 </p>
               </div>
-              <div className={`text-xs ${approval.checklist ? 'text-lime-200' : 'text-gray-400'}`}>
-                {approval.checklist ? 'Available' : 'Not Available'}
+              <div className={`text-xs ${vehicle.checklist && vehicle.checklist.checklistItems ? 'text-lime-200' : 'text-gray-400'}`}>
+                {vehicle.checklist && vehicle.checklist.checklistItems ? 'Available' : 'Not Available'}
               </div>
             </div>
           </motion.div>
@@ -582,125 +430,133 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
     </motion.div>
   )
 
-  // Helper function to render section
-  const renderSection = (title, approvals, modalState, setModalState, sectionType) => (
-    <div className="w-full">
-      {/* Section Header */}
-      <div className="flex items-center justify-between mb-6 max-w-7xl mx-auto px-4">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-2xl font-bold text-white">{title}</h2>
-          <div className={`px-3 py-1 ${getStatusBgColor(sectionType)} text-sm font-medium rounded-full`}>
-            {approvals.length} items
-          </div>
-        </div>
-        {approvals.length > 4 && (
-          <button 
-            onClick={() => setModalState(true)}
-            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all shadow-md hover:shadow-lg"
-          >
-            View All
-          </button>
-        )}
-      </div>
-
-      {/* Cards Grid - Show only first 4 cards OR empty state */}
-      {approvals.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
-          {approvals.slice(0, 4).map((approval, index) => renderCard(approval, index, sectionType))}
-        </div>
-      ) : (
+  // Helper function to render a section
+  const renderSection = (title, vehicles, modalState, setModalState, sectionType) => {
+    const isLoading = loading[sectionType]
+    const hasError = error[sectionType]
+    
+    return (
+      <div className="w-full mb-12">
         <div className="max-w-7xl mx-auto px-4">
-          {sectionType === 'approved' || sectionType === 'rejected' ? (
-            // Full width card for approved/rejected empty states
-            <div className="w-full">
-              {renderEmptyStateCard(title, sectionType)}
+          {/* Section Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-white">{title}</h2>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                sectionType === 'pending' ? 'bg-yellow-500/20 text-yellow-200' :
+                sectionType === 'approved' ? 'bg-green-500/20 text-green-200' :
+                'bg-red-500/20 text-red-200'
+              }`}>
+                {vehicles.length} items
+              </div>
             </div>
-          ) : (
-            // Grid layout for pending empty state
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {renderEmptyStateCard(title, sectionType)}
+            
+            {vehicles.length > 4 && (
+              <motion.button
+                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm font-medium hover:bg-white/20 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setModalState(true)}
+              >
+                View All
+              </motion.button>
+            )}
+          </div>
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="h-64 bg-white/5 rounded-3xl animate-pulse"></div>
+              ))}
             </div>
           )}
-        </div>
-      )}
 
-      {/* View All Modal */}
-      {modalState && (
-        <motion.div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setModalState(false)}
-        >
-          <motion.div
-            className="bg-slate-900/95 border border-white/20 rounded-3xl p-6 max-w-7xl w-full max-h-[95vh] overflow-hidden"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/20">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-white">All {title} Approvals</h3>
-                  <p className="text-orange-400 text-base">{approvals.length} items</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setModalState(false)}
-                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+          {/* Error State */}
+          {hasError && (
+            <div className="text-center py-8">
+              <div className="text-red-400 mb-2">Failed to load {sectionType} vehicles</div>
+              <button 
+                onClick={() => fetchSectionData(sectionType, selectedPlant)}
+                className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 hover:bg-red-500/30"
               >
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                Retry
               </button>
             </div>
+          )}
 
-            {/* Search Box */}
-            <div className="mb-6">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search approvals..."
-                  className="block w-full pl-10 pr-3 py-3 border border-white/20 rounded-xl bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          {/* Cards Grid */}
+          {!isLoading && !hasError && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {vehicles.length === 0 ? (
+                renderEmptyStateCard(title, sectionType)
+              ) : (
+                vehicles.slice(0, 4).map((vehicle, index) => 
+                  renderCard(vehicle, index, sectionType)
+                )
+              )}
+            </div>
+          )}
+
+          {/* View All Modal */}
+          <AnimatePresence>
+            {modalState && (
+              <motion.div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                  onClick={() => setModalState(false)}
                 />
-              </div>
-            </div>
+                <motion.div
+                  className="relative bg-slate-900/95 rounded-3xl p-6 max-w-7xl w-full max-h-[95vh] overflow-hidden"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                >
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-bold text-white">{title} - All Vehicles</h3>
+                    <button
+                      onClick={() => setModalState(false)}
+                      className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                    >
+                      <XCircle className="w-6 h-6 text-white" />
+                    </button>
+                  </div>
 
-            {/* Modal Content - Grid of all cards */}
-            <div className="overflow-y-auto max-h-[70vh]">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {approvals.map((approval, index) => (
-                  <motion.div
-                    key={index}
-                    onClick={() => {
-                      setActiveVehicle(approval._id || `${sectionType}-${index}`)
-                      setActiveSection('vehicle')
-                      setModalState(false)
-                    }}
-                  >
-                    {renderCard(approval, index, sectionType)}
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </div>
-  )
+                  {/* Search Box */}
+                  <div className="mb-6">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search vehicles..."
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <FileText className="w-5 h-5 text-white/50" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* All Cards Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto max-h-[60vh]">
+                    {vehicles.map((vehicle, index) => 
+                      renderCard(vehicle, index, sectionType)
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    )
+  }
 
   // Helper function to render empty state card
   const renderEmptyStateCard = (title, sectionType) => {
@@ -823,601 +679,758 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
     }
   }
 
-  const handleApprovalAction = (approvalId, section, action) => {
-    setApprovals(prev => prev.map(approval => {
-      if (approval._id === approvalId) {
-        return { ...approval, approved_by_hq: action }
-      }
-      return approval
-    }))
+  const handleApprovalAction = (vehicleId, section, action) => {
+    // Update the appropriate vehicle array based on the action
+    const updateVehicleArray = (vehicles, setVehicles) => {
+      setVehicles(prev => prev.map(vehicle => {
+        if (vehicle._id === vehicleId) {
+          return { ...vehicle, approved_by_hq: action }
+        }
+        return vehicle
+      }))
+    }
+
+    // Update the correct array based on current status
+    if (action === 'approved') {
+      updateVehicleArray(approvedVehicles, setApprovedVehicles)
+    } else if (action === 'rejected') {
+      updateVehicleArray(rejectedVehicles, setRejectedVehicles)
+    } else {
+      updateVehicleArray(pendingVehicles, setPendingVehicles)
+    }
+
     setActiveSection(null)
     setActiveVehicle(null)
     setReviewMessage('')
   }
 
   return (
-    <div className="w-full">
+    <div className="min-h-screen">
       {/* PENDING Section - Main Focus */}
       <div className="mb-12">
-        {renderSection('PENDING', pendingApprovals, showPendingModal, setShowPendingModal, 'pending')}
+        {renderSection('PENDING', pendingVehicles, showPendingModal, setShowPendingModal, 'pending')}
       </div>
 
       {/* APPROVED Section - Separate Container */}
       <div className="mb-12">
-        {renderSection('APPROVED', approvedApprovals, showApprovedModal, setShowApprovedModal, 'approved')}
+        {renderSection('APPROVED', approvedVehicles, showApprovedModal, setShowApprovedModal, 'approved')}
       </div>
 
       {/* REJECTED Section - Separate Container */}
       <div className="mb-12">
-        {renderSection('REJECTED', rejectedApprovals, showRejectedModal, setShowRejectedModal, 'rejected')}
+        {renderSection('REJECTED', rejectedVehicles, showRejectedModal, setShowRejectedModal, 'rejected')}
       </div>
 
-      {/* Modal - Outside the card structure */}
-      <AnimatePresence>
-        {activeVehicle && activeSection && (
-          <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
+      {/* Vehicle Details Modal */}
+        <AnimatePresence>
+          {activeSection === 'vehicle' && activeVehicle && (
             <motion.div
-              className="bg-slate-900/95 border border-white/20 rounded-3xl p-6 max-w-5xl w-full h-[85vh] flex flex-col"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              {(() => {
-                const currentApproval = approvals.find(a => a._id === activeVehicle)
-                if (!currentApproval) return null
-                
-                const getSectionData = () => {
-                  switch (activeSection) {
-                    case 'vehicle':
-                      return {
-                        title: 'Vehicle Details',
-                        icon: <Truck className="w-8 h-8" />,
-                        data: currentApproval
-                      }
-                    case 'driver':
-                      return {
-                        title: 'Driver Details',
-                        icon: <UserCheck className="w-8 h-8" />,
-                        data: currentApproval
-                      }
-                    case 'checklist':
-                      return {
-                        title: 'Safety Checklist',
-                        icon: <ClipboardCheck className="w-8 h-8" />,
-                        data: currentApproval
-                      }
-                    default:
-                      return null
-                  }
-                }
-                
-                const sectionData = getSectionData()
-                if (!sectionData) return null
-                
-                return (
-                  <div className="h-full flex flex-col">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6 flex-shrink-0">
-                      <div className="flex items-center gap-4">
-                        <div className="p-4 rounded-2xl bg-teal-500/20">
-                          <div className="text-teal-400">
-                            {sectionData.icon}
+              <motion.div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={() => {
+                  setActiveSection(null)
+                  setActiveVehicle(null)
+                }}
+              />
+              <motion.div
+                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Find the vehicle data */}
+                {(() => {
+                  const vehicle = [...pendingVehicles, ...approvedVehicles, ...rejectedVehicles]
+                    .find(v => v._id === activeVehicle || v.custrecord_vehicle_number === activeVehicle)
+                  
+                  if (!vehicle) return <div className="text-white">Vehicle not found</div>
+
+                  return (
+                    <div>
+                      {/* Header */}
+                      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/20">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center">
+                            <Truck className="w-6 h-6 text-teal-400" />
+                          </div>
+                          <div>
+                            <h3 className="text-2xl font-bold text-white">Vehicle Details</h3>
+                            <p className="text-teal-400 text-base">{vehicle.custrecord_vehicle_number}</p>
                           </div>
                         </div>
-                        <div>
-                          <h3 className="text-2xl font-bold text-white mb-1">{sectionData.title}</h3>
-                          <p className="text-teal-200 text-base">{currentApproval.custrecord_vehicle_number} • {currentApproval.custrecord_vehicle_type_ag}</p>
+                        <button
+                          onClick={() => {
+                            setActiveSection(null)
+                            setActiveVehicle(null)
+                          }}
+                          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                        >
+                          <XCircle className="w-6 h-6 text-white" />
+                        </button>
+                      </div>
+
+                      {/* Content */}
+                      <div className="space-y-6">
+                        {/* Basic Vehicle Information */}
+                        <div className="bg-white/5 rounded-xl p-4">
+                          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <Car className="w-5 h-5 text-teal-400" />
+                            Basic Vehicle Information
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-teal-300 text-sm">Vehicle Number</label>
+                              <p className="text-white font-medium">{vehicle.custrecord_vehicle_number}</p>
+                            </div>
+                            <div>
+                              <label className="text-teal-300 text-sm">Current Plant</label>
+                              <p className="text-white font-medium">{vehicle.currentPlant}</p>
+                            </div>
+                            <div>
+                              <label className="text-teal-300 text-sm">Vehicle Type</label>
+                              <p className="text-white font-medium">{vehicle.custrecord_vehicle_type_ag}</p>
+                            </div>
+                            <div>
+                              <label className="text-teal-300 text-sm">Age of Vehicle</label>
+                              <p className="text-white font-medium">{vehicle.custrecord_age_of_vehicle}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Technical Details */}
+                        <div className="bg-white/5 rounded-xl p-4">
+                          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <DocumentIcon className="w-5 h-5 text-teal-400" />
+                            Technical Details
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-teal-300 text-sm">Engine Number</label>
+                              <p className="text-white font-medium">{vehicle.custrecord_engine_number_ag}</p>
+                            </div>
+                            <div>
+                              <label className="text-teal-300 text-sm">Chassis Number</label>
+                              <p className="text-white font-medium">{vehicle.custrecord_chassis_number}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Documentation */}
+                        <div className="bg-white/5 rounded-xl p-4">
+                          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-teal-400" />
+                            Documentation
+                          </h4>
+                          <div className="space-y-4">
+                            {/* RC Document */}
+                            <div className="border border-white/10 rounded-lg p-4">
+                              <h5 className="text-white font-medium mb-3">RC Document</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-teal-300 text-sm">RC Number</label>
+                                  <p className="text-white font-medium">{vehicle.custrecord_rc_no}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">Start Date</label>
+                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_rc_start_date)}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">End Date</label>
+                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_rc_end_date)}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">Status</label>
+                                  <p className="text-white font-medium">{getDocumentStatus(vehicle.custrecord_rc_end_date)}</p>
+                                </div>
+                              </div>
+                                                              {renderAttachments(vehicle.custrecord_rc_doc_attach, 'RC Document')}
+                            </div>
+
+                            {/* Insurance */}
+                            <div className="border border-white/10 rounded-lg p-4">
+                              <h5 className="text-white font-medium mb-3">Insurance</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-teal-300 text-sm">Company</label>
+                                  <p className="text-white font-medium">{vehicle.custrecord_insurance_company_name_ag}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">Policy Number</label>
+                                  <p className="text-white font-medium">{vehicle.custrecord_insurance_number_ag}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">Start Date</label>
+                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_insurance_start_date_ag)}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">End Date</label>
+                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_insurance_end_date_ag)}</p>
+                                </div>
+                              </div>
+                                                              {renderAttachments(vehicle.custrecord_insurance_attachment_ag, 'Insurance')}
+                            </div>
+
+                            {/* Permit */}
+                            <div className="border border-white/10 rounded-lg p-4">
+                              <h5 className="text-white font-medium mb-3">Permit</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-teal-300 text-sm">Permit Number</label>
+                                  <p className="text-white font-medium">{vehicle.custrecord_permit_number_ag}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">Start Date</label>
+                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_permit_start_date)}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">End Date</label>
+                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_permit_end_date)}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">Status</label>
+                                  <p className="text-white font-medium">{getDocumentStatus(vehicle.custrecord_permit_end_date)}</p>
+                                </div>
+                              </div>
+                                                              {renderAttachments(vehicle.custrecord_permit_attachment_ag, 'Permit')}
+                            </div>
+
+                            {/* PUC */}
+                            <div className="border border-white/10 rounded-lg p-4">
+                              <h5 className="text-white font-medium mb-3">PUC</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-teal-300 text-sm">PUC Number</label>
+                                  <p className="text-white font-medium">{vehicle.custrecord_puc_number}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">Start Date</label>
+                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_puc_start_date_ag)}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">End Date</label>
+                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_puc_end_date_ag)}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">Status</label>
+                                  <p className="text-white font-medium">{getDocumentStatus(vehicle.custrecord_puc_end_date_ag)}</p>
+                                </div>
+                              </div>
+                                                              {renderAttachments(vehicle.custrecord_puc_attachment_ag, 'PUC')}
+                            </div>
+
+                            {/* Fitness Certificate */}
+                            <div className="border border-white/10 rounded-lg p-4">
+                              <h5 className="text-white font-medium mb-3">Fitness Certificate</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-teal-300 text-sm">Valid Until</label>
+                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_tms_vehicle_fit_cert_vld_upto)}</p>
+                                </div>
+                                <div>
+                                  <label className="text-teal-300 text-sm">Status</label>
+                                  <p className="text-white font-medium">{getDocumentStatus(vehicle.custrecord_tms_vehicle_fit_cert_vld_upto)}</p>
+                                </div>
+                              </div>
+                                                              {renderAttachments(vehicle.custrecord_tms_vehicle_fit_cert_attach, 'Fitness Certificate')}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Vendor & Owner Information */}
+                        <div className="bg-white/5 rounded-xl p-4">
+                          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <User className="w-5 h-5 text-teal-400" />
+                            Vendor & Owner Information
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-teal-300 text-sm">Vendor Name</label>
+                              <p className="text-white font-medium">{vehicle.custrecord_vendor_name_ag?.name || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <label className="text-teal-300 text-sm">Owner Name</label>
+                              <p className="text-white font-medium">{vehicle.custrecord_owner_name_ag}</p>
+                            </div>
+                            <div>
+                              <label className="text-teal-300 text-sm">Owner Number</label>
+                              <p className="text-white font-medium">{vehicle.custrecord_owner_no_ag}</p>
+                            </div>
+                            <div>
+                              <label className="text-teal-300 text-sm">Created By</label>
+                              <p className="text-white font-medium">{vehicle.custrecord_create_by}</p>
+                            </div>
+                            <div>
+                              <label className="text-teal-300 text-sm">GPS Available</label>
+                              <p className="text-white font-medium">{vehicle.custrecord_vehicle_master_gps_available ? 'Yes' : 'No'}</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <button
-                        onClick={() => {
-                          setActiveSection(null)
-                          setActiveVehicle(null)
-                          setReviewMessage('')
-                        }}
-                        className="text-white/70 hover:text-white transition-colors text-xl p-2 hover:bg-white/10 rounded-full"
-                      >
-                        ✕
-                      </button>
+
+                      {/* Review Message and Action Buttons */}
+                      <div className="mt-6 pt-4 border-t border-white/20">
+                        <div className="space-y-4">
+                          {/* Review Message */}
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">Review Message</label>
+                            <textarea
+                              value={reviewMessage}
+                              onChange={(e) => setReviewMessage(e.target.value)}
+                              placeholder="Add your review message here..."
+                              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                              rows={3}
+                            />
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-3">
+                            <motion.button
+                              onClick={() => handleApprovalAction(vehicle._id, 'vehicle', 'approved')}
+                              className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                              Approve Vehicle Details
+                            </motion.button>
+                            <motion.button
+                              onClick={() => handleApprovalAction(vehicle._id, 'vehicle', 'rejected')}
+                              className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <XCircle className="w-5 h-5" />
+                              Reject Vehicle Details
+                            </motion.button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  )
+                })()}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {/* Driver Details Modal */}
+        <AnimatePresence>
+          {activeSection === 'driver' && activeVehicle && (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={() => {
+                  setActiveSection(null)
+                  setActiveVehicle(null)
+                }}
+              />
+              <motion.div
+                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Find the vehicle data */}
+                {(() => {
+                  const vehicle = [...pendingVehicles, ...approvedVehicles, ...rejectedVehicles]
+                    .find(v => v._id === activeVehicle || v.custrecord_vehicle_number === activeVehicle)
+                  
+                  if (!vehicle) return <div className="text-white">Vehicle not found</div>
 
-                    {/* Content */}
-                    <div className="flex-1 overflow-y-auto scrollbar-hide min-h-0">
-                      {activeSection === 'vehicle' && (
-                        <div className="space-y-4">
-                          {/* Basic Vehicle Information */}
-                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
-                            <h4 className="text-white font-bold text-lg mb-3">Basic Vehicle Information</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-teal-200 text-xs font-medium mb-1">Vehicle Number</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_vehicle_number}</p>
+                  return (
+                    <div>
+                      {/* Header */}
+                      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/20">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-lime-500/20 flex items-center justify-center">
+                            <User className="w-6 h-6 text-lime-400" />
+                          </div>
+                          <div>
+                            <h3 className="text-2xl font-bold text-white">Driver Details</h3>
+                            <p className="text-lime-400 text-base">{vehicle.custrecord_vehicle_number}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setActiveSection(null)
+                            setActiveVehicle(null)
+                          }}
+                          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                        >
+                          <XCircle className="w-6 h-6 text-white" />
+                        </button>
+                      </div>
+
+                      {/* Content */}
+                      {vehicle.assignedDriver ? (
+                        <div className="space-y-6">
+                          {/* Basic Driver Information */}
+                          <div className="bg-white/5 rounded-xl p-4">
+                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                              <User className="w-5 h-5 text-lime-400" />
+                              Basic Driver Information
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-lime-300 text-sm">Driver Name</label>
+                                <p className="text-white font-medium">{vehicle.assignedDriver.custrecord_driver_name}</p>
                               </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-teal-200 text-xs font-medium mb-1">Current Plant</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.currentPlant}</p>
+                              <div>
+                                <label className="text-lime-300 text-sm">Mobile Number</label>
+                                <p className="text-white font-medium">{vehicle.assignedDriver.custrecord_driver_mobile_no}</p>
                               </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-teal-200 text-xs font-medium mb-1">Vehicle Type</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_vehicle_type_ag}</p>
+                              <div>
+                                <label className="text-lime-300 text-sm">Created By</label>
+                                <p className="text-white font-medium">{vehicle.assignedDriver.custrecord_create_by_driver_master}</p>
                               </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-teal-200 text-xs font-medium mb-1">Age of Vehicle</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_age_of_vehicle}</p>
+                              <div>
+                                <label className="text-lime-300 text-sm">LCA Test Status</label>
+                                <p className="text-white font-medium capitalize">{vehicle.assignedDriver.custrecord_driving_lca_test}</p>
                               </div>
                             </div>
                           </div>
 
-                          {/* Technical Details */}
-                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
-                            <h4 className="text-white font-bold text-lg mb-3">Technical Details</h4>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-teal-200 text-xs font-medium mb-1">Engine Number</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_engine_number_ag}</p>
+                          {/* License Information */}
+                          <div className="bg-white/5 rounded-xl p-4">
+                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                              <FileText className="w-5 h-5 text-lime-400" />
+                              License Information
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-lime-300 text-sm">License Number</label>
+                                <p className="text-white font-medium">{vehicle.assignedDriver.custrecord_driving_license_no}</p>
                               </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-teal-200 text-xs font-medium mb-1">Chassis Number</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_chassis_number}</p>
+                              <div>
+                                <label className="text-lime-300 text-sm">License Category</label>
+                                <p className="text-white font-medium">{vehicle.assignedDriver.custrecord_license_category_ag}</p>
+                              </div>
+                              <div>
+                                <label className="text-lime-300 text-sm">License Start Date</label>
+                                <p className="text-white font-medium">{formatDate(vehicle.assignedDriver.custrecord_driving_license_s_date)}</p>
+                              </div>
+                              <div>
+                                <label className="text-lime-300 text-sm">License End Date</label>
+                                <p className="text-white font-medium">{formatDate(vehicle.assignedDriver.custrecord_driver_license_e_date)}</p>
+                              </div>
+                            </div>
+                            
+                            {/* License Attachment */}
+                            {renderAttachments(
+                              vehicle.assignedDriver.custrecord_driving_license_attachment?.map(url => ({
+                                url,
+                                fileName: 'Driving License',
+                                mimeType: 'image/png'
+                              })), 
+                              'Driving License'
+                            )}
+                          </div>
+
+                          {/* Vehicle Assignment */}
+                          <div className="bg-white/5 rounded-xl p-4">
+                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                              <Truck className="w-5 h-5 text-lime-400" />
+                              Vehicle Assignment
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-lime-300 text-sm">Assigned Vehicle</label>
+                                <p className="text-white font-medium">{vehicle.custrecord_vehicle_number}</p>
+                              </div>
+                              <div>
+                                <label className="text-lime-300 text-sm">Vehicle Type</label>
+                                <p className="text-white font-medium">{vehicle.custrecord_vehicle_type_ag}</p>
+                              </div>
+                              <div>
+                                <label className="text-lime-300 text-sm">Current Plant</label>
+                                <p className="text-white font-medium">{vehicle.currentPlant}</p>
+                              </div>
+                              <div>
+                                <label className="text-lime-300 text-sm">Approval Status</label>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  vehicle.assignedDriver.approved_by_hq === 'approved' 
+                                    ? 'bg-green-500/20 text-green-200' 
+                                    : vehicle.assignedDriver.approved_by_hq === 'rejected'
+                                    ? 'bg-red-500/20 text-red-200'
+                                    : 'bg-yellow-500/20 text-yellow-200'
+                                }`}>
+                                  {vehicle.assignedDriver.approved_by_hq || 'pending'}
+                                </span>
                               </div>
                             </div>
                           </div>
-
-                          {/* Documentation */}
-                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
-                            <h4 className="text-white font-bold text-lg mb-3">Documentation</h4>
-                            <div className="space-y-3">
-                              {/* RC Document */}
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h5 className="text-white font-semibold text-base">RC Document</h5>
-                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(getDocumentStatus(currentApproval.custrecord_rc_start_date))} ${getStatusColor(getDocumentStatus(currentApproval.custrecord_rc_start_date))}`}>
-                                    {getDocumentStatus(currentApproval.custrecord_rc_start_date)}
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">RC Number</p>
-                                    <p className="text-white font-semibold text-sm">{currentApproval.custrecord_rc_no}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">Start Date</p>
-                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_rc_start_date)}</p>
-                                  </div>
-                                </div>
-                                {currentApproval.custrecord_rc_doc_attach && currentApproval.custrecord_rc_doc_attach.length > 0 && (
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <Image className="w-4 h-4 text-cyan-400" />
-                                    <button 
-                                      onClick={() => window.open(currentApproval.custrecord_rc_doc_attach[0].url, '_blank')}
-                                      className="text-cyan-200 text-xs hover:text-cyan-400 underline"
-                                    >
-                                      {currentApproval.custrecord_rc_doc_attach[0].fileName}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Insurance */}
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h5 className="text-white font-semibold text-base">Insurance</h5>
-                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(getDocumentStatus(currentApproval.custrecord_insurance_end_date_ag))} ${getStatusColor(getDocumentStatus(currentApproval.custrecord_insurance_end_date_ag))}`}>
-                                    {getDocumentStatus(currentApproval.custrecord_insurance_end_date_ag)}
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">Company</p>
-                                    <p className="text-white font-semibold text-sm">{currentApproval.custrecord_insurance_company_name_ag}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">Policy Number</p>
-                                    <p className="text-white font-semibold text-sm">{currentApproval.custrecord_insurance_number_ag}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">Start Date</p>
-                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_insurance_start_date_ag)}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">End Date</p>
-                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_insurance_end_date_ag)}</p>
-                                  </div>
-                                </div>
-                                {currentApproval.custrecord_insurance_attachment_ag && currentApproval.custrecord_insurance_attachment_ag.length > 0 && (
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <Image className="w-4 h-4 text-cyan-400" />
-                                    <button 
-                                      onClick={() => window.open(currentApproval.custrecord_insurance_attachment_ag[0].url, '_blank')}
-                                      className="text-cyan-200 text-xs hover:text-cyan-400 underline"
-                                    >
-                                      {currentApproval.custrecord_insurance_attachment_ag[0].fileName}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Permit */}
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h5 className="text-white font-semibold text-base">Permit</h5>
-                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(getDocumentStatus(currentApproval.custrecord_permit_end_date))} ${getStatusColor(getDocumentStatus(currentApproval.custrecord_permit_end_date))}`}>
-                                    {getDocumentStatus(currentApproval.custrecord_permit_end_date)}
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">Start Date</p>
-                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_permit_start_date)}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">End Date</p>
-                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_permit_end_date)}</p>
-                                  </div>
-                                </div>
-                                {currentApproval.custrecord_permit_attachment_ag && currentApproval.custrecord_permit_attachment_ag.length > 0 && (
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <Image className="w-4 h-4 text-cyan-400" />
-                                    <button 
-                                      onClick={() => window.open(currentApproval.custrecord_permit_attachment_ag[0].url, '_blank')}
-                                      className="text-cyan-200 text-xs hover:text-cyan-400 underline"
-                                    >
-                                      {currentApproval.custrecord_permit_attachment_ag[0].fileName}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* PUC */}
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h5 className="text-white font-semibold text-base">PUC</h5>
-                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(getDocumentStatus(currentApproval.custrecord_puc_end_date_ag))} ${getStatusColor(getDocumentStatus(currentApproval.custrecord_puc_end_date_ag))}`}>
-                                    {getDocumentStatus(currentApproval.custrecord_puc_end_date_ag)}
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-3">
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">PUC Number</p>
-                                    <p className="text-white font-semibold text-sm">{currentApproval.custrecord_puc_number}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">Start Date</p>
-                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_puc_start_date_ag)}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">End Date</p>
-                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_puc_end_date_ag)}</p>
-                                  </div>
-                                </div>
-                                {currentApproval.custrecord_puc_attachment_ag && currentApproval.custrecord_puc_attachment_ag.length > 0 && (
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <Image className="w-4 h-4 text-cyan-400" />
-                                    <button 
-                                      onClick={() => window.open(currentApproval.custrecord_puc_attachment_ag[0].url, '_blank')}
-                                      className="text-cyan-200 text-xs hover:text-cyan-400 underline"
-                                    >
-                                      {currentApproval.custrecord_puc_attachment_ag[0].fileName}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Fitness Certificate */}
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h5 className="text-white font-semibold text-base">Fitness Certificate</h5>
-                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(getDocumentStatus(currentApproval.custrecord_tms_vehicle_fit_cert_vld_upto))} ${getStatusColor(getDocumentStatus(currentApproval.custrecord_tms_vehicle_fit_cert_vld_upto))}`}>
-                                    {getDocumentStatus(currentApproval.custrecord_tms_vehicle_fit_cert_vld_upto)}
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-1 gap-3">
-                                  <div>
-                                    <p className="text-cyan-200 text-xs">Valid Until</p>
-                                    <p className="text-white font-semibold text-sm">{formatDate(currentApproval.custrecord_tms_vehicle_fit_cert_vld_upto)}</p>
-                                  </div>
-                                </div>
-                                {currentApproval.custrecord_tms_vehicle_fit_cert_attach && currentApproval.custrecord_tms_vehicle_fit_cert_attach.length > 0 && (
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <Image className="w-4 h-4 text-cyan-400" />
-                                    <button 
-                                      onClick={() => window.open(currentApproval.custrecord_tms_vehicle_fit_cert_attach[0].url, '_blank')}
-                                      className="text-cyan-200 text-xs hover:text-cyan-400 underline"
-                                    >
-                                      {currentApproval.custrecord_tms_vehicle_fit_cert_attach[0].fileName}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 rounded-full bg-gray-500/20 flex items-center justify-center mx-auto mb-4">
+                            <User className="w-8 h-8 text-gray-400" />
                           </div>
-
-                          {/* Vendor & Owner Information */}
-                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
-                            <h4 className="text-white font-bold text-lg mb-3">Vendor & Owner Information</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">Vendor Name</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_vendor_name_ag.name}</p>
-                              </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">Owner Name</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_owner_name_ag}</p>
-                              </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">Owner Number</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_owner_no_ag}</p>
-                              </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">Created By</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_create_by}</p>
-                              </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs font-medium mb-1">GPS Available</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.custrecord_vehicle_master_gps_available ? 'Yes' : 'No'}</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Review Message Box - Now part of scrollable content */}
-                          <div className="bg-white/10 rounded-xl p-3 border border-white/20">
-                            <label className="block text-cyan-200 text-xs font-medium mb-1">Review Message</label>
-                            <textarea
-                              value={reviewMessage}
-                              onChange={(e) => setReviewMessage(e.target.value)}
-                              placeholder="Enter your review message here..."
-                              className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 transition-colors resize-none"
-                              rows={2}
-                              maxLength={500}
-                            />
-                            <div className="flex justify-between items-center mt-1">
-                              <span className="text-cyan-200 text-xs">
-                                {reviewMessage.length}/500 characters
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Action Buttons - Now part of scrollable content */}
-                          <div className="flex gap-3">
-                            <motion.button
-                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'approved')}
-                              className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-emerald-600 hover:to-green-600 transition-all shadow-lg"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <CheckCircle className="w-5 h-5 inline mr-2" />
-                              Approve {sectionData.title}
-                            </motion.button>
-                            <motion.button
-                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'rejected')}
-                              className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-red-600 hover:to-pink-600 transition-all shadow-lg"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <XCircle className="w-5 h-5 inline mr-2" />
-                              Reject {sectionData.title}
-                            </motion.button>
-                          </div>
+                          <h4 className="text-xl font-semibold text-white mb-2">No Driver Assigned</h4>
+                          <p className="text-gray-400">This vehicle currently has no driver assigned to it.</p>
                         </div>
                       )}
 
-                      {activeSection === 'driver' && (
+                      {/* Review Message and Action Buttons */}
+                      <div className="mt-6 pt-4 border-t border-white/20">
                         <div className="space-y-4">
-                          <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-                            <div className="text-center py-8">
-                              <UserCheck className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                              <h4 className="text-white font-bold text-lg mb-2">No Driver Assigned</h4>
-                              <p className="text-cyan-200 text-base">No driver has been assigned to this vehicle yet.</p>
-                            </div>
-                          </div>
-
-                          {/* Review Message Box - Now part of scrollable content */}
-                          <div className="bg-white/10 rounded-xl p-3 border border-white/20">
-                            <label className="block text-cyan-200 text-xs font-medium mb-1">Review Message</label>
+                          {/* Review Message */}
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">Review Message</label>
                             <textarea
                               value={reviewMessage}
                               onChange={(e) => setReviewMessage(e.target.value)}
-                              placeholder="Enter your review message here..."
-                              className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 transition-colors resize-none"
-                              rows={2}
-                              maxLength={500}
+                              placeholder="Add your review message here..."
+                              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-lime-500 resize-none"
+                              rows={3}
                             />
-                            <div className="flex justify-between items-center mt-1">
-                              <span className="text-cyan-200 text-xs">
-                                {reviewMessage.length}/500 characters
-                              </span>
-                            </div>
                           </div>
 
-                          {/* Action Buttons - Now part of scrollable content */}
+                          {/* Action Buttons */}
                           <div className="flex gap-3">
                             <motion.button
-                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'approved')}
-                              className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-emerald-600 hover:to-green-600 transition-all shadow-lg"
+                              onClick={() => handleApprovalAction(vehicle._id, 'driver', 'approved')}
+                              className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
-                              <CheckCircle className="w-5 h-5 inline mr-2" />
-                              Approve {sectionData.title}
+                              <CheckCircle className="w-5 h-5" />
+                              Approve Driver Details
                             </motion.button>
                             <motion.button
-                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'rejected')}
-                              className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-red-600 hover:to-pink-600 transition-all shadow-lg"
+                              onClick={() => handleApprovalAction(vehicle._id, 'driver', 'rejected')}
+                              className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
-                              <XCircle className="w-5 h-5 inline mr-2" />
-                              Reject {sectionData.title}
+                              <XCircle className="w-5 h-5" />
+                              Reject Driver Details
                             </motion.button>
                           </div>
                         </div>
-                      )}
+                      </div>
+                    </div>
+                  )
+                })()}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {/* Checklist Modal */}
+        <AnimatePresence>
+          {activeSection === 'checklist' && activeVehicle && (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={() => {
+                  setActiveSection(null)
+                  setActiveVehicle(null)
+                }}
+              />
+              <motion.div
+                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Find the vehicle data */}
+                {(() => {
+                  const vehicle = [...pendingVehicles, ...approvedVehicles, ...rejectedVehicles]
+                    .find(v => v._id === activeVehicle || v.custrecord_vehicle_number === activeVehicle)
+                  
+                  if (!vehicle) return <div className="text-white">Vehicle not found</div>
 
-                      {activeSection === 'checklist' && currentApproval.checklist && (
-                        <div className="space-y-4">
-                          {/* Checklist Info */}
-                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
-                            <div className="flex items-center justify-between mb-3">
-                              <h4 className="text-white font-bold text-lg">Checklist Information</h4>
-                              <div className="text-cyan-200 text-sm">
-                                {currentApproval.checklist.checklistItems.length} Items
+                  return (
+                    <div>
+                      {/* Header */}
+                      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/20">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-lime-500/20 flex items-center justify-center">
+                            <CheckSquare className="w-6 h-6 text-lime-400" />
+                          </div>
+                          <div>
+                            <h3 className="text-2xl font-bold text-white">Checklist Details</h3>
+                            <p className="text-lime-400 text-base">{vehicle.custrecord_vehicle_number}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setActiveSection(null)
+                            setActiveVehicle(null)
+                          }}
+                          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                        >
+                          <XCircle className="w-6 h-6 text-white" />
+                        </button>
+                      </div>
+
+                      {/* Content */}
+                      {vehicle.checklist && vehicle.checklist.checklistItems ? (
+                        <div className="space-y-6">
+                          {/* Checklist Header */}
+                          <div className="bg-white/5 rounded-xl p-4">
+                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                              <ClipboardCheck className="w-5 h-5 text-lime-400" />
+                              Checklist Information
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-lime-300 text-sm">Checklist Name</label>
+                                <p className="text-white font-medium">{vehicle.checklist.name}</p>
                               </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-3">
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs">Checklist Name</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.checklist.name}</p>
+                              <div>
+                                <label className="text-lime-300 text-sm">Filled By</label>
+                                <p className="text-white font-medium">{vehicle.checklist.filledBy}</p>
                               </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs">Filled By</p>
-                                <p className="text-white font-semibold text-sm">{currentApproval.checklist.filledBy}</p>
+                              <div>
+                                <label className="text-lime-300 text-sm">Filled At</label>
+                                <p className="text-white font-medium">{formatDate(vehicle.checklist.filledAt)}</p>
                               </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                <p className="text-cyan-200 text-xs">Filled At</p>
-                                <p className="text-white font-semibold text-sm">{formatDate(currentApproval.checklist.filledAt)}</p>
+                              <div>
+                                <label className="text-lime-300 text-sm">Date</label>
+                                <p className="text-white font-medium">{formatDate(vehicle.checklist.date)}</p>
                               </div>
                             </div>
                           </div>
 
                           {/* Checklist Items */}
-                          <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
-                            <h4 className="text-white font-bold text-lg mb-4">Checklist Items</h4>
-                            <div className="space-y-3 max-h-60 overflow-y-auto">
-                              {currentApproval.checklist.checklistItems.map((item, index) => (
-                                <div key={index} className="p-3 bg-white/5 rounded-xl border border-white/10">
-                                  <div className="flex items-start gap-3">
-                                    <div className="w-5 h-5 bg-cyan-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                      <span className="text-cyan-400 text-xs font-bold">{index + 1}</span>
-                                    </div>
-                                    <div className="flex-1">
-                                      <h5 className="text-white font-semibold text-sm mb-2">{item.question}</h5>
-                                      <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                          <p className="text-cyan-200 text-xs">Answer</p>
-                                          <p className="text-white font-medium text-xs">{item.answer || 'Not answered'}</p>
-                                        </div>
-                                        <div>
-                                          <p className="text-cyan-200 text-xs">Comment</p>
-                                          <p className="text-white font-medium text-xs">{item.comment || 'No comment'}</p>
-                                        </div>
-                                      </div>
+                          <div className="bg-white/5 rounded-xl p-4">
+                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                              <CheckSquare className="w-5 h-5 text-lime-400" />
+                              Checklist Items
+                            </h4>
+                            <div className="space-y-4">
+                              {vehicle.checklist.checklistItems.map((item, index) => (
+                                <div key={index} className="border border-white/10 rounded-lg p-4">
+                                  <div className="flex items-start justify-between mb-3">
+                                    <h5 className="text-white font-medium flex items-center gap-2">
+                                      <span className="w-6 h-6 rounded-full bg-lime-500/20 flex items-center justify-center text-lime-400 text-xs font-bold">
+                                        {index + 1}
+                                      </span>
+                                      {item.question}
+                                    </h5>
+                                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                      item.answer === 'Yes' ? 'bg-green-500/20 text-green-200' :
+                                      item.answer === 'No' ? 'bg-red-500/20 text-red-200' :
+                                      'bg-gray-500/20 text-gray-200'
+                                    }`}>
+                                      {item.answer || 'Not answered'}
                                     </div>
                                   </div>
+                                  {item.comment && (
+                                    <div className="mt-3 p-3 bg-white/5 rounded-lg">
+                                      <label className="text-lime-300 text-sm">Comment</label>
+                                      <p className="text-white text-sm mt-1">{item.comment}</p>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
                           </div>
 
-                          {/* Review Message Box - Now part of scrollable content */}
-                          <div className="bg-white/10 rounded-xl p-3 border border-white/20">
-                            <label className="block text-cyan-200 text-xs font-medium mb-1">Review Message</label>
-                            <textarea
-                              value={reviewMessage}
-                              onChange={(e) => setReviewMessage(e.target.value)}
-                              placeholder="Enter your review message here..."
-                              className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 transition-colors resize-none"
-                              rows={2}
-                              maxLength={500}
-                            />
-                            <div className="flex justify-between items-center mt-1">
-                              <span className="text-cyan-200 text-xs">
-                                {reviewMessage.length}/500 characters
-                              </span>
+                          {/* Vehicle Information */}
+                          <div className="bg-white/5 rounded-xl p-4">
+                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                              <Truck className="w-5 h-5 text-lime-400" />
+                              Vehicle Information
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-lime-300 text-sm">Vehicle Number</label>
+                                <p className="text-white font-medium">{vehicle.custrecord_vehicle_number}</p>
+                              </div>
+                              <div>
+                                <label className="text-lime-300 text-sm">Vehicle Type</label>
+                                <p className="text-white font-medium">{vehicle.custrecord_vehicle_type_ag}</p>
+                              </div>
+                              <div>
+                                <label className="text-lime-300 text-sm">Current Plant</label>
+                                <p className="text-white font-medium">{vehicle.currentPlant}</p>
+                              </div>
+                              <div>
+                                <label className="text-lime-300 text-sm">Checklist Status</label>
+                                <p className="text-white font-medium">Completed</p>
+                              </div>
                             </div>
                           </div>
-
-                          {/* Action Buttons - Now part of scrollable content */}
-                          <div className="flex gap-3">
-                            <motion.button
-                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'approved')}
-                              className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-emerald-600 hover:to-green-600 transition-all shadow-lg"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <CheckCircle className="w-5 h-5 inline mr-2" />
-                              Approve {sectionData.title}
-                            </motion.button>
-                            <motion.button
-                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'rejected')}
-                              className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-red-600 hover:to-pink-600 transition-all shadow-lg"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <XCircle className="w-5 h-5 inline mr-2" />
-                              Reject {sectionData.title}
-                            </motion.button>
+                        </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 rounded-full bg-gray-500/20 flex items-center justify-center mx-auto mb-4">
+                            <CheckSquare className="w-8 h-8 text-gray-400" />
                           </div>
+                          <h4 className="text-xl font-semibold text-white mb-2">No Checklist Done</h4>
+                          <p className="text-gray-400">This vehicle has no checklist completed yet.</p>
                         </div>
                       )}
 
-                      {activeSection === 'checklist' && !currentApproval.checklist && (
+                      {/* Review Message and Action Buttons */}
+                      <div className="mt-6 pt-4 border-t border-white/20">
                         <div className="space-y-4">
-                          <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-                            <div className="text-center py-8">
-                              <ClipboardCheck className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                              <h4 className="text-white font-bold text-lg mb-2">No Checklist Done</h4>
-                              <p className="text-cyan-200 text-base">No checklist has been completed for this vehicle yet.</p>
-                            </div>
-                          </div>
-
-                          {/* Review Message Box - Now part of scrollable content */}
-                          <div className="bg-white/10 rounded-xl p-3 border border-white/20">
-                            <label className="block text-cyan-200 text-xs font-medium mb-1">Review Message</label>
+                          {/* Review Message */}
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">Review Message</label>
                             <textarea
                               value={reviewMessage}
                               onChange={(e) => setReviewMessage(e.target.value)}
-                              placeholder="Enter your review message here..."
-                              className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400 transition-colors resize-none"
-                              rows={2}
-                              maxLength={500}
+                              placeholder="Add your review message here..."
+                              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-lime-500 resize-none"
+                              rows={3}
                             />
-                            <div className="flex justify-between items-center mt-1">
-                              <span className="text-cyan-200 text-xs">
-                                {reviewMessage.length}/500 characters
-                              </span>
-                            </div>
                           </div>
 
-                          {/* Action Buttons - Now part of scrollable content */}
+                          {/* Action Buttons */}
                           <div className="flex gap-3">
                             <motion.button
-                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'approved')}
-                              className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-emerald-600 hover:to-green-600 transition-all shadow-lg"
+                              onClick={() => handleApprovalAction(vehicle._id, 'checklist', 'approved')}
+                              className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
-                              <CheckCircle className="w-5 h-5 inline mr-2" />
-                              Approve {sectionData.title}
+                              <CheckCircle className="w-5 h-5" />
+                              Approve Checklist
                             </motion.button>
                             <motion.button
-                              onClick={() => handleApprovalAction(currentApproval._id, activeSection, 'rejected')}
-                              className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold text-base hover:from-red-600 hover:to-pink-600 transition-all shadow-lg"
+                              onClick={() => handleApprovalAction(vehicle._id, 'checklist', 'rejected')}
+                              className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
-                              <XCircle className="w-5 h-5 inline mr-2" />
-                              Reject {sectionData.title}
+                              <XCircle className="w-5 h-5" />
+                              Reject Checklist
                             </motion.button>
                           </div>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                )
-              })()}
+                  )
+                })()}
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
     </div>
   )
 }
 
 export default ApprovalCard 
+
