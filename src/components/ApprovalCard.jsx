@@ -3,6 +3,47 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Car, User, CheckSquare, FileText, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Truck, UserCheck, ClipboardCheck, Calendar, Image, FileText as DocumentIcon } from 'lucide-react'
 import { getThemeColors } from '../utils/theme.js'
 
+// Toast notification component
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose()
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [onClose])
+
+  return (
+    <motion.div
+      className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-lg ${
+        type === 'success' 
+          ? 'bg-green-500 text-white' 
+          : 'bg-red-500 text-white'
+      }`}
+      initial={{ opacity: 0, y: -50, scale: 0.3 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -50, scale: 0.3 }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+    >
+      <div className="flex items-center gap-3">
+        {type === 'success' ? (
+          <CheckCircle className="w-5 h-5" />
+        ) : (
+          <XCircle className="w-5 h-5" />
+        )}
+        <span className="font-medium">{message}</span>
+        <button
+          onClick={onClose}
+          className="ml-2 hover:opacity-70 transition-opacity"
+        >
+          <XCircle className="w-4 h-4" />
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+
+
 // API Configuration
 const API_BASE_URL = "http://localhost:5000/vms/vehicle/plant"
 
@@ -14,6 +55,13 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
   const [showApprovedModal, setShowApprovedModal] = useState(false)
   const [showRejectedModal, setShowRejectedModal] = useState(false)
   
+  // Custom confirmation modal state
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+  const [confirmationData, setConfirmationData] = useState(null)
+  
+  // Toast notification state
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
+  
   // API-driven state
   const [pendingVehicles, setPendingVehicles] = useState([])
   const [approvedVehicles, setApprovedVehicles] = useState([])
@@ -23,6 +71,32 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
   
   const themeColors = getThemeColors(currentTheme)
   const isLightTheme = currentTheme === 'blue'
+
+  // Track driver approval status for fallback data
+  const [driverApprovalStatus, setDriverApprovalStatus] = useState({})
+
+  // Update driver approval status
+  const updateDriverApprovalStatus = (driverId, status) => {
+    setDriverApprovalStatus(prev => ({
+      ...prev,
+      [driverId]: status
+    }))
+  }
+
+  // Get driver approval status for fallback data
+  const getDriverApprovalStatus = (driverId) => {
+    return driverApprovalStatus[driverId] || 'pending'
+  }
+
+  // Helper function to show toast
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type })
+  }
+
+  // Helper function to hide toast
+  const hideToast = () => {
+    setToast({ show: false, message: '', type: 'success' })
+  }
 
   // API Service Functions
   const fetchVehicles = async (plant, status, page = 1, limit = 10) => {
@@ -98,7 +172,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
           custrecord_tms_vehicle_fit_cert_attach: [],
           assignedDriver: status === 'pending' ? {
             _id: "688b34f72c9c1645efc75b97",
-            approved_by_hq: "approved",
+            approved_by_hq: getDriverApprovalStatus("688b34f72c9c1645efc75b97"),
             custrecord_driver_name: "bunty singh",
             custrecord_driving_license_no: "LC1234754",
             custrecord_driving_license_s_date: "2022-07-31",
@@ -223,8 +297,8 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
 
   // Helper function to check if vehicle approval is allowed
   const isVehicleApprovalAllowed = (vehicle) => {
-    // If no driver assigned, allow vehicle approval
-    if (!vehicle.assignedDriver) return true
+    // If no driver assigned, don't allow vehicle approval
+    if (!vehicle.assignedDriver) return false
     
     // If driver is approved, allow vehicle approval
     if (vehicle.assignedDriver.approved_by_hq === 'approved') return true
@@ -758,29 +832,397 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
     }
   }
 
-  const handleApprovalAction = (vehicleId, section, action) => {
-    // Update the appropriate vehicle array based on the action
-    const updateVehicleArray = (vehicles, setVehicles) => {
+  // Driver Approval API Function
+  const callDriverApprovalAPI = async (driverId, action, reviewMessage) => {
+    try {
+      console.log(`Calling driver approval API for driver: ${driverId}, action: ${action}`)
+      
+      const requestBody = {
+        approved_by_hq: action, // "approved" or "rejected"
+        approvalMeta: {
+          reviewer: "hq.admin",
+          reviewedAt: new Date().toISOString(),
+          reviewMessage: reviewMessage || ""
+        }
+      }
+      
+      const response = await fetch(`http://localhost:5000/vms/driver-master/approval/${driverId}`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      console.log('Driver approval API response:', data)
+      
+      return { success: true, data }
+    } catch (error) {
+      console.error('Driver approval API error:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Vehicle Approval API Function
+  const callVehicleApprovalAPI = async (vehicleId, action, reviewMessage) => {
+    try {
+      console.log(`Calling vehicle approval API for vehicle: ${vehicleId}, action: ${action}`)
+      
+      const requestBody = {
+        approved_by_hq: action, // "approved" or "rejected"
+        approvalMeta: {
+          reviewer: "hq.admin",
+          reviewedAt: new Date().toISOString(),
+          reviewMessage: reviewMessage || ""
+        }
+      }
+      
+      const response = await fetch(`http://localhost:5000/vms/vehicle-master/approval/${vehicleId}`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      console.log('Vehicle approval API response:', data)
+      
+      return { success: true, data }
+    } catch (error) {
+      console.error('Vehicle approval API error:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Custom confirmation modal component
+  const ConfirmationModal = ({ isOpen, onConfirm, onCancel, title, message, action }) => {
+    if (!isOpen) return null
+
+    return (
+      <motion.div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={onCancel}
+        />
+        <motion.div
+          className="relative bg-slate-900/95 rounded-3xl p-6 max-w-md w-full"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-yellow-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+            <p className="text-gray-300 mb-6">{message}</p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={onCancel}
+                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className={`flex-1 px-4 py-2 font-medium rounded-xl transition-colors ${
+                  action === 'approved' 
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-red-600 hover:bg-red-700 text-white'
+                }`}
+              >
+                {action === 'approved' ? 'Approve' : 'Reject'}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    )
+  }
+
+  // Update local state with API response data
+  const updateLocalDriverStatusWithResponse = (vehicleId, apiResponse) => {
+    console.log(`Updating local state with API response: Vehicle ${vehicleId}`)
+    
+    if (!apiResponse.driver) {
+      console.error('No driver data in API response')
+      return
+    }
+    
+    const updatedDriver = apiResponse.driver
+    
+    // Update in all arrays where the vehicle might exist
+    const updateArray = (vehicles, setVehicles) => {
       setVehicles(prev => prev.map(vehicle => {
-        if (vehicle._id === vehicleId) {
-          return { ...vehicle, approved_by_hq: action }
+        if (vehicle._id === vehicleId || vehicle.custrecord_vehicle_number === vehicleId) {
+          return {
+            ...vehicle,
+            assignedDriver: vehicle.assignedDriver ? {
+              ...vehicle.assignedDriver,
+              ...updatedDriver // Use complete API response data
+            } : updatedDriver
+          }
         }
         return vehicle
       }))
     }
+    
+    // Update all three arrays
+    updateArray(pendingVehicles, setPendingVehicles)
+    updateArray(approvedVehicles, setApprovedVehicles)
+    updateArray(rejectedVehicles, setRejectedVehicles)
+    
+    console.log('Local state updated with API response data')
+  }
 
-    // Update the correct array based on current status
-    if (action === 'approved') {
-      updateVehicleArray(approvedVehicles, setApprovedVehicles)
-    } else if (action === 'rejected') {
-      updateVehicleArray(rejectedVehicles, setRejectedVehicles)
+  // Update local state immediately after driver approval
+  const updateLocalDriverStatus = (vehicleId, driverId, newStatus) => {
+    console.log(`Updating local state: Vehicle ${vehicleId}, Driver ${driverId}, Status ${newStatus}`)
+    
+    // Update in all arrays where the vehicle might exist
+    const updateArray = (vehicles, setVehicles) => {
+      setVehicles(prev => prev.map(vehicle => {
+        if (vehicle._id === vehicleId || vehicle.custrecord_vehicle_number === vehicleId) {
+          return {
+            ...vehicle,
+            assignedDriver: vehicle.assignedDriver ? {
+              ...vehicle.assignedDriver,
+              approved_by_hq: newStatus
+            } : null
+          }
+        }
+        return vehicle
+      }))
+    }
+    
+    // Update all three arrays
+    updateArray(pendingVehicles, setPendingVehicles)
+    updateArray(approvedVehicles, setApprovedVehicles)
+    updateArray(rejectedVehicles, setRejectedVehicles)
+    
+    console.log('Local state updated successfully')
+  }
+
+  // Handle confirmation modal actions
+  const handleConfirmationConfirm = async () => {
+    if (!confirmationData) return
+    
+    const { vehicleId, section, action, driverName } = confirmationData
+    
+    // Find the vehicle
+    const vehicle = [...pendingVehicles, ...approvedVehicles, ...rejectedVehicles]
+      .find(v => v._id === vehicleId || v.custrecord_vehicle_number === vehicleId)
+    
+    if (!vehicle || !vehicle.assignedDriver) return
+    
+    // Close confirmation modal
+    setShowConfirmationModal(false)
+    setConfirmationData(null)
+    
+    // Call API based on section
+    let result
+    if (section === 'driver') {
+      result = await callDriverApprovalAPI(
+        vehicle.assignedDriver._id, 
+        action, 
+        reviewMessage
+      )
+    } else if (section === 'vehicle') {
+      result = await callVehicleApprovalAPI(
+        vehicleId, 
+        action, 
+        reviewMessage
+      )
+    }
+    
+    if (result.success) {
+      // Update local state with API response data
+      if (section === 'driver') {
+        updateLocalDriverStatusWithResponse(vehicleId, result.data)
+        updateDriverApprovalStatus(vehicle.assignedDriver._id, action)
+        showToast(`Driver ${driverName} ${action} successfully!`, 'success')
+      } else if (section === 'vehicle') {
+        updateLocalVehicleStatusWithResponse(vehicleId, result.data)
+        showToast(`Vehicle ${confirmationData.vehicleName} ${action} successfully!`, 'success')
+      }
+      
+      // Clear modal first
+      setActiveSection(null)
+      setActiveVehicle(null)
+      setReviewMessage('')
     } else {
-      updateVehicleArray(pendingVehicles, setPendingVehicles)
+      // Show error toast
+      const sectionName = section === 'driver' ? 'driver' : 'vehicle'
+      showToast(`Failed to ${action} ${sectionName}: ${result.error}`, 'error')
+    }
+  }
+
+  const handleConfirmationCancel = () => {
+    setShowConfirmationModal(false)
+    setConfirmationData(null)
+  }
+
+  // Enhanced handleApprovalAction with custom confirmation
+  const handleApprovalAction = async (vehicleId, section, action) => {
+    // Find the vehicle
+    const vehicle = [...pendingVehicles, ...approvedVehicles, ...rejectedVehicles]
+      .find(v => v._id === vehicleId || v.custrecord_vehicle_number === vehicleId)
+    
+    if (!vehicle) {
+      console.error('Vehicle not found for approval action')
+      return
     }
 
-    setActiveSection(null)
-    setActiveVehicle(null)
-    setReviewMessage('')
+    // Handle driver approval/rejection
+    if (section === 'driver' && vehicle.assignedDriver) {
+      // Show custom confirmation modal
+      setConfirmationData({
+        vehicleId,
+        section,
+        action,
+        driverName: vehicle.assignedDriver.custrecord_driver_name
+      })
+      setShowConfirmationModal(true)
+      return
+    }
+
+    // Handle vehicle approval/rejection
+    if (section === 'vehicle') {
+      // Check if vehicle approval is allowed
+      if (!isVehicleApprovalAllowed(vehicle)) {
+        const message = !vehicle.assignedDriver 
+          ? 'No driver assigned - cannot approve vehicle'
+          : vehicle.assignedDriver.approved_by_hq === 'pending'
+            ? 'Driver must be approved first'
+            : 'Driver must be approved first'
+        
+        showToast(message, 'error')
+        return
+      }
+      
+      // Show custom confirmation modal for vehicle
+      setConfirmationData({
+        vehicleId,
+        section,
+        action,
+        vehicleName: vehicle.custrecord_vehicle_number
+      })
+      setShowConfirmationModal(true)
+      return
+    }
+  }
+
+  // Force refresh data after driver approval
+  const forceRefreshData = async () => {
+    console.log('Force refreshing all data...')
+    
+    // Clear existing data first
+    setPendingVehicles([])
+    setApprovedVehicles([])
+    setRejectedVehicles([])
+    
+    // Force fresh API calls
+    try {
+      await Promise.all([
+        fetchSectionData('pending', selectedPlant),
+        fetchSectionData('approved', selectedPlant),
+        fetchSectionData('rejected', selectedPlant)
+      ])
+      console.log('Data refresh completed')
+    } catch (error) {
+      console.error('Error during force refresh:', error)
+    }
+  }
+
+  // Update local state with vehicle API response data
+  const updateLocalVehicleStatusWithResponse = (vehicleId, apiResponse) => {
+    console.log(`Updating local vehicle state with API response: Vehicle ${vehicleId}`)
+    
+    if (!apiResponse.vehicle) {
+      console.error('No vehicle data in API response')
+      return
+    }
+    
+    const updatedVehicle = apiResponse.vehicle
+    
+    // Find the vehicle in current arrays
+    const findVehicle = (vehicles) => {
+      return vehicles.find(v => v._id === vehicleId || v.custrecord_vehicle_number === vehicleId)
+    }
+    
+    // Remove vehicle from all arrays first
+    const removeFromArray = (vehicles, setVehicles) => {
+      setVehicles(prev => prev.filter(vehicle => 
+        vehicle._id !== vehicleId && vehicle.custrecord_vehicle_number !== vehicleId
+      ))
+    }
+    
+    // Remove from all arrays
+    removeFromArray(pendingVehicles, setPendingVehicles)
+    removeFromArray(approvedVehicles, setApprovedVehicles)
+    removeFromArray(rejectedVehicles, setRejectedVehicles)
+    
+    // Add to correct array based on new status
+    const newStatus = updatedVehicle.approved_by_hq
+    console.log(`Moving vehicle to ${newStatus} section`)
+    
+    switch (newStatus) {
+      case 'approved':
+        setApprovedVehicles(prev => [...prev, updatedVehicle])
+        break
+      case 'rejected':
+        setRejectedVehicles(prev => [...prev, updatedVehicle])
+        break
+      default:
+        setPendingVehicles(prev => [...prev, updatedVehicle])
+        break
+    }
+    
+    console.log('Local vehicle state updated and moved to correct section')
+  }
+
+  // Helper function to get vehicle approval warning message
+  const getVehicleApprovalWarning = (vehicle) => {
+    if (!vehicle.assignedDriver) {
+      return "Driver must be assigned before vehicle can be approved."
+    }
+    
+    if (vehicle.assignedDriver.approved_by_hq === 'rejected') {
+      return `Vehicle Approval Blocked\nDriver must be approved before vehicle can be approved. Current driver status: rejected`
+    }
+    
+    if (vehicle.assignedDriver.approved_by_hq === 'pending') {
+      return `Vehicle Approval Blocked\nDriver must be approved before vehicle can be approved. Current driver status: pending`
+    }
+    
+    return null // No warning when driver is approved
+  }
+
+  // Helper function to get vehicle approval button state
+  const getVehicleApprovalButtonState = (vehicle) => {
+    const isAllowed = isVehicleApprovalAllowed(vehicle)
+    return {
+      disabled: !isAllowed,
+      message: isAllowed ? 'Approve Vehicle Details' : 'Vehicle approval blocked'
+    }
   }
 
   return (
@@ -857,21 +1299,23 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
 
                       {/* Content */}
                       <div className="space-y-6">
-                        {/* Approval Status Warning */}
-                        {!isVehicleApprovalAllowed(vehicle) && vehicle.assignedDriver && (
-                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-                            <div className="flex items-center gap-3">
-                              <AlertCircle className="w-5 h-5 text-yellow-400" />
-                              <div>
-                                <h4 className="text-yellow-400 font-medium">Vehicle Approval Blocked</h4>
-                                <p className="text-yellow-300 text-sm mt-1">
-                                  Driver must be approved before vehicle can be approved. 
-                                  Current driver status: <span className="font-medium capitalize">{vehicle.assignedDriver.approved_by_hq}</span>
-                                </p>
+                        {/* Vehicle Approval Warning */}
+                        {(() => {
+                          const warningMessage = getVehicleApprovalWarning(vehicle)
+                          return warningMessage ? (
+                            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+                              <div className="flex items-center gap-3">
+                                <AlertCircle className="w-5 h-5 text-yellow-400" />
+                                <div>
+                                  <h4 className="text-yellow-400 font-medium">Vehicle Approval Blocked</h4>
+                                  <p className="text-yellow-300 text-sm mt-1 whitespace-pre-line">
+                                    {warningMessage}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
+                          ) : null
+                        })()}
                         {/* Basic Vehicle Information */}
                         <div className="bg-white/5 rounded-xl p-4">
                           <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -1086,7 +1530,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                           {/* Action Buttons */}
                           <div className="flex gap-3">
                             {(() => {
-                              const vehicleButtonState = getApprovalButtonState(vehicle, 'vehicle')
+                              const vehicleButtonState = getVehicleApprovalButtonState(vehicle)
                               return (
                                 <>
                                   <motion.button
@@ -1105,9 +1549,14 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                                   </motion.button>
                                   <motion.button
                                     onClick={() => handleApprovalAction(vehicle._id, 'vehicle', 'rejected')}
-                                    className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
+                                    disabled={vehicleButtonState.disabled}
+                                    className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${
+                                      vehicleButtonState.disabled
+                                        ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                                        : 'bg-red-600 hover:bg-red-700 text-white'
+                                    }`}
+                                    whileHover={!vehicleButtonState.disabled ? { scale: 1.02 } : {}}
+                                    whileTap={!vehicleButtonState.disabled ? { scale: 0.98 } : {}}
                                   >
                                     <XCircle className="w-5 h-5" />
                                     Reject Vehicle Details
@@ -1495,6 +1944,27 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                 })()}
               </motion.div>
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Custom Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showConfirmationModal}
+          onConfirm={handleConfirmationConfirm}
+          onCancel={handleConfirmationCancel}
+          title={`${confirmationData?.action === 'approved' ? 'Approve' : 'Reject'} ${confirmationData?.section === 'driver' ? 'Driver' : 'Vehicle'}`}
+          message={`Are you sure you want to ${confirmationData?.action} ${confirmationData?.section === 'driver' ? 'driver' : 'vehicle'} "${confirmationData?.driverName || confirmationData?.vehicleName}"?`}
+          action={confirmationData?.action}
+        />
+
+        {/* Toast Notifications */}
+        <AnimatePresence>
+          {toast.show && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={hideToast}
+            />
           )}
         </AnimatePresence>
     </div>
