@@ -221,6 +221,80 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
     )
   }
 
+  // Helper function to check if vehicle approval is allowed
+  const isVehicleApprovalAllowed = (vehicle) => {
+    // If no driver assigned, allow vehicle approval
+    if (!vehicle.assignedDriver) return true
+    
+    // If driver is approved, allow vehicle approval
+    if (vehicle.assignedDriver.approved_by_hq === 'approved') return true
+    
+    // If driver is pending or rejected, don't allow vehicle approval
+    return false
+  }
+
+  // Helper function to get driver icon colors based on approval status
+  const getDriverIconColor = (vehicle) => {
+    if (!vehicle.assignedDriver) {
+      return {
+        icon: 'text-gray-400',
+        background: 'bg-gray-500/20'
+      }
+    }
+    
+    switch (vehicle.assignedDriver.approved_by_hq) {
+      case 'approved':
+        return {
+          icon: 'text-green-400',
+          background: 'bg-green-500/20'
+        }
+      case 'rejected':
+        return {
+          icon: 'text-red-400',
+          background: 'bg-red-500/20'
+        }
+      case 'pending':
+      default:
+        return {
+          icon: 'text-yellow-400',
+          background: 'bg-yellow-500/20'
+        }
+    }
+  }
+
+  // Helper function to get driver status text
+  const getDriverStatusText = (vehicle) => {
+    if (!vehicle.assignedDriver) {
+      return 'Not Available'
+    }
+    
+    switch (vehicle.assignedDriver.approved_by_hq) {
+      case 'approved':
+        return 'Approved'
+      case 'rejected':
+        return 'Rejected'
+      case 'pending':
+      default:
+        return 'Pending'
+    }
+  }
+
+  // Helper function to get approval button state
+  const getApprovalButtonState = (vehicle, section) => {
+    if (section === 'vehicle') {
+      return {
+        disabled: !isVehicleApprovalAllowed(vehicle),
+        message: !isVehicleApprovalAllowed(vehicle) 
+          ? (vehicle.assignedDriver ? 'Driver must be approved first' : 'No driver assigned')
+          : 'Approve Vehicle Details'
+      }
+    }
+    return {
+      disabled: false,
+      message: section === 'driver' ? 'Approve Driver Details' : 'Approve'
+    }
+  }
+
   // Helper function to get status background color
   const getStatusBgColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -371,22 +445,27 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
             }}
           >
             <div className="flex items-center gap-2">
-              <div className={`p-2 rounded-full ${
-                vehicle.assignedDriver ? 'bg-lime-500/20' : 'bg-gray-500/20'
-              }`}>
-                <div className={vehicle.assignedDriver ? 'text-lime-400' : 'text-gray-400'}>
-                  <User className="w-4 h-4" />
-                </div>
-              </div>
-              <div className="flex-1">
-                <h4 className="text-white font-semibold text-sm">Driver Details</h4>
-                <p className="text-teal-200 text-xs">
-                  {vehicle.assignedDriver ? vehicle.assignedDriver.name : 'No Driver Available'}
-                </p>
-              </div>
-              <div className={`text-xs ${vehicle.assignedDriver ? 'text-lime-200' : 'text-gray-400'}`}>
-                {vehicle.assignedDriver ? 'Available' : 'Not Available'}
-              </div>
+              {(() => {
+                const driverColors = getDriverIconColor(vehicle)
+                return (
+                  <>
+                    <div className={`p-2 rounded-full ${driverColors.background}`}>
+                      <div className={driverColors.icon}>
+                        <User className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-white font-semibold text-sm">Driver Details</h4>
+                      <p className="text-teal-200 text-xs">
+                        {vehicle.assignedDriver ? vehicle.assignedDriver.custrecord_driver_name : 'No Driver Available'}
+                      </p>
+                    </div>
+                    <div className={`text-xs ${driverColors.icon}`}>
+                      {getDriverStatusText(vehicle)}
+                    </div>
+                  </>
+                )
+              })()}
             </div>
           </motion.div>
 
@@ -738,7 +817,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                 }}
               />
               <motion.div
-                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -778,6 +857,21 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
 
                       {/* Content */}
                       <div className="space-y-6">
+                        {/* Approval Status Warning */}
+                        {!isVehicleApprovalAllowed(vehicle) && vehicle.assignedDriver && (
+                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+                            <div className="flex items-center gap-3">
+                              <AlertCircle className="w-5 h-5 text-yellow-400" />
+                              <div>
+                                <h4 className="text-yellow-400 font-medium">Vehicle Approval Blocked</h4>
+                                <p className="text-yellow-300 text-sm mt-1">
+                                  Driver must be approved before vehicle can be approved. 
+                                  Current driver status: <span className="font-medium capitalize">{vehicle.assignedDriver.approved_by_hq}</span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         {/* Basic Vehicle Information */}
                         <div className="bg-white/5 rounded-xl p-4">
                           <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -991,24 +1085,36 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
 
                           {/* Action Buttons */}
                           <div className="flex gap-3">
-                            <motion.button
-                              onClick={() => handleApprovalAction(vehicle._id, 'vehicle', 'approved')}
-                              className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <CheckCircle className="w-5 h-5" />
-                              Approve Vehicle Details
-                            </motion.button>
-                            <motion.button
-                              onClick={() => handleApprovalAction(vehicle._id, 'vehicle', 'rejected')}
-                              className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <XCircle className="w-5 h-5" />
-                              Reject Vehicle Details
-                            </motion.button>
+                            {(() => {
+                              const vehicleButtonState = getApprovalButtonState(vehicle, 'vehicle')
+                              return (
+                                <>
+                                  <motion.button
+                                    onClick={() => handleApprovalAction(vehicle._id, 'vehicle', 'approved')}
+                                    disabled={vehicleButtonState.disabled}
+                                    className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${
+                                      vehicleButtonState.disabled
+                                        ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                                        : 'bg-green-600 hover:bg-green-700 text-white'
+                                    }`}
+                                    whileHover={!vehicleButtonState.disabled ? { scale: 1.02 } : {}}
+                                    whileTap={!vehicleButtonState.disabled ? { scale: 0.98 } : {}}
+                                  >
+                                    <CheckCircle className="w-5 h-5" />
+                                    {vehicleButtonState.message}
+                                  </motion.button>
+                                  <motion.button
+                                    onClick={() => handleApprovalAction(vehicle._id, 'vehicle', 'rejected')}
+                                    className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                  >
+                                    <XCircle className="w-5 h-5" />
+                                    Reject Vehicle Details
+                                  </motion.button>
+                                </>
+                              )
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -1036,7 +1142,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                 }}
               />
               <motion.div
-                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -1245,7 +1351,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                 }}
               />
               <motion.div
-                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -1383,44 +1489,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                         </div>
                       )}
 
-                      {/* Review Message and Action Buttons */}
-                      <div className="mt-6 pt-4 border-t border-white/20">
-                        <div className="space-y-4">
-                          {/* Review Message */}
-                          <div>
-                            <label className="block text-white text-sm font-medium mb-2">Review Message</label>
-                            <textarea
-                              value={reviewMessage}
-                              onChange={(e) => setReviewMessage(e.target.value)}
-                              placeholder="Add your review message here..."
-                              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-lime-500 resize-none"
-                              rows={3}
-                            />
-                          </div>
 
-                          {/* Action Buttons */}
-                          <div className="flex gap-3">
-                            <motion.button
-                              onClick={() => handleApprovalAction(vehicle._id, 'checklist', 'approved')}
-                              className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <CheckCircle className="w-5 h-5" />
-                              Approve Checklist
-                            </motion.button>
-                            <motion.button
-                              onClick={() => handleApprovalAction(vehicle._id, 'checklist', 'rejected')}
-                              className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <XCircle className="w-5 h-5" />
-                              Reject Checklist
-                            </motion.button>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   )
                 })()}
