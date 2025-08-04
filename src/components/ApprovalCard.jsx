@@ -7,7 +7,11 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
   const [activeSection, setActiveSection] = useState(null)
   const [activeVehicle, setActiveVehicle] = useState(null)
   const [reviewMessage, setReviewMessage] = useState('')
+  const [showPendingModal, setShowPendingModal] = useState(false)
+  const [showApprovedModal, setShowApprovedModal] = useState(false)
+  const [showRejectedModal, setShowRejectedModal] = useState(false)
   const themeColors = getThemeColors(currentTheme)
+  const isLightTheme = currentTheme === 'blue'
   
   // Real data structure
   const [approvals, setApprovals] = useState([
@@ -359,9 +363,312 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
     }
   ])
 
-  const filteredApprovals = selectedPlant === 'all' 
-    ? approvals 
-    : approvals.filter(approval => approval.currentPlant.toLowerCase() === selectedPlant)
+  // Helper function to get status background color
+  const getStatusBgColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'approved':
+        return 'bg-emerald-500/20 text-emerald-400'
+      case 'pending':
+        return 'bg-orange-500/20 text-orange-400'
+      case 'rejected':
+        return 'bg-red-500/20 text-red-400'
+      default:
+        return 'bg-gray-500/20 text-gray-400'
+    }
+  }
+
+  // Filter approvals based on selected plant and status
+  const filteredApprovals = approvals.filter(approval => 
+    selectedPlant === 'all' || approval.currentPlant?.toLowerCase() === selectedPlant?.toLowerCase()
+  )
+
+  // Separate approvals by status
+  const pendingApprovals = filteredApprovals.filter(approval => approval.approved_by_hq?.toLowerCase() === 'pending')
+  const approvedApprovals = filteredApprovals.filter(approval => approval.approved_by_hq?.toLowerCase() === 'approved')
+  const rejectedApprovals = filteredApprovals.filter(approval => approval.approved_by_hq?.toLowerCase() === 'rejected')
+
+  // Helper function to render a single card
+  const renderCard = (approval, index, sectionType) => (
+    <motion.div key={approval._id || `${sectionType}-${index}`}
+      className={`relative bg-gradient-to-br ${themeColors.cardGradient} rounded-3xl p-6 cursor-pointer overflow-hidden`}
+      style={{ 
+        background: themeColors.cardBackground
+      }}
+      whileHover={{ scale: 1.02, boxShadow: "0 25px 50px rgba(0,0,0,0.4)" }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    >
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-3 h-3 bg-cyan-400/30 rounded-full blur-sm"
+            style={{
+              left: `${20 + (i * 20)}%`,
+              top: `${30 + (i * 15)}%`,
+            }}
+            animate={{
+              y: [0, -15, 0],
+              opacity: [0.3, 0.6, 0.3],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 h-full flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-bold text-white">{approval.custrecord_vehicle_number || `Vehicle ${index + 1}`}</h3>
+            <p className={`text-sm ${themeColors.accentText}`}>{approval.custrecord_vehicle_type_ag || 'Vehicle Type'} • {approval.currentPlant || 'Plant'}</p>
+          </div>
+          
+          {/* Status Badge */}
+          <div className={`${getStatusBgColor(approval.approved_by_hq || sectionType)} text-white text-xs px-2 py-1 rounded-full`}>
+            {approval.approved_by_hq || sectionType}
+          </div>
+        </div>
+
+        {/* Progress Ring */}
+        <div className="flex justify-center mb-4">
+          <div className="relative">
+            <svg className="w-16 h-16 transform -rotate-90">
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                stroke="rgba(255,255,255,0.1)"
+                strokeWidth="3"
+                fill="none"
+              />
+              <motion.circle
+                cx="32"
+                cy="32"
+                r="28"
+                stroke="url(#approvalGradient)"
+                strokeWidth="3"
+                fill="none"
+                strokeDasharray={`${2 * Math.PI * 28}`}
+                strokeDashoffset={`${2 * Math.PI * 28 * 0.25}`}
+                initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
+                animate={{ strokeDashoffset: 2 * Math.PI * 28 * 0.25 }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+              />
+              <defs>
+                <linearGradient id="approvalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#06b6d4" />
+                  <stop offset="50%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#8b5cf6" />
+                </linearGradient>
+              </defs>
+            </svg>
+            
+            {/* Inner Content */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="text-lg font-bold text-white">25%</div>
+              <div className="text-xs text-teal-200">Complete</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sub-Cards Grid */}
+        <div className="grid grid-cols-1 gap-3 flex-1">
+          {/* Vehicle Details Sub-Card */}
+          <motion.div
+            className="relative p-3 rounded-xl bg-white/10 border border-white/10 cursor-pointer"
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+            }}
+            onClick={() => {
+              setActiveVehicle(approval._id || `${sectionType}-${index}`)
+              setActiveSection('vehicle')
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-full bg-teal-500/20">
+                <div className="text-teal-400">
+                  <Truck className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-white font-semibold text-sm">Vehicle Details</h4>
+                <p className="text-teal-200 text-xs">{approval.custrecord_vehicle_number || `Vehicle ${index + 1}`}</p>
+              </div>
+              <div className="text-xs text-teal-200">Available</div>
+            </div>
+          </motion.div>
+
+          {/* Driver Details Sub-Card */}
+          <motion.div
+            className={`relative p-3 rounded-xl border border-white/10 cursor-pointer ${
+              approval.assignedDriver ? 'bg-white/10' : 'bg-gray-500/20'
+            }`}
+            whileHover={approval.assignedDriver ? { 
+              scale: 1.05,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+            } : {}}
+            onClick={() => {
+              if (approval.assignedDriver) {
+                setActiveVehicle(approval._id || `${sectionType}-${index}`)
+                setActiveSection('driver')
+              }
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <div className={`p-2 rounded-full ${
+                approval.assignedDriver ? 'bg-lime-500/20' : 'bg-gray-500/20'
+              }`}>
+                <div className={approval.assignedDriver ? 'text-lime-400' : 'text-gray-400'}>
+                  <User className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-white font-semibold text-sm">Driver Details</h4>
+                <p className="text-teal-200 text-xs">
+                  {approval.assignedDriver ? approval.assignedDriver.name : 'No Driver Available'}
+                </p>
+              </div>
+              <div className={`text-xs ${approval.assignedDriver ? 'text-lime-200' : 'text-gray-400'}`}>
+                {approval.assignedDriver ? 'Available' : 'Not Available'}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Checklist Sub-Card */}
+          <motion.div
+            className={`relative p-3 rounded-xl border border-white/10 cursor-pointer ${
+              approval.checklist ? 'bg-white/10' : 'bg-gray-500/20'
+            }`}
+            whileHover={approval.checklist ? { 
+              scale: 1.05,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+            } : {}}
+            onClick={() => {
+              if (approval.checklist) {
+                setActiveVehicle(approval._id || `${sectionType}-${index}`)
+                setActiveSection('checklist')
+              }
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <div className={`p-2 rounded-full ${
+                approval.checklist ? 'bg-lime-500/20' : 'bg-gray-500/20'
+              }`}>
+                <div className={approval.checklist ? 'text-lime-400' : 'text-gray-400'}>
+                  <CheckSquare className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-white font-semibold text-sm">Checklist</h4>
+                <p className="text-teal-200 text-xs">
+                  {approval.checklist ? 'Checklist Completed' : 'No Checklist Done'}
+                </p>
+              </div>
+              <div className={`text-xs ${approval.checklist ? 'text-lime-200' : 'text-gray-400'}`}>
+                {approval.checklist ? 'Available' : 'Not Available'}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  )
+
+  // Helper function to render section
+  const renderSection = (title, approvals, modalState, setModalState, sectionType) => (
+    <div className="w-full">
+      {/* Section Header */}
+      <div className="flex items-center justify-between mb-6 max-w-7xl mx-auto px-4">
+        <div className="flex items-center space-x-4">
+          <h2 className="text-2xl font-bold text-white">{title}</h2>
+          <div className={`px-3 py-1 ${getStatusBgColor(sectionType)} text-sm font-medium rounded-full`}>
+            {approvals.length} items
+          </div>
+        </div>
+        {approvals.length > 4 && (
+          <button 
+            onClick={() => setModalState(true)}
+            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all shadow-md hover:shadow-lg"
+          >
+            View All
+          </button>
+        )}
+      </div>
+
+      {/* Cards Grid - Show only first 4 cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
+        {approvals.slice(0, 4).map((approval, index) => renderCard(approval, index, sectionType))}
+      </div>
+
+      {/* View All Modal */}
+      {modalState && (
+        <motion.div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setModalState(false)}
+        >
+          <motion.div
+            className="bg-slate-900/95 border border-white/20 rounded-3xl p-6 max-w-6xl w-full max-h-[90vh] overflow-hidden"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/20">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">All {title} Approvals</h3>
+                  <p className="text-orange-400 text-base">{approvals.length} items</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setModalState(false)}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content - Grid of all cards */}
+            <div className="overflow-y-auto max-h-[70vh]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {approvals.map((approval, index) => (
+                  <motion.div
+                    key={index}
+                    onClick={() => {
+                      setActiveVehicle(approval._id || `${sectionType}-${index}`)
+                      setActiveSection('vehicle')
+                      setModalState(false)
+                    }}
+                  >
+                    {renderCard(approval, index, sectionType)}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </div>
+  )
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
@@ -391,16 +698,6 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
     }
   }
 
-  const getStatusBgColor = (status) => {
-    switch (status) {
-      case 'valid': return 'bg-emerald-500/20'
-      case 'expired': return 'bg-red-500/20'
-      case 'expiring': return 'bg-yellow-500/20'
-      case 'pending': return 'bg-amber-500/20'
-      default: return 'bg-slate-500/20'
-    }
-  }
-
   const handleApprovalAction = (approvalId, section, action) => {
     setApprovals(prev => prev.map(approval => {
       if (approval._id === approvalId) {
@@ -414,201 +711,20 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
   }
 
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
-        {filteredApprovals.map((approval) => (
-          <motion.div key={approval._id}
-            className={`relative bg-gradient-to-br ${themeColors.cardGradient} rounded-3xl p-6 cursor-pointer overflow-hidden`}
-            style={{ 
-              background: themeColors.cardBackground
-            }}
-            whileHover={{ scale: 1.02, boxShadow: "0 25px 50px rgba(0,0,0,0.4)" }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          >
-            {/* Animated Background Elements */}
-            <div className="absolute inset-0 overflow-hidden">
-              {[...Array(3)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-3 h-3 bg-cyan-400/30 rounded-full blur-sm"
-                  style={{
-                    left: `${20 + (i * 20)}%`,
-                    top: `${30 + (i * 15)}%`,
-                  }}
-                  animate={{
-                    y: [0, -15, 0],
-                    opacity: [0.3, 0.6, 0.3],
-                    scale: [1, 1.1, 1],
-                  }}
-                  transition={{
-                    duration: 3 + Math.random() * 2,
-                    repeat: Infinity,
-                    delay: Math.random() * 2,
-                  }}
-                />
-              ))}
-            </div>
+    <div className="w-full">
+      {/* PENDING Section - Main Focus */}
+      <div className="mb-12">
+        {renderSection('PENDING', pendingApprovals, showPendingModal, setShowPendingModal, 'pending')}
+      </div>
 
-            {/* Main Content */}
-            <div className="relative z-10 h-full flex flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-white">{approval.custrecord_vehicle_number}</h3>
-                  <p className={`text-sm ${themeColors.accentText}`}>{approval.custrecord_vehicle_type_ag} • {approval.currentPlant}</p>
-                </div>
-                
-                {/* Status Badge */}
-                <div className={`${getStatusBgColor(approval.approved_by_hq)} text-white text-xs px-2 py-1 rounded-full`}>
-                  {approval.approved_by_hq}
-                </div>
-              </div>
+      {/* APPROVED Section - Separate Container */}
+      <div className="mb-12">
+        {renderSection('APPROVED', approvedApprovals, showApprovedModal, setShowApprovedModal, 'approved')}
+      </div>
 
-              {/* Progress Ring */}
-              <div className="flex justify-center mb-4">
-                <div className="relative">
-                  <svg className="w-16 h-16 transform -rotate-90">
-                    <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      stroke="rgba(255,255,255,0.1)"
-                      strokeWidth="3"
-                      fill="none"
-                    />
-                    <motion.circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      stroke="url(#approvalGradient)"
-                      strokeWidth="3"
-                      fill="none"
-                      strokeDasharray={`${2 * Math.PI * 28}`}
-                      strokeDashoffset={`${2 * Math.PI * 28 * 0.25}`}
-                      initial={{ strokeDashoffset: 2 * Math.PI * 28 }}
-                      animate={{ strokeDashoffset: 2 * Math.PI * 28 * 0.25 }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
-                    />
-                    <defs>
-                      <linearGradient id="approvalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#06b6d4" />
-                        <stop offset="50%" stopColor="#3b82f6" />
-                        <stop offset="100%" stopColor="#8b5cf6" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  
-                  {/* Inner Content */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-lg font-bold text-white">25%</div>
-                    <div className="text-xs text-teal-200">Complete</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sub-Cards Grid */}
-              <div className="grid grid-cols-1 gap-3 flex-1">
-                {/* Vehicle Details Sub-Card */}
-                <motion.div
-                  className="relative p-3 rounded-xl bg-white/10 border border-white/10 cursor-pointer"
-                  whileHover={{ 
-                    scale: 1.05,
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
-                  }}
-                  onClick={() => {
-                    setActiveVehicle(approval._id)
-                    setActiveSection('vehicle')
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-full bg-teal-500/20">
-                      <div className="text-teal-400">
-                        <Truck className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-white font-semibold text-sm">Vehicle Details</h4>
-                      <p className="text-teal-200 text-xs">{approval.custrecord_vehicle_number}</p>
-                    </div>
-                    <div className="text-xs text-teal-200">Available</div>
-                  </div>
-                </motion.div>
-
-                {/* Driver Details Sub-Card */}
-                <motion.div
-                  className={`relative p-3 rounded-xl border border-white/10 cursor-pointer ${
-                    approval.assignedDriver ? 'bg-white/10' : 'bg-gray-500/20'
-                  }`}
-                  whileHover={approval.assignedDriver ? { 
-                    scale: 1.05,
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
-                  } : {}}
-                  onClick={() => {
-                    if (approval.assignedDriver) {
-                      setActiveVehicle(approval._id)
-                      setActiveSection('driver')
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`p-2 rounded-full ${
-                      approval.assignedDriver ? 'bg-lime-500/20' : 'bg-gray-500/20'
-                    }`}>
-                      <div className={approval.assignedDriver ? 'text-lime-400' : 'text-gray-400'}>
-                        <User className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-white font-semibold text-sm">Driver Details</h4>
-                      <p className="text-teal-200 text-xs">
-                        {approval.assignedDriver ? approval.assignedDriver.name : 'No Driver Available'}
-                      </p>
-                    </div>
-                    <div className={`text-xs ${approval.assignedDriver ? 'text-lime-200' : 'text-gray-400'}`}>
-                      {approval.assignedDriver ? 'Available' : 'Not Available'}
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Checklist Sub-Card */}
-                <motion.div
-                  className={`relative p-3 rounded-xl border border-white/10 cursor-pointer ${
-                    approval.checklist ? 'bg-white/10' : 'bg-gray-500/20'
-                  }`}
-                  whileHover={approval.checklist ? { 
-                    scale: 1.05,
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
-                  } : {}}
-                  onClick={() => {
-                    if (approval.checklist) {
-                      setActiveVehicle(approval._id)
-                      setActiveSection('checklist')
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`p-2 rounded-full ${
-                      approval.checklist ? 'bg-lime-500/20' : 'bg-gray-500/20'
-                    }`}>
-                      <div className={approval.checklist ? 'text-lime-400' : 'text-gray-400'}>
-                        <CheckSquare className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-white font-semibold text-sm">Checklist</h4>
-                      <p className="text-teal-200 text-xs">
-                        {approval.checklist ? 'Checklist Completed' : 'No Checklist Done'}
-                      </p>
-                    </div>
-                    <div className={`text-xs ${approval.checklist ? 'text-lime-200' : 'text-gray-400'}`}>
-                      {approval.checklist ? 'Available' : 'Not Available'}
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+      {/* REJECTED Section - Separate Container */}
+      <div className="mb-12">
+        {renderSection('REJECTED', rejectedApprovals, showRejectedModal, setShowRejectedModal, 'rejected')}
       </div>
 
       {/* Modal - Outside the card structure */}
@@ -1175,7 +1291,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   )
 }
 
