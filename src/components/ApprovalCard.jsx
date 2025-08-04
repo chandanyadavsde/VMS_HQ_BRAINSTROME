@@ -603,10 +603,26 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
         )}
       </div>
 
-      {/* Cards Grid - Show only first 4 cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
-        {approvals.slice(0, 4).map((approval, index) => renderCard(approval, index, sectionType))}
-      </div>
+      {/* Cards Grid - Show only first 4 cards OR empty state */}
+      {approvals.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
+          {approvals.slice(0, 4).map((approval, index) => renderCard(approval, index, sectionType))}
+        </div>
+      ) : (
+        <div className="max-w-7xl mx-auto px-4">
+          {sectionType === 'approved' || sectionType === 'rejected' ? (
+            // Full width card for approved/rejected empty states
+            <div className="w-full">
+              {renderEmptyStateCard(title, sectionType)}
+            </div>
+          ) : (
+            // Grid layout for pending empty state
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {renderEmptyStateCard(title, sectionType)}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* View All Modal */}
       {modalState && (
@@ -618,7 +634,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
           onClick={() => setModalState(false)}
         >
           <motion.div
-            className="bg-slate-900/95 border border-white/20 rounded-3xl p-6 max-w-6xl w-full max-h-[90vh] overflow-hidden"
+            className="bg-slate-900/95 border border-white/20 rounded-3xl p-6 max-w-7xl w-full max-h-[95vh] overflow-hidden"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -647,9 +663,25 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
               </button>
             </div>
 
+            {/* Search Box */}
+            <div className="mb-6">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search approvals..."
+                  className="block w-full pl-10 pr-3 py-3 border border-white/20 rounded-xl bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
             {/* Modal Content - Grid of all cards */}
             <div className="overflow-y-auto max-h-[70vh]">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {approvals.map((approval, index) => (
                   <motion.div
                     key={index}
@@ -669,6 +701,99 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
       )}
     </div>
   )
+
+  // Helper function to render empty state card
+  const renderEmptyStateCard = (title, sectionType) => {
+    const getEmptyStateData = () => {
+      switch (sectionType) {
+        case 'pending':
+          return {
+            icon: <Clock className="w-8 h-8" />,
+            message: "All caught up!",
+            subtitle: "No pending approvals at the moment",
+            color: "orange"
+          }
+        case 'approved':
+          return {
+            icon: <CheckCircle className="w-8 h-8" />,
+            message: "No approved items",
+            subtitle: "Approved items will appear here",
+            color: "emerald"
+          }
+        case 'rejected':
+          return {
+            icon: <XCircle className="w-8 h-8" />,
+            message: "No rejected items",
+            subtitle: "Rejected items will appear here",
+            color: "red"
+          }
+        default:
+          return {
+            icon: <FileText className="w-8 h-8" />,
+            message: "No items",
+            subtitle: "Items will appear here",
+            color: "gray"
+          }
+      }
+    }
+
+    const emptyData = getEmptyStateData()
+    const colorClasses = {
+      orange: "bg-orange-500/20 text-orange-400",
+      emerald: "bg-emerald-500/20 text-emerald-400", 
+      red: "bg-red-500/20 text-red-400",
+      gray: "bg-gray-500/20 text-gray-400"
+    }
+
+    return (
+      <motion.div
+        className={`relative bg-gradient-to-br ${themeColors.cardGradient} rounded-3xl p-8 cursor-pointer overflow-hidden`}
+        style={{ 
+          background: themeColors.cardBackground
+        }}
+        whileHover={{ scale: 1.02, boxShadow: "0 25px 50px rgba(0,0,0,0.4)" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-3 h-3 bg-cyan-400/30 rounded-full blur-sm"
+              style={{
+                left: `${20 + (i * 20)}%`,
+                top: `${30 + (i * 15)}%`,
+              }}
+              animate={{
+                y: [0, -15, 0],
+                opacity: [0.3, 0.6, 0.3],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Main Content */}
+        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center">
+          {/* Icon */}
+          <div className={`p-4 rounded-full ${colorClasses[emptyData.color]} mb-6`}>
+            <div className={colorClasses[emptyData.color].split(' ')[1]}>
+              {emptyData.icon}
+            </div>
+          </div>
+          
+          {/* Message */}
+          <h3 className="text-2xl font-bold text-white mb-3">{emptyData.message}</h3>
+          <p className="text-teal-200 text-base">{emptyData.subtitle}</p>
+        </div>
+      </motion.div>
+    )
+  }
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
@@ -731,14 +856,14 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
       <AnimatePresence>
         {activeVehicle && activeSection && (
           <motion.div
-            className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
             <motion.div
-              className="bg-blue/95 border border-white/20 rounded-3xl p-6 max-w-5xl w-full h-[85vh] flex flex-col"
+              className="bg-slate-900/95 border border-white/20 rounded-3xl p-6 max-w-5xl w-full h-[85vh] flex flex-col"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
