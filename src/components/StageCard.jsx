@@ -71,13 +71,13 @@ const StageCard = ({ stage, onAction }) => {
             </div>
             <div>
               <h4 className="text-white font-semibold">{stage.name}</h4>
-              <p className="text-blue-200 text-sm">{stage.description}</p>
+                              <p className="text-teal-200 text-sm">{stage.description}</p>
             </div>
           </div>
 
           {/* Progress Bar */}
           <div className="mb-3">
-            <div className="flex justify-between text-xs text-blue-200 mb-1">
+                            <div className="flex justify-between text-xs text-teal-200 mb-1">
               <span>Progress</span>
               <span>{stage.progress}%</span>
             </div>
@@ -93,7 +93,7 @@ const StageCard = ({ stage, onAction }) => {
 
           {/* Date Info */}
           {(stage.startDate || stage.endDate) && (
-            <div className="flex items-center gap-4 text-xs text-blue-200">
+                            <div className="flex items-center gap-4 text-xs text-teal-200">
               {stage.startDate && (
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />

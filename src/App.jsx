@@ -5,7 +5,7 @@ import ApprovalCard from './components/ApprovalCard.jsx'
 import { getCurrentTheme, setTheme, getThemeColors } from './utils/theme.js'
 
 // Header Component
-const Header = ({ isScrolled, currentTheme, onThemeToggle }) => {
+const Header = ({ isScrolled, currentTheme }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
@@ -37,19 +37,17 @@ const Header = ({ isScrolled, currentTheme, onThemeToggle }) => {
   }
 
   return (
-    <div className={`${isScrolled ? 'fixed top-0 left-0 right-0 z-50 bg-white/10 backdrop-blur-md border-b border-white/20' : 'relative'} transition-all duration-300`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={`${isScrolled ? 'fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' : 'relative bg-white/90 backdrop-blur-sm'} transition-all duration-300`}>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className={`flex items-center justify-between transition-all duration-300 ${
-          isScrolled ? 'h-16' : 'h-20'
+          isScrolled ? 'h-14' : 'h-16'
         }`}>
           {/* Logo Section - Left Side */}
-          <div className="flex items-center">
-            <div className="flex items-center space-x-3">
+          <div className="flex items-center flex-1">
+            <div className="flex items-center space-x-2">
               {/* Logo Icon */}
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${themeColors.logoGradient} flex items-center justify-center transition-all duration-300 ${
-                isScrolled ? 'w-8 h-8' : 'w-10 h-10'
-              }`}>
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
@@ -58,69 +56,63 @@ const Header = ({ isScrolled, currentTheme, onThemeToggle }) => {
               <div className={`transition-all duration-300 ${
                 isScrolled ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
               }`}>
-                <h1 className="text-xl font-bold text-white">Wind Energy</h1>
-                <p className={`text-xs ${themeColors.accentText}`}>Management System</p>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">VMS</h1>
+                <p className="text-xs text-gray-500">Vehicle Management System</p>
               </div>
             </div>
           </div>
 
           {/* Navigation Tabs - Center */}
-          <div className={`flex space-x-1 ${!isScrolled ? 'bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20' : ''}`}>
-            {sections.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => navigate(section.path)}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                  getCurrentSection() === section.id
-                    ? 'bg-white/20 text-white shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {section.name}
-              </button>
-            ))}
+          <div className="flex items-center justify-center flex-1">
+            <div className="flex space-x-1 bg-white/80 backdrop-blur-sm rounded-xl p-1 border border-orange-200/50 shadow-md">
+              {sections.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => navigate(section.path)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                    getCurrentSection() === section.id
+                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md transform scale-105'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/80'
+                  }`}
+                >
+                  {section.name}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Profile Section - Right Side */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center justify-end flex-1 space-x-2">
             {/* Theme Toggle */}
-            <div className={`relative transition-all duration-300 ${
-              isScrolled ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-            }`}>
-              <button 
-                onClick={onThemeToggle}
-                className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                title={`Switch to ${currentTheme === 'teal' ? 'Blue' : 'Teal'} Theme`}
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
-                </svg>
-              </button>
-            </div>
+            <button className="w-8 h-8 rounded-lg bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center hover:bg-white hover:shadow-lg transition-all duration-300 hover:scale-105">
+              <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            </button>
 
             {/* Notifications */}
-            <div className={`relative transition-all duration-300 ${
-              isScrolled ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-            }`}>
-              <button className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                </svg>
-              </button>
-            </div>
+            <button className="w-8 h-8 rounded-lg bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center hover:bg-white hover:shadow-lg transition-all duration-300 hover:scale-105 relative">
+              <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+              </svg>
+              {/* Notification Badge */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-bold">3</span>
+              </div>
+            </button>
 
             {/* User Profile */}
             <div className="flex items-center space-x-2">
-              <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${themeColors.logoGradient} flex items-center justify-center`}>
-                <span className="text-white text-sm font-semibold">U</span>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-md">
+                <span className="text-white text-xs font-bold">A</span>
               </div>
               
               {/* User Info */}
               <div className={`transition-all duration-300 ${
                 isScrolled ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
               }`}>
-                <p className="text-white text-sm font-medium">User Admin</p>
-                <p className={`text-xs ${themeColors.accentText}`}>Administrator</p>
+                <p className="text-gray-900 text-sm font-semibold">Admin</p>
+                <p className="text-xs text-gray-500">Administrator</p>
               </div>
             </div>
           </div>
@@ -144,71 +136,80 @@ const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlan
   ]
 
   return (
-    <div className="flex justify-center mb-6">
-      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 max-w-4xl w-full">
-        <div className="flex items-center space-x-3 px-4 py-2">
+    <div className="flex justify-center mb-4">
+      <div className="bg-white/95 backdrop-blur-md rounded-xl p-4 border border-orange-200/50 shadow-md max-w-4xl w-full">
+        {/* Search Row */}
+        <div className="flex items-center space-x-2 mb-3">
           {/* Search Icon */}
-          <div className="flex-shrink-0">
-            <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           
           {/* Search Input */}
-          <input
-            type="text"
-            placeholder="Search projects, stages, or activities..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 bg-transparent text-white placeholder-white/50 outline-none text-sm"
-          />
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search projects, stages, or activities..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/80 backdrop-blur-sm border border-orange-200/50 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-500 outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
+            />
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+              <div className="w-1 h-1 bg-orange-500 rounded-full animate-pulse"></div>
+            </div>
+          </div>
           
           {/* Search Actions */}
           <div className="flex items-center space-x-2">
-            <button className="px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs hover:from-cyan-600 hover:to-blue-600 transition-all">
+            <button className="px-3 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm hover:shadow-md hover:scale-105 transform">
               Search
             </button>
           </div>
         </div>
 
         {/* Plant Filter and Stats Row */}
-        <div className="pt-3 border-t border-white/20">
+        <div className="pt-2 border-t border-orange-200/30">
           <div className="flex items-center justify-between">
             {/* Plant Filter - Left Side */}
-            <div className="flex flex-wrap gap-1">
-              {plants.map((plant) => (
-                <button
-                  key={plant.id}
-                  onClick={() => setSelectedPlant(plant.id)}
-                  className={`px-2 py-1 rounded-md font-medium text-xs transition-all ${
-                    selectedPlant === plant.id
-                      ? 'bg-white/20 text-white shadow-lg'
-                      : 'text-white/70 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {plant.name}
-                </button>
-              ))}
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-semibold text-gray-700">Plant:</span>
+              <div className="flex items-center space-x-1">
+                {plants.map((plant) => (
+                  <button
+                    key={plant.id}
+                    onClick={() => setSelectedPlant(plant.id)}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-all duration-300 ${
+                      selectedPlant === plant.id
+                        ? 'text-orange-600 bg-orange-50 border border-orange-200'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {plant.name}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Approval Stats - Right Side */}
             {activeSection === 'approvals' && (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 <div className="text-center">
-                  <div className={`text-lg font-bold ${themeColors.limeColor}`}>15</div>
-                  <div className={`text-xs ${themeColors.accentText}`}>Pending</div>
+                  <div className="text-sm font-bold text-orange-600">15</div>
+                  <div className="text-xs text-gray-500">Pending</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-emerald-400">8</div>
-                  <div className={`text-xs ${themeColors.accentText}`}>Approved</div>
+                  <div className="text-sm font-bold text-green-600">8</div>
+                  <div className="text-xs text-gray-500">Approved</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-amber-400">3</div>
-                  <div className={`text-xs ${themeColors.accentText}`}>Overdue</div>
+                  <div className="text-sm font-bold text-amber-600">3</div>
+                  <div className="text-xs text-gray-500">Overdue</div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-lg font-bold ${themeColors.tealColor}`}>67%</div>
-                  <div className={`text-xs ${themeColors.accentText}`}>Progress</div>
+                  <div className="text-sm font-bold text-blue-600">67%</div>
+                  <div className="text-xs text-gray-500">Progress</div>
                 </div>
               </div>
             )}
@@ -310,15 +311,9 @@ const AppContent = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const handleThemeToggle = () => {
-    const newTheme = currentTheme === 'teal' ? 'blue' : 'teal'
-    setCurrentTheme(newTheme)
-    setTheme(newTheme)
-  }
-
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${themeColors.background}`}>
-      <Header isScrolled={isScrolled} currentTheme={currentTheme} onThemeToggle={handleThemeToggle} />
+    <div className="min-h-screen bg-gray-50">
+      <Header isScrolled={isScrolled} currentTheme={currentTheme} />
       
       {/* Main Content with Conditional Top Spacing */}
       <div className={`${isScrolled ? 'pt-16' : 'pt-8'} p-4`}>

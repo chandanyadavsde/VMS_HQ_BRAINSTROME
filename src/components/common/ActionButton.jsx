@@ -15,7 +15,7 @@ const ActionButton = ({
   const getVariantClasses = (variant) => {
     switch (variant) {
       case 'primary':
-        return 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white'
+        return 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white'
       case 'secondary':
         return 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
       case 'success':
@@ -25,7 +25,7 @@ const ActionButton = ({
       case 'warning':
         return 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
       default:
-        return 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white'
+        return 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white'
     }
   }
 

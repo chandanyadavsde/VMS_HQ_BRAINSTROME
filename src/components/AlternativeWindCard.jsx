@@ -232,7 +232,7 @@ const AlternativeWindCard = ({ currentTheme = 'teal' }) => {
                   </div>
                   <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
                     <motion.div
-                      className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"
+                      className="h-full bg-gradient-to-r from-teal-400 to-teal-500 rounded-full"
                       initial={{ width: 0 }}
                       animate={{ width: `${stage.progress}%` }}
                       transition={{ duration: 0.8, ease: "easeOut" }}
@@ -269,7 +269,7 @@ const AlternativeWindCard = ({ currentTheme = 'teal' }) => {
                       {/* Action Buttons */}
                       <div className="flex space-x-2 mt-4">
                         {stage.status === 'not-started' && (
-                          <button className="px-3 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all">
+                          <button className="px-3 py-1 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-xs rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all">
                             <Play className="w-3 h-3 inline mr-1" />
                             Start
                           </button>

@@ -126,7 +126,7 @@ const WindEnergyCard = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-2xl font-bold text-white mb-1">Wind Farm Alpha</h2>
-              <p className="text-blue-200 text-sm">Location: Coastal Plains</p>
+                              <p className="text-teal-200 text-sm">Location: Coastal Plains</p>
             </div>
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -205,7 +205,7 @@ const WindEnergyCard = () => {
             <p className="text-white font-medium">
               {stages.find(s => s.status === 'in-progress')?.name || 'All stages completed'}
             </p>
-            <p className="text-blue-200 text-sm">
+                            <p className="text-teal-200 text-sm">
               {stages.filter(s => s.status === 'completed').length} of {stages.length} stages complete
             </p>
           </div>

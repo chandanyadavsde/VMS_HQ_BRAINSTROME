@@ -1,8 +1,10 @@
 # 🎨 Color Theme Guide
 
-## Quick Color Changes
+## Current Theme: Skeiron Teal
 
-### 🚀 **Easy Way (Recommended)**
+The application now uses a single **Skeiron Teal** theme throughout. The theme is consistent across all components and provides a modern, professional appearance.
+
+### 🚀 **Easy Way to Customize**
 To change the entire application theme, modify **only one file**:
 
 **File:** `tailwind.config.js`
@@ -11,16 +13,16 @@ To change the entire application theme, modify **only one file**:
 ```javascript
 // Change these colors to change the entire theme
 primary: {
-  50: '#f0f9ff',   // Lightest shade
-  100: '#e0f2fe',
-  200: '#bae6fd',
-  300: '#7dd3fc',
-  400: '#38bdf8',  // Light primary
-  500: '#0ea5e9',  // Main primary color ← CHANGE THIS
-  600: '#0284c7',  // Dark primary
-  700: '#0369a1',
-  800: '#075985',
-  900: '#0c4a6e',  // Darkest shade
+  50: '#f0fdfa',   // Lightest shade
+  100: '#ccfbf1',
+  200: '#99f6e4',
+  300: '#5eead4',
+  400: '#2dd4bf',  // Light primary
+  500: '#14b8a6',  // Main primary color ← CHANGE THIS
+  600: '#0d9488',  // Dark primary
+  700: '#0f766e',
+  800: '#115e59',
+  900: '#134e4a',  // Darkest shade
 },
 ```
 
@@ -126,22 +128,15 @@ getColorClasses.borderPrimary  // Main border
 getColorClasses.borderGlass    // Glass border
 ```
 
-## 🔄 **Theme Switching**
+## 🔄 **Theme Customization**
 
 ### **Static Theme Change**
 1. Modify `tailwind.config.js`
 2. Restart your development server
 3. All colors update automatically
 
-### **Dynamic Theme Change**
-Use the `ThemeSwitcher` component:
-
-```javascript
-import ThemeSwitcher from './components/ThemeSwitcher.jsx'
-
-// Add to your App.jsx
-<ThemeSwitcher />
-```
+### **Note**
+The application now uses a single consistent theme. Dynamic theme switching has been removed to maintain design consistency.
 
 ## 📊 **Current Color Usage**
 
@@ -231,27 +226,30 @@ For dynamic theme switching, use CSS custom properties:
 
 ## 🎨 **Theme Examples**
 
-### **Default (Cyan)**
+### **Current (Teal)**
 ```javascript
-primary: { 500: '#0ea5e9' }
+primary: { 500: '#14b8a6' }
 ```
 
-### **Purple**
+### **Alternative Themes**
+If you want to change to a different color scheme, here are some examples:
+
+**Purple**
 ```javascript
 primary: { 500: '#8b5cf6' }
 ```
 
-### **Green**
+**Green**
 ```javascript
 primary: { 500: '#10b981' }
 ```
 
-### **Orange**
+**Orange**
 ```javascript
 primary: { 500: '#f97316' }
 ```
 
-### **Pink**
+**Pink**
 ```javascript
 primary: { 500: '#ec4899' }
 ```

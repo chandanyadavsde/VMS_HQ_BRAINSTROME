@@ -14,7 +14,7 @@ const ProgressBar = ({
   const progressBar = (
     <div className={`w-full bg-white/10 rounded-full ${height} overflow-hidden ${className}`}>
       <motion.div
-        className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"
+        className="h-full bg-gradient-to-r from-teal-400 to-teal-500 rounded-full"
         initial={animated ? { width: 0 } : {}}
         animate={{ width: `${clampedProgress}%` }}
         transition={{ duration: animated ? 0.8 : 0, ease: "easeOut" }}

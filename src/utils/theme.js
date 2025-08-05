@@ -1,20 +1,5 @@
 // Theme configuration
 export const themes = {
-  blue: {
-    name: 'Blue Theme',
-    background: 'from-slate-900 via-blue-900 to-slate-900',
-    cardGradient: 'from-cyan-900 via-blue-900 to-indigo-900',
-    cardBackground: 'linear-gradient(135deg, #0c4a6e 0%, #1e40af 50%, #3730a3 100%)',
-    logoGradient: 'from-cyan-400 to-blue-500',
-    accentText: 'text-cyan-200',
-    accentColor: 'text-cyan-400',
-    accentBg: 'bg-cyan-500/20',
-    successColor: 'text-emerald-400',
-    limeColor: 'text-lime-400',
-    tealColor: 'text-teal-400',
-    tealText: 'text-teal-200',
-    tealBg: 'bg-teal-500/20',
-  },
   teal: {
     name: 'Skeiron Teal',
     background: 'from-slate-900 via-teal-900 to-slate-900',
