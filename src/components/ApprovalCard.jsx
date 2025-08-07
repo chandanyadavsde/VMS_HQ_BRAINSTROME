@@ -240,53 +240,53 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
   const renderAttachments = (attachments, documentType) => {
     if (!attachments || attachments.length === 0) {
       return (
-        <div className="mt-3 p-3 bg-white/5 rounded-lg">
-          <p className="text-gray-400 text-sm">No attachments available</p>
+        <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <p className="text-gray-500 text-sm">No attachments available</p>
         </div>
       )
     }
 
     return (
       <div className="mt-3">
-        <label className="text-teal-300 text-sm">Attachments</label>
+        <label className="text-gray-700 text-sm font-medium">Attachments</label>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
           {attachments.map((doc, index) => {
             const isImage = doc.mimeType?.startsWith('image/')
             const isPDF = doc.mimeType === 'application/pdf'
             
             return (
-              <div key={index} className="border border-white/10 rounded-lg p-3 bg-white/5">
+              <div key={index} className="border border-orange-200/30 rounded-lg p-3 bg-white/60 backdrop-blur-sm shadow-sm">
                 {isImage ? (
                   <div className="space-y-2">
                     <img 
                       src={doc.url} 
                       alt={doc.fileName}
-                      className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-orange-200/20"
                       onClick={() => window.open(doc.url, '_blank')}
                     />
-                    <p className="text-white text-xs truncate">{doc.fileName}</p>
+                    <p className="text-gray-700 text-xs truncate font-medium">{doc.fileName}</p>
                   </div>
                 ) : isPDF ? (
                   <div className="space-y-2">
-                    <div className="w-full h-32 bg-red-500/20 rounded-lg flex items-center justify-center cursor-pointer hover:bg-red-500/30 transition-colors"
+                    <div className="w-full h-32 bg-red-50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-red-100 transition-colors border border-red-200"
                          onClick={() => window.open(doc.url, '_blank')}>
                       <div className="text-center">
-                        <FileText className="w-8 h-8 text-red-400 mx-auto mb-2" />
-                        <p className="text-red-400 text-xs">PDF Document</p>
+                        <FileText className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                        <p className="text-red-600 text-xs font-medium">PDF Document</p>
                       </div>
                     </div>
-                    <p className="text-white text-xs truncate">{doc.fileName}</p>
+                    <p className="text-gray-700 text-xs truncate font-medium">{doc.fileName}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <div className="w-full h-32 bg-gray-500/20 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-500/30 transition-colors"
+                    <div className="w-full h-32 bg-blue-50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-blue-100 transition-colors border border-blue-200"
                          onClick={() => window.open(doc.url, '_blank')}>
                       <div className="text-center">
-                        <DocumentIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-400 text-xs">Document</p>
+                        <DocumentIcon className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                        <p className="text-blue-600 text-xs font-medium">Document</p>
                       </div>
                     </div>
-                    <p className="text-white text-xs truncate">{doc.fileName}</p>
+                    <p className="text-gray-700 text-xs truncate font-medium">{doc.fileName}</p>
                   </div>
                 )}
               </div>
@@ -395,7 +395,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
       {/* Enhanced Texture Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-50/40 via-transparent to-green-50/40 opacity-60"></div>
       <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/20 via-transparent to-purple-50/20 opacity-40"></div>
-      
+
       {/* Main Content */}
       <div className="relative z-10 h-full flex flex-col">
         {/* Compact Header */}
@@ -423,7 +423,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                 sectionType === 'approved' ? 'bg-green-500' :
                 'bg-red-500'
               }`}></div>
-              {vehicle.approved_by_hq || sectionType}
+            {vehicle.approved_by_hq || sectionType}
             </div>
           </div>
         </div>
@@ -676,9 +676,9 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {vehicles.slice(0, 4).map((vehicle, index) => 
-                    renderCard(vehicle, index, sectionType)
-                  )}
-                </div>
+                  renderCard(vehicle, index, sectionType)
+              )}
+            </div>
               )}
             </>
           )}
@@ -746,7 +746,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                           </p>
                         </div>
                       </div>
-                      <button
+                    <button
                         onClick={() => {
                           setModalState(false)
                           setSearchTerm('') // Clear search when modal closes
@@ -754,19 +754,19 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                         className="p-3 rounded-xl bg-white/80 backdrop-blur-sm border border-orange-200/30 hover:bg-white hover:shadow-lg transition-all shadow-sm"
                       >
                         <XCircle className="w-6 h-6 text-gray-600" />
-                      </button>
-                    </div>
+                    </button>
+                  </div>
 
                     {/* Enhanced Search Box */}
                     <div className="mb-8">
-                      <div className="relative">
+                    <div className="relative">
                         <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                           </svg>
                         </div>
-                        <input
-                          type="text"
+                      <input
+                        type="text"
                           placeholder="Search by vehicle number..."
                           value={searchTerm}
                           className="w-full pl-12 pr-4 py-4 bg-white/80 backdrop-blur-sm border border-orange-200/30 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
@@ -784,8 +784,8 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                             </svg>
                           </button>
                         )}
-                      </div>
                     </div>
+                  </div>
 
                     {/* Enhanced Cards Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 overflow-y-auto max-h-[65vh] pr-2">
@@ -794,8 +794,8 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                           vehicle.custrecord_vehicle_number?.toLowerCase().includes(searchTerm.toLowerCase())
                         )
                         .map((vehicle, index) => 
-                          renderCard(vehicle, index, sectionType)
-                        )}
+                      renderCard(vehicle, index, sectionType)
+                    )}
                     </div>
                   </div>
                 </motion.div>
@@ -869,7 +869,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
         {/* Enhanced Texture Overlay */}
         <div className={`absolute inset-0 bg-gradient-to-br ${emptyData.gradient} opacity-60`}></div>
         <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/10 via-transparent to-purple-50/10 opacity-30"></div>
-        
+
         {/* Main Content */}
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center">
           {/* Enhanced Icon */}
@@ -1351,20 +1351,33 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 backdrop-blur-md"
                 onClick={() => {
                   setActiveSection(null)
                   setActiveVehicle(null)
                 }}
               />
               <motion.div
-                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide"
+                className="relative bg-white/95 backdrop-blur-sm rounded-3xl p-8 max-w-6xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide border border-orange-200/30 shadow-2xl"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 onClick={(e) => e.stopPropagation()}
               >
+                {/* Enhanced Multi-Layer Texture Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 via-transparent to-green-50/50 opacity-70"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/30 via-transparent to-purple-50/30 opacity-40"></div>
+                <div className="absolute inset-0 bg-gradient-to-bl from-yellow-50/20 via-transparent to-pink-50/20 opacity-30"></div>
+                
+                {/* Subtle Animated Gradient Bar */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 via-green-400 to-blue-400 opacity-60 animate-pulse"></div>
+                
+                {/* Glass Effect Border */}
+                <div className="absolute inset-0 rounded-3xl border border-orange-200/40 shadow-inner"></div>
+                
+                {/* Modal Content */}
+                <div className="relative z-10">
                 {/* Find the vehicle data */}
                 {(() => {
                   const vehicle = [...pendingVehicles, ...approvedVehicles, ...rejectedVehicles]
@@ -1374,15 +1387,19 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
 
                   return (
                     <div>
-                      {/* Header */}
-                      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/20">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center">
-                            <Truck className="w-6 h-6 text-teal-400" />
+                      {/* Enhanced Header with Texture */}
+                      <div className="flex items-center justify-between mb-8 pb-6 border-b border-orange-200/30 relative">
+                        {/* Header Background Texture */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-orange-50/30 via-transparent to-green-50/30 rounded-t-3xl"></div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+                        
+                        <div className="relative z-10 flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/30 to-blue-600/20 flex items-center justify-center shadow-lg border border-blue-200/30 backdrop-blur-sm">
+                            <Truck className="w-8 h-8 text-blue-700" />
                           </div>
                           <div>
-                            <h3 className="text-2xl font-bold text-white">Vehicle Details</h3>
-                            <p className="text-teal-400 text-base">{vehicle.custrecord_vehicle_number}</p>
+                            <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Vehicle Details</h3>
+                            <p className="text-gray-600 text-lg font-medium">{vehicle.custrecord_vehicle_number}</p>
                           </div>
                         </div>
                         <button
@@ -1390,9 +1407,9 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                             setActiveSection(null)
                             setActiveVehicle(null)
                           }}
-                          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                          className="relative z-10 p-3 rounded-xl bg-white/90 backdrop-blur-sm border border-orange-200/40 hover:bg-white hover:shadow-lg transition-all shadow-sm hover:scale-105"
                         >
-                          <XCircle className="w-6 h-6 text-white" />
+                          <XCircle className="w-6 h-6 text-gray-600" />
                         </button>
                       </div>
 
@@ -1402,12 +1419,16 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                         {(() => {
                           const warningMessage = getVehicleApprovalWarning(vehicle)
                           return warningMessage ? (
-                            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-                              <div className="flex items-center gap-3">
-                                <AlertCircle className="w-5 h-5 text-yellow-400" />
+                            <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6 shadow-sm relative overflow-hidden">
+                              {/* Warning Background Texture */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-orange-100/20 via-transparent to-red-100/20"></div>
+                              <div className="relative z-10 flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shadow-sm">
+                                  <AlertCircle className="w-5 h-5 text-orange-600" />
+                                </div>
                                 <div>
-                                  <h4 className="text-yellow-400 font-medium">Vehicle Approval Blocked</h4>
-                                  <p className="text-yellow-300 text-sm mt-1 whitespace-pre-line">
+                                  <h4 className="text-orange-700 font-semibold">Vehicle Approval Blocked</h4>
+                                  <p className="text-orange-600 text-sm mt-2 whitespace-pre-line">
                                     {warningMessage}
                                   </p>
                                 </div>
@@ -1416,163 +1437,197 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                           ) : null
                         })()}
                         {/* Basic Vehicle Information */}
-                        <div className="bg-white/5 rounded-xl p-4">
-                          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <Car className="w-5 h-5 text-teal-400" />
+                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
+                          {/* Section Background Texture */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-purple-50/20"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent"></div>
+                          <h4 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
+                            <Car className="w-6 h-6 text-blue-600" />
                             Basic Vehicle Information
                           </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                              <label className="text-teal-300 text-sm">Vehicle Number</label>
-                              <p className="text-white font-medium">{vehicle.custrecord_vehicle_number}</p>
+                              <label className="text-gray-600 text-sm font-medium">Vehicle Number</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_vehicle_number}</p>
                             </div>
                             <div>
-                              <label className="text-teal-300 text-sm">Current Plant</label>
-                              <p className="text-white font-medium">{vehicle.currentPlant}</p>
+                              <label className="text-gray-600 text-sm font-medium">Current Plant</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.currentPlant}</p>
                             </div>
                             <div>
-                              <label className="text-teal-300 text-sm">Vehicle Type</label>
-                              <p className="text-white font-medium">{vehicle.custrecord_vehicle_type_ag}</p>
+                              <label className="text-gray-600 text-sm font-medium">Vehicle Type</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_vehicle_type_ag}</p>
                             </div>
                             <div>
-                              <label className="text-teal-300 text-sm">Age of Vehicle</label>
-                              <p className="text-white font-medium">{vehicle.custrecord_age_of_vehicle}</p>
+                              <label className="text-gray-600 text-sm font-medium">Age of Vehicle</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_age_of_vehicle}</p>
                             </div>
                           </div>
                         </div>
 
                         {/* Technical Details */}
-                        <div className="bg-white/5 rounded-xl p-4">
-                          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <DocumentIcon className="w-5 h-5 text-teal-400" />
+                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
+                          {/* Section Background Texture */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-purple-50/20 via-transparent to-pink-50/20"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent"></div>
+                          <h4 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
+                            <DocumentIcon className="w-6 h-6 text-purple-600" />
                             Technical Details
                           </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                              <label className="text-teal-300 text-sm">Engine Number</label>
-                              <p className="text-white font-medium">{vehicle.custrecord_engine_number_ag}</p>
+                              <label className="text-gray-600 text-sm font-medium">Engine Number</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_engine_number_ag}</p>
                             </div>
                             <div>
-                              <label className="text-teal-300 text-sm">Chassis Number</label>
-                              <p className="text-white font-medium">{vehicle.custrecord_chassis_number}</p>
+                              <label className="text-gray-600 text-sm font-medium">Chassis Number</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_chassis_number}</p>
                             </div>
                           </div>
                         </div>
 
                         {/* Documentation */}
-                        <div className="bg-white/5 rounded-xl p-4">
-                          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <FileText className="w-5 h-5 text-teal-400" />
+                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
+                          {/* Section Background Texture */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-green-50/20 via-transparent to-teal-50/20"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent"></div>
+                          <h4 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
+                            <FileText className="w-6 h-6 text-green-600" />
                             Documentation
                           </h4>
                           <div className="space-y-4">
                             {/* RC Document */}
-                            <div className="border border-white/10 rounded-lg p-4">
-                              <h5 className="text-white font-medium mb-3">RC Document</h5>
+                            <div className="bg-white/60 backdrop-blur-sm border border-orange-200/20 rounded-xl p-5 shadow-sm">
+                              <h5 className="text-gray-900 font-semibold mb-4 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                RC Document
+                              </h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-teal-300 text-sm">RC Number</label>
-                                  <p className="text-white font-medium">{vehicle.custrecord_rc_no}</p>
+                                  <label className="text-gray-600 text-sm font-medium">RC Number</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_rc_no}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">Start Date</label>
-                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_rc_start_date)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Start Date</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.custrecord_rc_start_date)}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">End Date</label>
-                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_rc_end_date)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">End Date</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.custrecord_rc_end_date)}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">Status</label>
-                                  <p className="text-white font-medium">{getDocumentStatus(vehicle.custrecord_rc_end_date)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Status</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{getDocumentStatus(vehicle.custrecord_rc_end_date)}</p>
                                 </div>
                               </div>
                                                               {renderAttachments(vehicle.custrecord_rc_doc_attach, 'RC Document')}
                             </div>
 
                             {/* Insurance */}
-                            <div className="border border-white/10 rounded-lg p-4">
-                              <h5 className="text-white font-medium mb-3">Insurance</h5>
+                            <div className="bg-white/60 backdrop-blur-sm border border-orange-200/20 rounded-xl p-5 shadow-sm">
+                              <h5 className="text-gray-900 font-semibold mb-4 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Insurance
+                              </h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-teal-300 text-sm">Company</label>
-                                  <p className="text-white font-medium">{vehicle.custrecord_insurance_company_name_ag}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Company</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_insurance_company_name_ag}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">Policy Number</label>
-                                  <p className="text-white font-medium">{vehicle.custrecord_insurance_number_ag}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Policy Number</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_insurance_number_ag}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">Start Date</label>
-                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_insurance_start_date_ag)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Start Date</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.custrecord_insurance_start_date_ag)}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">End Date</label>
-                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_insurance_end_date_ag)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">End Date</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.custrecord_insurance_end_date_ag)}</p>
                                 </div>
                               </div>
                                                               {renderAttachments(vehicle.custrecord_insurance_attachment_ag, 'Insurance')}
                             </div>
 
                             {/* Permit */}
-                            <div className="border border-white/10 rounded-lg p-4">
-                              <h5 className="text-white font-medium mb-3">Permit</h5>
+                            <div className="bg-white/60 backdrop-blur-sm border border-orange-200/20 rounded-xl p-5 shadow-sm">
+                              <h5 className="text-gray-900 font-semibold mb-4 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Permit
+                              </h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-teal-300 text-sm">Permit Number</label>
-                                  <p className="text-white font-medium">{vehicle.custrecord_permit_number_ag}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Permit Number</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_permit_number_ag}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">Start Date</label>
-                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_permit_start_date)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Start Date</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.custrecord_permit_start_date)}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">End Date</label>
-                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_permit_end_date)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">End Date</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.custrecord_permit_end_date)}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">Status</label>
-                                  <p className="text-white font-medium">{getDocumentStatus(vehicle.custrecord_permit_end_date)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Status</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{getDocumentStatus(vehicle.custrecord_permit_end_date)}</p>
                                 </div>
                               </div>
                                                               {renderAttachments(vehicle.custrecord_permit_attachment_ag, 'Permit')}
                             </div>
 
                             {/* PUC */}
-                            <div className="border border-white/10 rounded-lg p-4">
-                              <h5 className="text-white font-medium mb-3">PUC</h5>
+                            <div className="bg-white/60 backdrop-blur-sm border border-orange-200/20 rounded-xl p-5 shadow-sm">
+                              <h5 className="text-gray-900 font-semibold mb-4 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                PUC
+                              </h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-teal-300 text-sm">PUC Number</label>
-                                  <p className="text-white font-medium">{vehicle.custrecord_puc_number}</p>
+                                  <label className="text-gray-600 text-sm font-medium">PUC Number</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_puc_number}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">Start Date</label>
-                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_puc_start_date_ag)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Start Date</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.custrecord_puc_start_date_ag)}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">End Date</label>
-                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_puc_end_date_ag)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">End Date</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.custrecord_puc_end_date_ag)}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">Status</label>
-                                  <p className="text-white font-medium">{getDocumentStatus(vehicle.custrecord_puc_end_date_ag)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Status</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{getDocumentStatus(vehicle.custrecord_puc_end_date_ag)}</p>
                                 </div>
                               </div>
                                                               {renderAttachments(vehicle.custrecord_puc_attachment_ag, 'PUC')}
                             </div>
 
                             {/* Fitness Certificate */}
-                            <div className="border border-white/10 rounded-lg p-4">
-                              <h5 className="text-white font-medium mb-3">Fitness Certificate</h5>
+                            <div className="bg-white/60 backdrop-blur-sm border border-orange-200/20 rounded-xl p-5 shadow-sm">
+                              <h5 className="text-gray-900 font-semibold mb-4 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Fitness Certificate
+                              </h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-teal-300 text-sm">Valid Until</label>
-                                  <p className="text-white font-medium">{formatDate(vehicle.custrecord_tms_vehicle_fit_cert_vld_upto)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Valid Until</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.custrecord_tms_vehicle_fit_cert_vld_upto)}</p>
                                 </div>
                                 <div>
-                                  <label className="text-teal-300 text-sm">Status</label>
-                                  <p className="text-white font-medium">{getDocumentStatus(vehicle.custrecord_tms_vehicle_fit_cert_vld_upto)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Status</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{getDocumentStatus(vehicle.custrecord_tms_vehicle_fit_cert_vld_upto)}</p>
                                 </div>
                               </div>
                                                               {renderAttachments(vehicle.custrecord_tms_vehicle_fit_cert_attach, 'Fitness Certificate')}
@@ -1581,47 +1636,52 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                         </div>
 
                         {/* Vendor & Owner Information */}
-                        <div className="bg-white/5 rounded-xl p-4">
-                          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <User className="w-5 h-5 text-teal-400" />
+                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
+                          {/* Section Background Texture */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/20 via-transparent to-purple-50/20"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent"></div>
+                          <h4 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
+                            <User className="w-6 h-6 text-indigo-600" />
                             Vendor & Owner Information
                           </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                              <label className="text-teal-300 text-sm">Vendor Name</label>
-                              <p className="text-white font-medium">{vehicle.custrecord_vendor_name_ag?.name || 'N/A'}</p>
+                              <label className="text-gray-600 text-sm font-medium">Vendor Name</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_vendor_name_ag?.name || 'N/A'}</p>
                             </div>
                             <div>
-                              <label className="text-teal-300 text-sm">Owner Name</label>
-                              <p className="text-white font-medium">{vehicle.custrecord_owner_name_ag}</p>
+                              <label className="text-gray-600 text-sm font-medium">Owner Name</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_owner_name_ag}</p>
                             </div>
                             <div>
-                              <label className="text-teal-300 text-sm">Owner Number</label>
-                              <p className="text-white font-medium">{vehicle.custrecord_owner_no_ag}</p>
+                              <label className="text-gray-600 text-sm font-medium">Owner Number</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_owner_no_ag}</p>
                             </div>
                             <div>
-                              <label className="text-teal-300 text-sm">Created By</label>
-                              <p className="text-white font-medium">{vehicle.custrecord_create_by}</p>
+                              <label className="text-gray-600 text-sm font-medium">Created By</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_create_by}</p>
                             </div>
                             <div>
-                              <label className="text-teal-300 text-sm">GPS Available</label>
-                              <p className="text-white font-medium">{vehicle.custrecord_vehicle_master_gps_available ? 'Yes' : 'No'}</p>
+                              <label className="text-gray-600 text-sm font-medium">GPS Available</label>
+                              <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_vehicle_master_gps_available ? 'Yes' : 'No'}</p>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Review Message and Action Buttons */}
-                      <div className="mt-6 pt-4 border-t border-white/20">
-                        <div className="space-y-4">
+                      <div className="mt-6 pt-6 border-t border-orange-200/30 relative">
+                        {/* Section Background Texture */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-50/10 via-transparent to-yellow-50/10 rounded-b-3xl"></div>
+                        <div className="relative z-10 space-y-4">
                           {/* Review Message */}
                           <div>
-                            <label className="block text-white text-sm font-medium mb-2">Review Message</label>
+                            <label className="block text-gray-700 text-sm font-medium mb-2">Review Message</label>
                             <textarea
                               value={reviewMessage}
                               onChange={(e) => setReviewMessage(e.target.value)}
                               placeholder="Add your review message here..."
-                              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                              className="w-full px-4 py-3 bg-white/90 backdrop-blur-sm border border-orange-200/40 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none shadow-sm hover:shadow-md transition-shadow"
                               rows={3}
                             />
                           </div>
@@ -1635,30 +1695,42 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                                   <motion.button
                                     onClick={() => handleApprovalAction(vehicle._id, 'vehicle', 'approved')}
                                     disabled={vehicleButtonState.disabled}
-                                    className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${
+                                    className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 relative overflow-hidden ${
                                       vehicleButtonState.disabled
-                                        ? 'bg-gray-500 cursor-not-allowed opacity-50'
-                                        : 'bg-green-600 hover:bg-green-700 text-white'
+                                        ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                                        : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl'
                                     }`}
                                     whileHover={!vehicleButtonState.disabled ? { scale: 1.02 } : {}}
                                     whileTap={!vehicleButtonState.disabled ? { scale: 0.98 } : {}}
                                   >
+                                    {/* Button Background Texture */}
+                                    {!vehicleButtonState.disabled && (
+                                      <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 via-transparent to-green-600/20"></div>
+                                    )}
+                                    <div className="relative z-10 flex items-center gap-2">
                                     <CheckCircle className="w-5 h-5" />
                                     {vehicleButtonState.message}
+                                    </div>
                                   </motion.button>
                                   <motion.button
                                     onClick={() => handleApprovalAction(vehicle._id, 'vehicle', 'rejected')}
                                     disabled={vehicleButtonState.disabled}
-                                    className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 ${
+                                    className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 relative overflow-hidden ${
                                       vehicleButtonState.disabled
-                                        ? 'bg-gray-500 cursor-not-allowed opacity-50'
-                                        : 'bg-red-600 hover:bg-red-700 text-white'
+                                        ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                                        : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl'
                                     }`}
                                     whileHover={!vehicleButtonState.disabled ? { scale: 1.02 } : {}}
                                     whileTap={!vehicleButtonState.disabled ? { scale: 0.98 } : {}}
                                   >
+                                    {/* Button Background Texture */}
+                                    {!vehicleButtonState.disabled && (
+                                      <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 via-transparent to-red-600/20"></div>
+                                    )}
+                                    <div className="relative z-10 flex items-center gap-2">
                                     <XCircle className="w-5 h-5" />
                                     Reject Vehicle Details
+                                    </div>
                                   </motion.button>
                                 </>
                               )
@@ -1669,6 +1741,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                     </div>
                   )
                 })()}
+                </div>
               </motion.div>
             </motion.div>
           )}
@@ -1683,38 +1756,53 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 backdrop-blur-md"
                 onClick={() => {
                   setActiveSection(null)
                   setActiveVehicle(null)
                 }}
               />
               <motion.div
-                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide"
+                className="relative bg-white/95 backdrop-blur-sm rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide border border-orange-200/30 shadow-2xl"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 onClick={(e) => e.stopPropagation()}
               >
+                {/* Enhanced Multi-Layer Texture Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 via-transparent to-green-50/50 opacity-70"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/30 via-transparent to-purple-50/30 opacity-40"></div>
+                <div className="absolute inset-0 bg-gradient-to-bl from-yellow-50/20 via-transparent to-pink-50/20 opacity-30"></div>
+                
+                {/* Subtle Animated Gradient Bar */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 via-green-400 to-blue-400 opacity-60 animate-pulse"></div>
+                
+                {/* Glass Effect Border */}
+                <div className="absolute inset-0 rounded-3xl border border-orange-200/40 shadow-inner"></div>
+                
                 {/* Find the vehicle data */}
                 {(() => {
                   const vehicle = [...pendingVehicles, ...approvedVehicles, ...rejectedVehicles]
                     .find(v => v._id === activeVehicle || v.custrecord_vehicle_number === activeVehicle)
                   
-                  if (!vehicle) return <div className="text-white">Vehicle not found</div>
+                  if (!vehicle) return <div className="text-gray-900">Vehicle not found</div>
 
                   return (
                     <div>
-                      {/* Header */}
-                      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/20">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-lime-500/20 flex items-center justify-center">
-                            <User className="w-6 h-6 text-lime-400" />
+                      {/* Enhanced Header with Texture */}
+                      <div className="flex items-center justify-between mb-8 pb-6 border-b border-orange-200/30 relative">
+                        {/* Header Background Texture */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-orange-50/30 via-transparent to-green-50/30 rounded-t-3xl"></div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+                        
+                        <div className="relative z-10 flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500/30 to-green-600/20 flex items-center justify-center shadow-lg border border-green-200/30 backdrop-blur-sm">
+                            <User className="w-8 h-8 text-green-700" />
                           </div>
                           <div>
-                            <h3 className="text-2xl font-bold text-white">Driver Details</h3>
-                            <p className="text-lime-400 text-base">{vehicle.custrecord_vehicle_number}</p>
+                            <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Driver Details</h3>
+                            <p className="text-gray-600 text-lg font-medium">{vehicle.custrecord_vehicle_number}</p>
                           </div>
                         </div>
                         <button
@@ -1722,9 +1810,9 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                             setActiveSection(null)
                             setActiveVehicle(null)
                           }}
-                          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                          className="relative z-10 p-3 rounded-xl bg-white/90 backdrop-blur-sm border border-orange-200/40 hover:bg-white hover:shadow-lg transition-all shadow-sm hover:scale-105"
                         >
-                          <XCircle className="w-6 h-6 text-white" />
+                          <XCircle className="w-6 h-6 text-gray-600" />
                         </button>
                       </div>
 
@@ -1732,53 +1820,64 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                       {vehicle.assignedDriver ? (
                         <div className="space-y-6">
                           {/* Basic Driver Information */}
-                          <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                              <User className="w-5 h-5 text-lime-400" />
+                          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
+                            {/* Section Background Texture */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-50/20 via-transparent to-blue-50/20"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent"></div>
+                            
+                            <div className="relative z-10">
+                              <h4 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
+                                <User className="w-6 h-6 text-green-600" />
                               Basic Driver Information
                             </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div>
-                                <label className="text-lime-300 text-sm">Driver Name</label>
-                                <p className="text-white font-medium">{vehicle.assignedDriver.custrecord_driver_name}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Driver Name</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.assignedDriver.custrecord_driver_name}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Mobile Number</label>
-                                <p className="text-white font-medium">{vehicle.assignedDriver.custrecord_driver_mobile_no}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Mobile Number</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.assignedDriver.custrecord_driver_mobile_no}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Created By</label>
-                                <p className="text-white font-medium">{vehicle.assignedDriver.custrecord_create_by_driver_master}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Created By</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.assignedDriver.custrecord_create_by_driver_master}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">LCA Test Status</label>
-                                <p className="text-white font-medium capitalize">{vehicle.assignedDriver.custrecord_driving_lca_test}</p>
+                                  <label className="text-gray-600 text-sm font-medium">LCA Test Status</label>
+                                  <p className="text-gray-900 font-semibold mt-1 capitalize">{vehicle.assignedDriver.custrecord_driving_lca_test}</p>
+                                </div>
                               </div>
                             </div>
                           </div>
 
                           {/* License Information */}
-                          <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                              <FileText className="w-5 h-5 text-lime-400" />
+                          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
+                            {/* Section Background Texture */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-purple-50/20"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent"></div>
+                            
+                            <div className="relative z-10">
+                              <h4 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
+                                <FileText className="w-6 h-6 text-blue-600" />
                               License Information
                             </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div>
-                                <label className="text-lime-300 text-sm">License Number</label>
-                                <p className="text-white font-medium">{vehicle.assignedDriver.custrecord_driving_license_no}</p>
+                                  <label className="text-gray-600 text-sm font-medium">License Number</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.assignedDriver.custrecord_driving_license_no}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">License Category</label>
-                                <p className="text-white font-medium">{vehicle.assignedDriver.custrecord_license_category_ag}</p>
+                                  <label className="text-gray-600 text-sm font-medium">License Category</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.assignedDriver.custrecord_license_category_ag}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">License Start Date</label>
-                                <p className="text-white font-medium">{formatDate(vehicle.assignedDriver.custrecord_driving_license_s_date)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">License Start Date</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.assignedDriver.custrecord_driving_license_s_date)}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">License End Date</label>
-                                <p className="text-white font-medium">{formatDate(vehicle.assignedDriver.custrecord_driver_license_e_date)}</p>
+                                  <label className="text-gray-600 text-sm font-medium">License End Date</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{formatDate(vehicle.assignedDriver.custrecord_driver_license_e_date)}</p>
                               </div>
                             </div>
                             
@@ -1791,63 +1890,76 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                               })), 
                               'Driving License'
                             )}
+                            </div>
                           </div>
 
                           {/* Vehicle Assignment */}
-                          <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                              <Truck className="w-5 h-5 text-lime-400" />
+                          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
+                            {/* Section Background Texture */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-orange-50/20 via-transparent to-yellow-50/20"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent"></div>
+                            
+                            <div className="relative z-10">
+                              <h4 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
+                                <Truck className="w-6 h-6 text-orange-600" />
                               Vehicle Assignment
                             </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div>
-                                <label className="text-lime-300 text-sm">Assigned Vehicle</label>
-                                <p className="text-white font-medium">{vehicle.custrecord_vehicle_number}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Assigned Vehicle</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_vehicle_number}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Vehicle Type</label>
-                                <p className="text-white font-medium">{vehicle.custrecord_vehicle_type_ag}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Vehicle Type</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.custrecord_vehicle_type_ag}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Current Plant</label>
-                                <p className="text-white font-medium">{vehicle.currentPlant}</p>
+                                  <label className="text-gray-600 text-sm font-medium">Current Plant</label>
+                                  <p className="text-gray-900 font-semibold mt-1">{vehicle.currentPlant}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Approval Status</label>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  <label className="text-gray-600 text-sm font-medium">Approval Status</label>
+                                  <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm mt-1 ${
                                   vehicle.assignedDriver.approved_by_hq === 'approved' 
-                                    ? 'bg-green-500/20 text-green-200' 
+                                      ? 'bg-green-50 text-green-700 border border-green-200' 
                                     : vehicle.assignedDriver.approved_by_hq === 'rejected'
-                                    ? 'bg-red-500/20 text-red-200'
-                                    : 'bg-yellow-500/20 text-yellow-200'
+                                      ? 'bg-red-50 text-red-700 border border-red-200'
+                                      : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
                                 }`}>
                                   {vehicle.assignedDriver.approved_by_hq || 'pending'}
                                 </span>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
                       ) : (
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 rounded-full bg-gray-500/20 flex items-center justify-center mx-auto mb-4">
-                            <User className="w-8 h-8 text-gray-400" />
+                        <div className="text-center py-12 relative">
+                          {/* Empty State Background Texture */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-gray-50/30 via-transparent to-blue-50/30 rounded-xl"></div>
+                          <div className="relative z-10">
+                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-6 shadow-lg border border-gray-200">
+                              <User className="w-10 h-10 text-gray-500" />
                           </div>
-                          <h4 className="text-xl font-semibold text-white mb-2">No Driver Assigned</h4>
-                          <p className="text-gray-400">This vehicle currently has no driver assigned to it.</p>
+                            <h4 className="text-2xl font-bold text-gray-900 mb-3">No Driver Assigned</h4>
+                            <p className="text-gray-600 text-lg">This vehicle currently has no driver assigned to it.</p>
+                          </div>
                         </div>
                       )}
 
                       {/* Review Message and Action Buttons */}
-                      <div className="mt-6 pt-4 border-t border-white/20">
-                        <div className="space-y-4">
+                      <div className="mt-6 pt-6 border-t border-orange-200/30 relative">
+                        {/* Section Background Texture */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-50/10 via-transparent to-yellow-50/10 rounded-b-3xl"></div>
+                        <div className="relative z-10 space-y-4">
                           {/* Review Message */}
                           <div>
-                            <label className="block text-white text-sm font-medium mb-2">Review Message</label>
+                            <label className="block text-gray-700 text-sm font-medium mb-2">Review Message</label>
                             <textarea
                               value={reviewMessage}
                               onChange={(e) => setReviewMessage(e.target.value)}
                               placeholder="Add your review message here..."
-                              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-lime-500 resize-none"
+                              className="w-full px-4 py-3 bg-white/90 backdrop-blur-sm border border-orange-200/40 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none shadow-sm hover:shadow-md transition-shadow"
                               rows={3}
                             />
                           </div>
@@ -1856,21 +1968,29 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                           <div className="flex gap-3">
                             <motion.button
                               onClick={() => handleApprovalAction(vehicle._id, 'driver', 'approved')}
-                              className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                              className="flex-1 px-6 py-3 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 relative overflow-hidden bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
+                              {/* Button Background Texture */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 via-transparent to-green-600/20"></div>
+                              <div className="relative z-10 flex items-center gap-2">
                               <CheckCircle className="w-5 h-5" />
                               Approve Driver Details
+                              </div>
                             </motion.button>
                             <motion.button
                               onClick={() => handleApprovalAction(vehicle._id, 'driver', 'rejected')}
-                              className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                              className="flex-1 px-6 py-3 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 relative overflow-hidden bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
+                              {/* Button Background Texture */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 via-transparent to-red-600/20"></div>
+                              <div className="relative z-10 flex items-center gap-2">
                               <XCircle className="w-5 h-5" />
                               Reject Driver Details
+                              </div>
                             </motion.button>
                           </div>
                         </div>
@@ -1899,13 +2019,26 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                 }}
               />
               <motion.div
-                className="relative bg-slate-900/95 rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide"
+                className="relative bg-white/95 backdrop-blur-sm rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide border border-orange-200/30 shadow-2xl"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 onClick={(e) => e.stopPropagation()}
               >
+                {/* Enhanced Multi-Layer Texture Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 via-transparent to-green-50/50 opacity-70"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/30 via-transparent to-purple-50/30 opacity-40"></div>
+                <div className="absolute inset-0 bg-gradient-to-bl from-yellow-50/20 via-transparent to-pink-50/20 opacity-30"></div>
+                
+                {/* Subtle Animated Gradient Bar */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 via-green-400 to-blue-400 opacity-60 animate-pulse"></div>
+                
+                {/* Glass Effect Border */}
+                <div className="absolute inset-0 rounded-3xl border border-orange-200/40 shadow-inner"></div>
+                
+                {/* Modal Content */}
+                <div className="relative z-10">
                 {/* Find the vehicle data */}
                 {(() => {
                   const vehicle = [...pendingVehicles, ...approvedVehicles, ...rejectedVehicles]
@@ -1922,8 +2055,8 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                             <CheckSquare className="w-6 h-6 text-lime-400" />
                           </div>
                           <div>
-                            <h3 className="text-2xl font-bold text-white">Checklist Details</h3>
-                            <p className="text-lime-400 text-base">{vehicle.custrecord_vehicle_number}</p>
+                            <h3 className="text-2xl font-bold text-gray-900">Checklist Details</h3>
+                            <p className="text-gray-600 text-base">{vehicle.custrecord_vehicle_number}</p>
                           </div>
                         </div>
                         <button
@@ -1933,7 +2066,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                           }}
                           className="p-2 rounded-lg hover:bg-white/10 transition-colors"
                         >
-                          <XCircle className="w-6 h-6 text-white" />
+                          <XCircle className="w-6 h-6 text-gray-600" />
                         </button>
                       </div>
 
@@ -1941,88 +2074,106 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                       {vehicle.checklist && vehicle.checklist.checklistItems ? (
                         <div className="space-y-6">
                           {/* Checklist Header */}
-                          <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                              <ClipboardCheck className="w-5 h-5 text-lime-400" />
+                          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
+                            {/* Section Background Texture */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-purple-50/20 via-transparent to-pink-50/20"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent"></div>
+                            
+                            <div className="relative z-10">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                              <ClipboardCheck className="w-5 h-5 text-purple-600" />
                               Checklist Information
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <label className="text-lime-300 text-sm">Checklist Name</label>
-                                <p className="text-white font-medium">{vehicle.checklist.name}</p>
+                                <label className="text-gray-600 text-sm">Checklist Name</label>
+                                <p className="text-gray-900 font-medium">{vehicle.checklist.name}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Filled By</label>
-                                <p className="text-white font-medium">{vehicle.checklist.filledBy}</p>
+                                <label className="text-gray-600 text-sm">Filled By</label>
+                                <p className="text-gray-900 font-medium">{vehicle.checklist.filledBy}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Filled At</label>
-                                <p className="text-white font-medium">{formatDate(vehicle.checklist.filledAt)}</p>
+                                <label className="text-gray-600 text-sm">Filled At</label>
+                                <p className="text-gray-900 font-medium">{formatDate(vehicle.checklist.filledAt)}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Date</label>
-                                <p className="text-white font-medium">{formatDate(vehicle.checklist.date)}</p>
+                                <label className="text-gray-600 text-sm">Date</label>
+                                <p className="text-gray-900 font-medium">{formatDate(vehicle.checklist.date)}</p>
+                              </div>
                               </div>
                             </div>
                           </div>
 
                           {/* Checklist Items */}
-                          <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                              <CheckSquare className="w-5 h-5 text-lime-400" />
+                          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
+                            {/* Section Background Texture */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-50/20 via-transparent to-blue-50/20"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent"></div>
+                            
+                            <div className="relative z-10">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                              <CheckSquare className="w-5 h-5 text-green-600" />
                               Checklist Items
                             </h4>
                             <div className="space-y-4">
                               {vehicle.checklist.checklistItems.map((item, index) => (
                                 <div key={index} className="border border-white/10 rounded-lg p-4">
                                   <div className="flex items-start justify-between mb-3">
-                                    <h5 className="text-white font-medium flex items-center gap-2">
-                                      <span className="w-6 h-6 rounded-full bg-lime-500/20 flex items-center justify-center text-lime-400 text-xs font-bold">
+                                    <h5 className="text-gray-900 font-medium flex items-center gap-2">
+                                      <span className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-700 text-xs font-bold">
                                         {index + 1}
                                       </span>
                                       {item.question}
                                     </h5>
-                                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                      item.answer === 'Yes' ? 'bg-green-500/20 text-green-200' :
-                                      item.answer === 'No' ? 'bg-red-500/20 text-red-200' :
-                                      'bg-gray-500/20 text-gray-200'
+                                    <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm ${
+                                      item.answer === 'Yes' ? 'bg-green-50 text-green-700 border border-green-200' :
+                                      item.answer === 'No' ? 'bg-red-50 text-red-700 border border-red-200' :
+                                      'bg-gray-50 text-gray-700 border border-gray-200'
                                     }`}>
                                       {item.answer || 'Not answered'}
                                     </div>
                                   </div>
                                   {item.comment && (
                                     <div className="mt-3 p-3 bg-white/5 rounded-lg">
-                                      <label className="text-lime-300 text-sm">Comment</label>
-                                      <p className="text-white text-sm mt-1">{item.comment}</p>
+                                      <label className="text-gray-600 text-sm">Comment</label>
+                                      <p className="text-gray-900 text-sm mt-1">{item.comment}</p>
                                     </div>
                                   )}
                                 </div>
                               ))}
                             </div>
+                            </div>
                           </div>
 
                           {/* Vehicle Information */}
-                          <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                              <Truck className="w-5 h-5 text-lime-400" />
+                          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
+                            {/* Section Background Texture */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-indigo-50/20"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent"></div>
+                            
+                            <div className="relative z-10">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                              <Truck className="w-5 h-5 text-blue-600" />
                               Vehicle Information
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <label className="text-lime-300 text-sm">Vehicle Number</label>
-                                <p className="text-white font-medium">{vehicle.custrecord_vehicle_number}</p>
+                                <label className="text-gray-600 text-sm">Vehicle Number</label>
+                                <p className="text-gray-900 font-medium">{vehicle.custrecord_vehicle_number}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Vehicle Type</label>
-                                <p className="text-white font-medium">{vehicle.custrecord_vehicle_type_ag}</p>
+                                <label className="text-gray-600 text-sm">Vehicle Type</label>
+                                <p className="text-gray-900 font-medium">{vehicle.custrecord_vehicle_type_ag}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Current Plant</label>
-                                <p className="text-white font-medium">{vehicle.currentPlant}</p>
+                                <label className="text-gray-600 text-sm">Current Plant</label>
+                                <p className="text-gray-900 font-medium">{vehicle.currentPlant}</p>
                               </div>
                               <div>
-                                <label className="text-lime-300 text-sm">Checklist Status</label>
-                                <p className="text-white font-medium">Completed</p>
+                                <label className="text-gray-600 text-sm">Checklist Status</label>
+                                <p className="text-gray-900 font-medium">Completed</p>
+                              </div>
                               </div>
                             </div>
                           </div>
@@ -2032,8 +2183,8 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                           <div className="w-16 h-16 rounded-full bg-gray-500/20 flex items-center justify-center mx-auto mb-4">
                             <CheckSquare className="w-8 h-8 text-gray-400" />
                           </div>
-                          <h4 className="text-xl font-semibold text-white mb-2">No Checklist Done</h4>
-                          <p className="text-gray-400">This vehicle has no checklist completed yet.</p>
+                          <h4 className="text-xl font-semibold text-gray-900 mb-2">No Checklist Done</h4>
+                          <p className="text-gray-600">This vehicle has no checklist completed yet.</p>
                         </div>
                       )}
 
@@ -2041,6 +2192,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
                     </div>
                   )
                 })()}
+                </div>
               </motion.div>
             </motion.div>
           )}
