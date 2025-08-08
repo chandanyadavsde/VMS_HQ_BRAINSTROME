@@ -302,11 +302,17 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
     // If no driver assigned, don't allow vehicle approval
     if (!vehicle.assignedDriver) return false
     
-    // If driver is approved, allow vehicle approval
-    if (vehicle.assignedDriver.approved_by_hq === 'approved') return true
+    // If driver is not approved, don't allow vehicle approval
+    if (vehicle.assignedDriver.approved_by_hq !== 'approved') return false
     
-    // If driver is pending or rejected, don't allow vehicle approval
-    return false
+    // If checklist is not confirmed, don't allow vehicle approval
+    if (!vehicle.checklistConfirmed) return false
+    
+    // If driver is not confirmed, don't allow vehicle approval
+    if (!vehicle.driverConfirmed) return false
+    
+    // All conditions met - allow vehicle approval
+    return true
   }
 
   // Helper function to get driver icon colors based on approval status
@@ -1207,11 +1213,20 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
     if (section === 'vehicle') {
       // Check if vehicle approval is allowed
       if (!isVehicleApprovalAllowed(vehicle)) {
-        const message = !vehicle.assignedDriver 
-          ? 'No driver assigned - cannot approve vehicle'
-          : vehicle.assignedDriver.approved_by_hq === 'pending'
-            ? 'Driver must be approved first'
-            : 'Driver must be approved first'
+        let message = ''
+        
+        if (!vehicle.assignedDriver) {
+          message = 'Driver not assigned - cannot approve vehicle'
+        } else if (vehicle.assignedDriver.approved_by_hq !== 'approved') {
+          const status = vehicle.assignedDriver.approved_by_hq
+          message = status === 'rejected' ? 'Driver rejected - cannot approve vehicle' : 'Driver must be approved first'
+        } else if (!vehicle.checklistConfirmed) {
+          message = 'Checklist must be confirmed by Plant user before vehicle can be approved'
+        } else if (!vehicle.driverConfirmed) {
+          message = 'Driver details must be confirmed by Plant user before vehicle can be approved'
+        } else {
+          message = 'Vehicle approval blocked'
+        }
         
         showToast(message, 'error')
         return
@@ -1300,28 +1315,158 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
 
   // Helper function to get vehicle approval warning message
   const getVehicleApprovalWarning = (vehicle) => {
+    // Check all requirements
     if (!vehicle.assignedDriver) {
-      return "Driver must be assigned before vehicle can be approved."
+      return "Driver not assigned"
     }
     
-    if (vehicle.assignedDriver.approved_by_hq === 'rejected') {
-      return `Vehicle Approval Blocked\nDriver must be approved before vehicle can be approved. Current driver status: rejected`
+    if (vehicle.assignedDriver.approved_by_hq !== 'approved') {
+      const status = vehicle.assignedDriver.approved_by_hq
+      return status === 'rejected' ? 'Driver rejected' : 'Driver must be approved'
     }
     
-    if (vehicle.assignedDriver.approved_by_hq === 'pending') {
-      return `Vehicle Approval Blocked\nDriver must be approved before vehicle can be approved. Current driver status: pending`
+    if (!vehicle.checklistConfirmed) {
+      return "Checklist must be confirmed by Plant user"
     }
     
-    return null // No warning when driver is approved
+    if (!vehicle.driverConfirmed) {
+      return "Driver details must be confirmed by Plant user"
+    }
+    
+    return null // No warning when all conditions are met
   }
 
   // Helper function to get vehicle approval button state
   const getVehicleApprovalButtonState = (vehicle) => {
     const isAllowed = isVehicleApprovalAllowed(vehicle)
+    
+    if (!isAllowed) {
+      // Provide specific messages based on what's missing
+      if (!vehicle.assignedDriver) {
+        return {
+          disabled: true,
+          message: 'Assign Driver'
+        }
+      }
+      
+      if (vehicle.assignedDriver.approved_by_hq !== 'approved') {
+        const status = vehicle.assignedDriver.approved_by_hq
+        return {
+          disabled: true,
+          message: status === 'rejected' ? 'Driver Rejected' : 'Approve Driver'
+        }
+      }
+      
+      if (!vehicle.checklistConfirmed) {
+        return {
+          disabled: true,
+          message: 'Confirm Checklist'
+        }
+      }
+      
+      if (!vehicle.driverConfirmed) {
+        return {
+          disabled: true,
+          message: 'Confirm Driver'
+        }
+      }
+    }
+    
     return {
       disabled: !isAllowed,
       message: isAllowed ? 'Approve Vehicle Details' : 'Vehicle approval blocked'
     }
+  }
+
+  // Compact approval requirements component
+  const ApprovalRequirements = ({ vehicle }) => {
+    const requirements = [
+      {
+        id: 'driver_assignment',
+        title: 'Driver Assignment',
+        status: !vehicle.assignedDriver ? 'pending' : 'completed',
+        message: !vehicle.assignedDriver ? 'Driver not assigned' : 'Driver assigned',
+        action: !vehicle.assignedDriver ? 'Plant user must assign driver' : '✅ Complete'
+      },
+      {
+        id: 'driver_approval',
+        title: 'Driver Approval',
+        status: !vehicle.assignedDriver || vehicle.assignedDriver.approved_by_hq !== 'approved' ? 'pending' : 'completed',
+        message: !vehicle.assignedDriver ? 'Driver not assigned' : 
+                 vehicle.assignedDriver.approved_by_hq === 'rejected' ? 'Driver rejected' :
+                 vehicle.assignedDriver.approved_by_hq === 'pending' ? 'Driver pending approval' : 'Driver approved',
+        action: !vehicle.assignedDriver ? 'Assign driver first' : 
+                vehicle.assignedDriver.approved_by_hq !== 'approved' ? 'HQ user must approve driver' : '✅ Complete'
+      },
+      {
+        id: 'checklist_confirmation',
+        title: 'Checklist Confirmation',
+        status: !vehicle.checklistConfirmed ? 'pending' : 'completed',
+        message: !vehicle.checklistConfirmed ? 'Checklist not confirmed' : 'Checklist confirmed',
+        action: !vehicle.checklistConfirmed ? 'Plant user must confirm checklist' : '✅ Complete'
+      },
+      {
+        id: 'driver_confirmation',
+        title: 'Driver Confirmation',
+        status: !vehicle.driverConfirmed ? 'pending' : 'completed',
+        message: !vehicle.driverConfirmed ? 'Driver details not confirmed' : 'Driver details confirmed',
+        action: !vehicle.driverConfirmed ? 'Plant user must confirm driver details' : '✅ Complete'
+      }
+    ]
+    
+    const pendingRequirements = requirements.filter(req => req.status === 'pending')
+    const completedRequirements = requirements.filter(req => req.status === 'completed')
+    
+    // Only show if there are pending requirements
+    if (pendingRequirements.length === 0) {
+      return null
+    }
+    
+    return (
+      <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200/30 rounded-xl p-4 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+          <h4 className="text-sm font-semibold text-orange-800">Approval Requirements</h4>
+          <div className="ml-auto text-xs text-orange-600 font-medium">
+            {completedRequirements.length}/{requirements.length} Complete
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          {requirements.map((req, index) => (
+            <div key={req.id} className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
+              req.status === 'pending' 
+                ? 'bg-orange-100/50 border border-orange-200/50' 
+                : 'bg-green-100/50 border border-green-200/50'
+            }`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                req.status === 'pending' 
+                  ? 'bg-orange-100 border border-orange-300' 
+                  : 'bg-green-100 border border-green-300'
+              }`}>
+                {req.status === 'pending' ? (
+                  <span className="text-orange-600 text-xs font-bold">{index + 1}</span>
+                ) : (
+                  <CheckCircle className="w-3 h-3 text-green-600" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className={`text-xs font-medium ${
+                  req.status === 'pending' ? 'text-orange-800' : 'text-green-800'
+                }`}>
+                  {req.title}
+                </div>
+                <div className={`text-xs mt-0.5 ${
+                  req.status === 'pending' ? 'text-orange-600' : 'text-green-600'
+                }`}>
+                  {req.action}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -1415,27 +1560,11 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
 
                       {/* Content */}
                       <div className="space-y-6">
-                        {/* Vehicle Approval Warning */}
-                        {(() => {
-                          const warningMessage = getVehicleApprovalWarning(vehicle)
-                          return warningMessage ? (
-                            <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6 shadow-sm relative overflow-hidden">
-                              {/* Warning Background Texture */}
-                              <div className="absolute inset-0 bg-gradient-to-br from-orange-100/20 via-transparent to-red-100/20"></div>
-                              <div className="relative z-10 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shadow-sm">
-                                  <AlertCircle className="w-5 h-5 text-orange-600" />
-                                </div>
-                                <div>
-                                  <h4 className="text-orange-700 font-semibold">Vehicle Approval Blocked</h4>
-                                  <p className="text-orange-600 text-sm mt-2 whitespace-pre-line">
-                                    {warningMessage}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ) : null
-                        })()}
+                       
+                        
+                        {/* Approval Requirements */}
+                        <ApprovalRequirements vehicle={vehicle} />
+                        
                         {/* Basic Vehicle Information */}
                         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200/20 shadow-sm relative overflow-hidden">
                           {/* Section Background Texture */}
