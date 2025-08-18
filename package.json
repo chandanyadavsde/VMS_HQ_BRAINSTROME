@@ -20,6 +20,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "deploy:build": "npm run build",
+    "deploy:upload": "scp -r dist/* ec2-user@YOUR_EC2_IP:/tmp/react-app/",
+    "deploy:setup": "ssh ec2-user@YOUR_EC2_IP 'bash -s' < deploy.sh"
   }
 }
