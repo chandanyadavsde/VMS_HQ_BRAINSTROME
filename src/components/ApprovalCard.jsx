@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Car, User, CheckSquare, FileText, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Truck, UserCheck, ClipboardCheck, Calendar, Image, FileText as DocumentIcon } from 'lucide-react'
 import { getThemeColors } from '../utils/theme.js'
@@ -47,13 +47,18 @@ const Toast = ({ message, type, onClose }) => {
 // API Configuration
 const API_BASE_URL = "http://localhost:5000/vms/vehicle/plant"
 
-const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
+const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApprovalCountsUpdate, onScrollFunctionsReady }) => {
   const [activeSection, setActiveSection] = useState(null)
   const [activeVehicle, setActiveVehicle] = useState(null)
   const [reviewMessage, setReviewMessage] = useState('')
   const [showPendingModal, setShowPendingModal] = useState(false)
   const [showApprovedModal, setShowApprovedModal] = useState(false)
   const [showRejectedModal, setShowRejectedModal] = useState(false)
+  
+  // Refs for smooth scrolling to sections
+  const pendingSectionRef = useRef(null)
+  const approvedSectionRef = useRef(null)
+  const rejectedSectionRef = useRef(null)
   
   // Custom confirmation modal state
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
@@ -235,6 +240,85 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
     fetchSectionData('approved', selectedPlant)
     fetchSectionData('rejected', selectedPlant)
   }, [selectedPlant])
+
+  // Send approval counts to parent component whenever they change
+  useEffect(() => {
+    if (onApprovalCountsUpdate) {
+      const counts = {
+        pending: pendingVehicles.length,
+        approved: approvedVehicles.length,
+        rejected: rejectedVehicles.length
+      }
+      onApprovalCountsUpdate(counts)
+    }
+  }, [pendingVehicles.length, approvedVehicles.length, rejectedVehicles.length, onApprovalCountsUpdate])
+
+  // Create scroll functions and send them to parent component
+  useEffect(() => {
+    if (onScrollFunctionsReady) {
+      const scrollFunctions = {
+        scrollToPending: () => {
+          if (pendingSectionRef.current) {
+            const element = pendingSectionRef.current
+            const headerOffset = 120 // Offset for header height
+            const elementPosition = element.getBoundingClientRect().top
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+            
+            // Custom smooth scroll with easing
+            smoothScrollTo(offsetPosition, 1500) // 1.5 seconds duration
+          }
+        },
+        scrollToApproved: () => {
+          if (approvedSectionRef.current) {
+            const element = approvedSectionRef.current
+            const headerOffset = 120 // Offset for header height
+            const elementPosition = element.getBoundingClientRect().top
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+            
+            // Custom smooth scroll with easing
+            smoothScrollTo(offsetPosition, 1500) // 1.5 seconds duration
+          }
+        },
+        scrollToRejected: () => {
+          if (rejectedSectionRef.current) {
+            const element = rejectedSectionRef.current
+            const headerOffset = 120 // Offset for header height
+            const elementPosition = element.getBoundingClientRect().top
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+            
+            // Custom smooth scroll with easing
+            smoothScrollTo(offsetPosition, 1500) // 1.5 seconds duration
+          }
+        }
+      }
+      onScrollFunctionsReady(scrollFunctions)
+    }
+  }, [onScrollFunctionsReady])
+
+  // Custom smooth scroll function with easing
+  const smoothScrollTo = (targetPosition, duration) => {
+    const startPosition = window.pageYOffset
+    const distance = targetPosition - startPosition
+    let startTime = null
+
+    const animation = (currentTime) => {
+      if (startTime === null) startTime = currentTime
+      const timeElapsed = currentTime - startTime
+      const run = easeInOutCubic(timeElapsed, startPosition, distance, duration)
+      window.scrollTo(0, run)
+      if (timeElapsed < duration) requestAnimationFrame(animation)
+    }
+
+    requestAnimationFrame(animation)
+  }
+
+  // Easing function for smooth animation
+  const easeInOutCubic = (t, b, c, d) => {
+    t /= d / 2
+    if (t < 1) return c / 2 * t * t * t + b
+    t -= 2
+    return c / 2 * (t * t * t + 2) + b
+  }
 
   // Helper function to render attachments
   const renderAttachments = (attachments, documentType) => {
@@ -583,8 +667,18 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal' }) => {
     const isLoading = loading[sectionType]
     const hasError = error[sectionType]
     
+    // Get the appropriate ref for this section
+    const getSectionRef = () => {
+      switch (sectionType) {
+        case 'pending': return pendingSectionRef
+        case 'approved': return approvedSectionRef
+        case 'rejected': return rejectedSectionRef
+        default: return null
+      }
+    }
+    
     return (
-      <div className="w-full mb-12">
+      <div className="w-full mb-12" ref={getSectionRef()}>
         <div className="max-w-7xl mx-auto px-4">
           {/* Section Header */}
           <div className="flex items-center justify-between mb-6">

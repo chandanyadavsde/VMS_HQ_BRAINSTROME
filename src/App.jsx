@@ -22,10 +22,8 @@ const Header = ({ isScrolled, currentTheme, user, onLogout }) => {
 
   const plants = [
     { id: 'all', name: 'All Plants' },
-    { id: 'mumbai', name: 'Mumbai' },
-    { id: 'delhi', name: 'Delhi' },
-    { id: 'bangalore', name: 'Bangalore' },
-    { id: 'chennai', name: 'Chennai' },
+    { id: 'daman', name: 'Daman' },
+    { id: 'solapur', name: 'Solapur' },
     { id: 'pune', name: 'Pune' }
   ]
 
@@ -139,15 +137,13 @@ const Header = ({ isScrolled, currentTheme, user, onLogout }) => {
 }
 
 // Search Component
-const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlant, activeSection, currentTheme }) => {
+const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlant, activeSection, currentTheme, approvalCounts, scrollFunctions }) => {
   const themeColors = getThemeColors(currentTheme)
   
   const plants = [
     { id: 'all', name: 'All Plants' },
-    { id: 'mumbai', name: 'Mumbai' },
-    { id: 'delhi', name: 'Delhi' },
-    { id: 'bangalore', name: 'Bangalore' },
-    { id: 'chennai', name: 'Chennai' },
+    { id: 'daman', name: 'Daman' },
+    { id: 'solapur', name: 'Solapur' },
     { id: 'pune', name: 'Pune' }
   ]
 
@@ -209,23 +205,37 @@ const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlan
             </div>
 
             {/* Approval Stats - Right Side */}
-            {activeSection === 'approvals' && (
+            {activeSection === 'approvals' && approvalCounts && (
               <div className="flex items-center space-x-3">
-                <div className="text-center">
-                  <div className="text-sm font-bold text-orange-600">15</div>
+                <div 
+                  className={`text-center cursor-pointer transition-all duration-300 hover:scale-105 ${
+                    scrollFunctions ? 'hover:bg-orange-50 hover:shadow-md rounded-lg px-3 py-2' : ''
+                  }`}
+                  onClick={() => scrollFunctions?.scrollToPending?.()}
+                  title="Click to scroll to Pending section"
+                >
+                  <div className="text-sm font-bold text-orange-600">{approvalCounts.pending || 0}</div>
                   <div className="text-xs text-gray-500">Pending</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-sm font-bold text-green-600">8</div>
+                <div 
+                  className={`text-center cursor-pointer transition-all duration-300 hover:scale-105 ${
+                    scrollFunctions ? 'hover:bg-green-50 hover:shadow-md rounded-lg px-3 py-2' : ''
+                  }`}
+                  onClick={() => scrollFunctions?.scrollToApproved?.()}
+                  title="Click to scroll to Approved section"
+                >
+                  <div className="text-sm font-bold text-green-600">{approvalCounts.approved || 0}</div>
                   <div className="text-xs text-gray-500">Approved</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-sm font-bold text-amber-600">3</div>
-                  <div className="text-xs text-gray-500">Overdue</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-bold text-blue-600">67%</div>
-                  <div className="text-xs text-gray-500">Progress</div>
+                <div 
+                  className={`text-center cursor-pointer transition-all duration-300 hover:scale-105 ${
+                    scrollFunctions ? 'hover:bg-red-50 hover:shadow-md rounded-lg px-3 py-2' : ''
+                  }`}
+                  onClick={() => scrollFunctions?.scrollToRejected?.()}
+                  title="Click to scroll to Rejected section"
+                >
+                  <div className="text-sm font-bold text-red-600">{approvalCounts.rejected || 0}</div>
+                  <div className="text-xs text-gray-500">Rejected</div>
                 </div>
               </div>
             )}
@@ -249,6 +259,16 @@ const Dashboard = ({ currentTheme }) => {
 const Approvals = ({ currentTheme }) => {
   const [selectedPlant, setSelectedPlant] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [approvalCounts, setApprovalCounts] = useState({ pending: 0, approved: 0, rejected: 0 })
+  const [scrollFunctions, setScrollFunctions] = useState(null)
+
+  const handleApprovalCountsUpdate = (counts) => {
+    setApprovalCounts(counts)
+  }
+
+  const handleScrollFunctionsReady = (functions) => {
+    setScrollFunctions(functions)
+  }
 
   return (
     <>
@@ -259,9 +279,16 @@ const Approvals = ({ currentTheme }) => {
         setSelectedPlant={setSelectedPlant}
         activeSection="approvals"
         currentTheme={currentTheme}
+        approvalCounts={approvalCounts}
+        scrollFunctions={scrollFunctions}
       />
       <div className="flex items-center justify-center">
-        <ApprovalCard selectedPlant={selectedPlant} currentTheme={currentTheme} />
+        <ApprovalCard 
+          selectedPlant={selectedPlant} 
+          currentTheme={currentTheme}
+          onApprovalCountsUpdate={handleApprovalCountsUpdate}
+          onScrollFunctionsReady={handleScrollFunctionsReady}
+        />
       </div>
     </>
   )
