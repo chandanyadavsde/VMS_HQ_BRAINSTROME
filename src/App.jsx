@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { Truck } from 'lucide-react'
 import AlternativeWindCard from './components/AlternativeWindCard.jsx'
 import ApprovalCard from './components/ApprovalCard.jsx'
 import LoginScreen from './components/LoginScreen.jsx'
@@ -22,8 +23,10 @@ const Header = ({ isScrolled, currentTheme, user, onLogout }) => {
 
   const plants = [
     { id: 'all', name: 'All Plants' },
-    { id: 'daman', name: 'Daman' },
-    { id: 'solapur', name: 'Solapur' },
+    { id: 'mumbai', name: 'Mumbai' },
+    { id: 'delhi', name: 'Delhi' },
+    { id: 'bangalore', name: 'Bangalore' },
+    { id: 'chennai', name: 'Chennai' },
     { id: 'pune', name: 'Pune' }
   ]
 
@@ -84,11 +87,7 @@ const Header = ({ isScrolled, currentTheme, user, onLogout }) => {
           {/* Profile Section - Right Side */}
           <div className="flex items-center justify-end flex-1 space-x-2">
             {/* Theme Toggle */}
-            <button className="w-8 h-8 rounded-lg bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center hover:bg-white hover:shadow-lg transition-all duration-300 hover:scale-105">
-              <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            </button>
+           
 
             {/* Notifications */}
             <button className="w-8 h-8 rounded-lg bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center hover:bg-white hover:shadow-lg transition-all duration-300 hover:scale-105 relative">
@@ -137,8 +136,11 @@ const Header = ({ isScrolled, currentTheme, user, onLogout }) => {
 }
 
 // Search Component
-const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlant, activeSection, currentTheme, approvalCounts, scrollFunctions }) => {
+const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlant, activeSection, currentTheme, activeStatus, onStatusChange, vehicleCounts }) => {
   const themeColors = getThemeColors(currentTheme)
+  
+  // Debug: Log the received counts
+  console.log('SearchBar: Received vehicleCounts:', vehicleCounts)
   
   const plants = [
     { id: 'all', name: 'All Plants' },
@@ -163,7 +165,7 @@ const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlan
           <div className="flex-1 relative">
             <input
               type="text"
-              placeholder="Search projects, stages, or activities..."
+              placeholder="Search by Vehicle Number"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-white/80 backdrop-blur-sm border border-orange-200/50 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-500 outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
@@ -205,38 +207,44 @@ const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlan
             </div>
 
             {/* Approval Stats - Right Side */}
-            {activeSection === 'approvals' && approvalCounts && (
+            {activeSection === 'approvals' && (
               <div className="flex items-center space-x-3">
-                <div 
-                  className={`text-center cursor-pointer transition-all duration-300 hover:scale-105 ${
-                    scrollFunctions ? 'hover:bg-orange-50 hover:shadow-md rounded-lg px-3 py-2' : ''
+                <button
+                  onClick={() => onStatusChange && onStatusChange('pending')}
+                  className={`text-center cursor-pointer hover:bg-orange-50 px-2 py-1 rounded-lg transition-all duration-200 ${
+                    activeStatus === 'pending' ? 'bg-orange-50 border border-orange-200' : ''
                   }`}
-                  onClick={() => scrollFunctions?.scrollToPending?.()}
-                  title="Click to scroll to Pending section"
                 >
-                  <div className="text-sm font-bold text-orange-600">{approvalCounts.pending || 0}</div>
-                  <div className="text-xs text-gray-500">Pending</div>
-                </div>
-                <div 
-                  className={`text-center cursor-pointer transition-all duration-300 hover:scale-105 ${
-                    scrollFunctions ? 'hover:bg-green-50 hover:shadow-md rounded-lg px-3 py-2' : ''
+                  <div className={`text-sm font-bold ${activeStatus === 'pending' ? 'text-orange-700' : 'text-orange-600'}`}>{vehicleCounts?.pending ?? '...'}</div>
+                  <div className={`text-xs ${activeStatus === 'pending' ? 'text-orange-600' : 'text-gray-500'}`}>Pending</div>
+                </button>
+                <button
+                  onClick={() => onStatusChange && onStatusChange('approved')}
+                  className={`text-center cursor-pointer hover:bg-green-50 px-2 py-1 rounded-lg transition-all duration-200 ${
+                    activeStatus === 'approved' ? 'bg-green-50 border border-green-200' : ''
                   }`}
-                  onClick={() => scrollFunctions?.scrollToApproved?.()}
-                  title="Click to scroll to Approved section"
                 >
-                  <div className="text-sm font-bold text-green-600">{approvalCounts.approved || 0}</div>
-                  <div className="text-xs text-gray-500">Approved</div>
-                </div>
-                <div 
-                  className={`text-center cursor-pointer transition-all duration-300 hover:scale-105 ${
-                    scrollFunctions ? 'hover:bg-red-50 hover:shadow-md rounded-lg px-3 py-2' : ''
+                  <div className={`text-sm font-bold ${activeStatus === 'approved' ? 'text-green-700' : 'text-green-600'}`}>{vehicleCounts?.approved ?? '...'}</div>
+                  <div className={`text-xs ${activeStatus === 'approved' ? 'text-green-600' : 'text-gray-500'}`}>Approved</div>
+                </button>
+                <button
+                  onClick={() => onStatusChange && onStatusChange('rejected')}
+                  className={`text-center cursor-pointer hover:bg-red-50 px-2 py-1 rounded-lg transition-all duration-200 ${
+                    activeStatus === 'rejected' ? 'bg-red-50 border border-red-200' : ''
                   }`}
-                  onClick={() => scrollFunctions?.scrollToRejected?.()}
-                  title="Click to scroll to Rejected section"
                 >
-                  <div className="text-sm font-bold text-red-600">{approvalCounts.rejected || 0}</div>
-                  <div className="text-xs text-gray-500">Rejected</div>
-                </div>
+                  <div className={`text-sm font-bold ${activeStatus === 'rejected' ? 'text-red-700' : 'text-red-600'}`}>{vehicleCounts?.rejected ?? '...'}</div>
+                  <div className={`text-xs ${activeStatus === 'rejected' ? 'text-red-600' : 'text-gray-500'}`}>Rejected</div>
+                </button>
+                <button
+                  onClick={() => onStatusChange && onStatusChange('in-transit')}
+                  className={`flex items-center space-x-2 cursor-pointer hover:bg-blue-50 px-3 py-2 rounded-lg transition-all duration-200 ${
+                    activeStatus === 'in-transit' ? 'bg-blue-50 border border-blue-200' : ''
+                  }`}
+                >
+                  <Truck className={`w-4 h-4 ${activeStatus === 'in-transit' ? 'text-blue-700' : 'text-blue-600'}`} />
+                  <span className={`text-sm font-semibold ${activeStatus === 'in-transit' ? 'text-blue-700' : 'text-blue-600'}`}>In Transit</span>
+                </button>
               </div>
             )}
           </div>
@@ -259,16 +267,25 @@ const Dashboard = ({ currentTheme }) => {
 const Approvals = ({ currentTheme }) => {
   const [selectedPlant, setSelectedPlant] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [approvalCounts, setApprovalCounts] = useState({ pending: 0, approved: 0, rejected: 0 })
-  const [scrollFunctions, setScrollFunctions] = useState(null)
+  const [activeStatus, setActiveStatus] = useState('pending')
+  const [vehicleCounts, setVehicleCounts] = useState({ pending: 0, approved: 0, rejected: 0, 'in-transit': 0 })
 
-  const handleApprovalCountsUpdate = (counts) => {
-    setApprovalCounts(counts)
-  }
+  const handleStatusChange = useCallback((newStatus) => {
+    setActiveStatus(newStatus)
+  }, [])
 
-  const handleScrollFunctionsReady = (functions) => {
-    setScrollFunctions(functions)
-  }
+  const handlePlantChange = useCallback((newPlant) => {
+    setSelectedPlant(newPlant)
+  }, [])
+
+  const handleVehicleCountsUpdate = useCallback((counts) => {
+    console.log('App.jsx: Received vehicle counts:', counts)
+    setVehicleCounts(counts)
+  }, [])
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('')
+  }, [])
 
   return (
     <>
@@ -276,18 +293,23 @@ const Approvals = ({ currentTheme }) => {
         searchQuery={searchQuery} 
         setSearchQuery={setSearchQuery} 
         selectedPlant={selectedPlant} 
-        setSelectedPlant={setSelectedPlant}
+        setSelectedPlant={handlePlantChange}
         activeSection="approvals"
         currentTheme={currentTheme}
-        approvalCounts={approvalCounts}
-        scrollFunctions={scrollFunctions}
+        activeStatus={activeStatus}
+        onStatusChange={handleStatusChange}
+        vehicleCounts={vehicleCounts}
+        onSearch={undefined} // Will be handled in ApprovalCard
       />
       <div className="flex items-center justify-center">
         <ApprovalCard 
           selectedPlant={selectedPlant} 
           currentTheme={currentTheme}
-          onApprovalCountsUpdate={handleApprovalCountsUpdate}
-          onScrollFunctionsReady={handleScrollFunctionsReady}
+          activeStatus={activeStatus}
+          onStatusChange={handleStatusChange}
+          onVehicleCountsUpdate={handleVehicleCountsUpdate}
+          searchQuery={searchQuery}
+          onClearSearch={handleClearSearch}
         />
       </div>
     </>

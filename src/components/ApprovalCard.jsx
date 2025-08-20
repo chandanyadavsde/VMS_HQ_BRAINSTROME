@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Car, User, CheckSquare, FileText, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Truck, UserCheck, ClipboardCheck, Calendar, Image, FileText as DocumentIcon } from 'lucide-react'
 import { getThemeColors } from '../utils/theme.js'
@@ -44,21 +44,16 @@ const Toast = ({ message, type, onClose }) => {
 
 
 
-// API Configuration
-const API_BASE_URL = "http://localhost:5000/vms/vehicle/plant"
+// Enterprise API Services
+import { apiService } from '../services/index.js'
 
-const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApprovalCountsUpdate, onScrollFunctionsReady }) => {
+const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStatus: externalActiveStatus, onStatusChange, onVehicleCountsUpdate, searchQuery: externalSearchQuery, onClearSearch }) => {
   const [activeSection, setActiveSection] = useState(null)
   const [activeVehicle, setActiveVehicle] = useState(null)
   const [reviewMessage, setReviewMessage] = useState('')
   const [showPendingModal, setShowPendingModal] = useState(false)
   const [showApprovedModal, setShowApprovedModal] = useState(false)
   const [showRejectedModal, setShowRejectedModal] = useState(false)
-  
-  // Refs for smooth scrolling to sections
-  const pendingSectionRef = useRef(null)
-  const approvedSectionRef = useRef(null)
-  const rejectedSectionRef = useRef(null)
   
   // Custom confirmation modal state
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
@@ -70,12 +65,23 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
   // Toast notification state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
   
-  // API-driven state
+  // New pagination and active status state
+  const [internalActiveStatus, setInternalActiveStatus] = useState('pending')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  
+  // Use external activeStatus if provided, otherwise use internal
+  const activeStatus = externalActiveStatus || internalActiveStatus
+  const setActiveStatus = onStatusChange || setInternalActiveStatus
+  
+  // API-driven state - keeping existing structure for backward compatibility
   const [pendingVehicles, setPendingVehicles] = useState([])
   const [approvedVehicles, setApprovedVehicles] = useState([])
   const [rejectedVehicles, setRejectedVehicles] = useState([])
-  const [loading, setLoading] = useState({ pending: false, approved: false, rejected: false })
-  const [error, setError] = useState({ pending: false, approved: false, rejected: false })
+  const [inTransitVehicles, setInTransitVehicles] = useState([])
+  const [loading, setLoading] = useState({ pending: false, approved: false, rejected: false, 'in-transit': false })
+  const [error, setError] = useState({ pending: false, approved: false, rejected: false, 'in-transit': false })
   
   const themeColors = getThemeColors(currentTheme)
 
@@ -105,32 +111,124 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
     setToast({ show: false, message: '', type: 'success' })
   }
 
-  // API Service Functions
+  // Trip Completed state
+  const [showTripCompletedModal, setShowTripCompletedModal] = useState(false)
+  const [selectedVehicleForTrip, setSelectedVehicleForTrip] = useState(null)
+
+  // Handle Trip Completed action
+  const handleTripCompleted = (vehicle) => {
+    setSelectedVehicleForTrip(vehicle)
+    setShowTripCompletedModal(true)
+  }
+
+  // Confirm Trip Completed
+  const confirmTripCompleted = async () => {
+    if (!selectedVehicleForTrip) return
+
+    try {
+      const vehicleNumber = selectedVehicleForTrip.custrecord_vehicle_number
+      console.log('🎯 Trip Completed for vehicle:', vehicleNumber)
+      
+      // Call real API to complete trip
+      await apiService.vehicles.completeTrip(vehicleNumber)
+      
+      // Show success message
+      showToast(`Trip completed for ${vehicleNumber}! Vehicle is now free.`, 'success')
+      
+      // Close modal
+      setShowTripCompletedModal(false)
+      setSelectedVehicleForTrip(null)
+      
+      // Immediately remove vehicle from In Transit list
+      setInTransitVehicles(prevVehicles => 
+        prevVehicles.filter(vehicle => 
+          vehicle.custrecord_vehicle_number !== vehicleNumber
+        )
+      )
+      
+      // Update counts to reflect the removal
+      setAllStatusCounts(prevCounts => ({
+        ...prevCounts,
+        'in-transit': Math.max(0, (prevCounts['in-transit'] || 0) - 1)
+      }))
+      
+      // Update parent counts if callback provided
+      if (onVehicleCountsUpdate) {
+        onVehicleCountsUpdate(prevCounts => ({
+          ...prevCounts,
+          'in-transit': Math.max(0, (prevCounts['in-transit'] || 0) - 1)
+        }))
+      }
+      
+      console.log(`✅ Vehicle ${vehicleNumber} removed from In Transit list`)
+      
+    } catch (error) {
+      console.error('Trip completion failed:', error)
+      showToast(`Failed to complete trip: ${error.message}`, 'error')
+    }
+  }
+
+  // Enterprise API Service Functions
   const fetchVehicles = async (plant, status, page = 1, limit = 10) => {
     try {
-      console.log(`Fetching ${status} vehicles for plant: ${plant}`)
-      const response = await fetch(`${API_BASE_URL}/${plant}?status=${status}&page=${page}&limit=${limit}&includeDriver=true`)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
-      console.log(`Received ${status} data:`, data)
-      return data
+      const response = await apiService.vehicles.getVehicleList(plant, {
+        status,
+        page,
+        limit,
+        includeDriver: true
+      })
+      return response
     } catch (error) {
       console.error(`Error fetching ${status} vehicles:`, error)
       throw error
     }
   }
 
-  const fetchSectionData = async (status, plant = 'all') => {
-    setLoading(prev => ({ ...prev, [status]: true }))
-    setError(prev => ({ ...prev, [status]: false }))
-    
+  // Enterprise Search API Function
+  const searchVehicle = async (vehicleNumber) => {
     try {
-      const data = await fetchVehicles(plant, status, 1, 10)
-      const vehicles = data.vehicles || []
+      const response = await apiService.vehicles.searchVehicle(vehicleNumber)
+      return response
+    } catch (error) {
+      console.error('❌ Search error:', error)
+      throw error
+    }
+  }
+
+  // Removed old fetchActiveStatusData - using enterprise solution above
+
+  // Removed legacy fetchSectionData - using enterprise solution only
+
+  // ENTERPRISE SOLUTION: Smart data loading with caching
+  const [allStatusCounts, setAllStatusCounts] = useState({ pending: 0, approved: 0, rejected: 0, 'in-transit': 0 })
+  const [dataCache, setDataCache] = useState({})
+  const [isPreFetching, setIsPreFetching] = useState(false)
+
+  // ENTERPRISE SEARCH SYSTEM
+  const [searchMode, setSearchMode] = useState(false)
+  const [searchResult, setSearchResult] = useState(null)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchError, setSearchError] = useState(null)
+  
+  // Use external search query from SearchBar
+  const searchQuery = externalSearchQuery || ''
+
+  // Master data loading effect - loads both active data and all counts in one go
+  useEffect(() => {
+    const loadData = async () => {
+      const cacheKey = `${selectedPlant}-${activeStatus}-${currentPage}`
+      console.log('🚀 Loading data for plant:', selectedPlant, 'status:', activeStatus, 'page:', currentPage)
+      console.log(`🔍 Active status type check: "${activeStatus}"`)
+      console.log(`🔍 Is In Transit: ${activeStatus === 'in-transit'}`)
       
-      switch (status) {
+      // Check cache first for instant loading
+      if (dataCache[cacheKey]) {
+        console.log('✨ Loading from cache:', cacheKey)
+        const cachedData = dataCache[cacheKey]
+        
+        // Update UI instantly from cache
+        const vehicles = cachedData.vehicles || []
+        switch (activeStatus) {
         case 'pending':
           setPendingVehicles(vehicles)
           break
@@ -140,185 +238,267 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
         case 'rejected':
           setRejectedVehicles(vehicles)
           break
+        case 'in-transit':
+          setInTransitVehicles(vehicles)
+          break
       }
-    } catch (error) {
-      setError(prev => ({ ...prev, [status]: true }))
-      console.error(`Error fetching ${status} vehicles:`, error)
+        
+        setTotalCount(cachedData.totalVehicles)
+        setTotalPages(cachedData.totalPages)
+        return
+      }
       
-      // Add fallback data for testing
-      const fallbackData = [
-        {
-          _id: `fallback-${status}-1`,
-          custrecord_vehicle_number: `TEST-${status.toUpperCase()}-001`,
-          currentPlant: plant,
-          custrecord_vehicle_type_ag: 'Test Vehicle',
-          custrecord_age_of_vehicle: '2 Years',
-          custrecord_owner_name_ag: 'Test Owner',
-          custrecord_owner_no_ag: '+91-9876543210',
-          custrecord_chassis_number: 'CH-TEST-001',
-          custrecord_engine_number_ag: 'EN-TEST-001',
-          custrecord_rc_no: 'RC-TEST-001',
-          custrecord_rc_start_date: '2023-01-01T00:00:00.000Z',
-          custrecord_insurance_company_name_ag: 'Test Insurance',
-          custrecord_insurance_number_ag: 'INS-TEST-001',
-          custrecord_insurance_start_date_ag: '2024-01-01T00:00:00.000Z',
-          custrecord_insurance_end_date_ag: '2029-01-01T00:00:00.000Z',
-          custrecord_permit_start_date: '2024-06-01T00:00:00.000Z',
-          custrecord_permit_end_date: '2024-12-31T00:00:00.000Z',
-          custrecord_puc_number: 'PUC-TEST-001',
-          custrecord_puc_start_date_ag: '2024-06-01T00:00:00.000Z',
-          custrecord_puc_end_date_ag: '2024-12-31T00:00:00.000Z',
-          custrecord_tms_vehicle_fit_cert_vld_upto: '2026-12-31T00:00:00.000Z',
-          custrecord_vehicle_master_gps_available: true,
-          custrecord_vendor_name_ag: { name: 'Test Vendor' },
-          custrecord_create_by: 'test.user',
-          custrecord_rc_doc_attach: [],
-          custrecord_insurance_attachment_ag: [],
-          custrecord_permit_attachment_ag: [],
-          custrecord_puc_attachment_ag: [],
-          custrecord_tms_vehicle_fit_cert_attach: [],
-          assignedDriver: status === 'pending' ? {
-            _id: "688b34f72c9c1645efc75b97",
-            approved_by_hq: getDriverApprovalStatus("688b34f72c9c1645efc75b97"),
-            custrecord_driver_name: "bunty singh",
-            custrecord_driving_license_no: "LC1234754",
-            custrecord_driving_license_s_date: "2022-07-31",
-            custrecord_driver_license_e_date: "2028-07-31",
-            custrecord_driving_license_attachment: [
-              "https://vms-media-handle.s3.ap-south-1.amazonaws.com/vehicle_attachments/1753953527404-Screenshot (3).png"
-            ],
-            custrecord_license_category_ag: "Light Motor Vehicle",
-            custrecord_driver_mobile_no: "1111111154",
-            custrecord_create_by_driver_master: "shekhar.seshmukh",
-            custrecord_driving_lca_test: "passed",
-            fcm_token: "cHdpbmzAToaxhtZPdIpeEh:APA91bHIrLZ5v9gWgEx3W5pQfzE9C1YvK53Y1fXXOWLLEP1tW2P-vdJnHtV5T-t1l7zBwZqsT-9-vDcliqOAIKDKsiHoKkgVMCRzgqA5oxD1nLBwwiDcID4",
-            createdAt: "2025-07-31T09:18:47.617Z",
-            updatedAt: "2025-07-31T09:18:47.617Z"
-          } : null,
-          checklist: status === 'pending' ? {
-            checklistItems: [
-              {
-                question: 'Safety equipment check',
-                answer: 'Yes',
-                comment: 'All equipment present'
-              },
-              {
-                question: 'Overall condition check',
-                answer: 'Yes',
-                comment: 'Good condition'
-              }
-            ],
-            date: '2025-07-23T10:20:33.388068',
-            filledAt: '2025-07-23T04:52:46.821Z',
-            filledBy: 'test.user',
-            name: 'Test Checklist'
-          } : null,
-          approved_by_hq: status
+      try {
+        // 1. Load active status data for display (16 cards)
+        const activeData = await fetchVehicles(selectedPlant, activeStatus, currentPage, 16)
+        
+        // 2. Load counts for all statuses (for SearchBar) - only on plant/status change, not page change
+        let pendingCount, approvedCount, rejectedCount
+        
+        if (currentPage === 1) {
+          // Only fetch counts on first page or when plant/status changes
+          const countsPromises = [
+            fetchVehicles(selectedPlant, 'pending', 1, 1),
+            fetchVehicles(selectedPlant, 'approved', 1, 1), 
+            fetchVehicles(selectedPlant, 'rejected', 1, 1)
+          ]
+          
+          const [activeResponse, ...countResponses] = await Promise.all([
+            Promise.resolve(activeData),
+            ...countsPromises
+          ])
+          
+          ;[pendingCount, approvedCount, rejectedCount] = countResponses
+        } else {
+          // On page navigation, just use the active data and keep existing counts
+          pendingCount = { pagination: { totalVehicles: allStatusCounts.pending } }
+          approvedCount = { pagination: { totalVehicles: allStatusCounts.approved } }
+          rejectedCount = { pagination: { totalVehicles: allStatusCounts.rejected } }
         }
-      ]
-      
-      switch (status) {
+        
+        // 3. Update active status vehicles
+        const vehicles = activeData.vehicles || []
+        console.log(`🚗 Setting ${activeStatus} vehicles:`, vehicles.length, 'vehicles')
+        
+        switch (activeStatus) {
         case 'pending':
-          setPendingVehicles(fallbackData)
+          setPendingVehicles(vehicles)
           break
         case 'approved':
-          setApprovedVehicles(fallbackData)
+          setApprovedVehicles(vehicles)
           break
         case 'rejected':
-          setRejectedVehicles(fallbackData)
+          setRejectedVehicles(vehicles)
+          break
+        case 'in-transit':
+          console.log('🚛 Setting In Transit vehicles:', vehicles)
+          setInTransitVehicles(vehicles)
           break
       }
-    } finally {
-      setLoading(prev => ({ ...prev, [status]: false }))
-    }
-  }
-
-  // Load data on component mount and when plant changes
-  useEffect(() => {
-    console.log('ApprovalCard: Loading data for plant:', selectedPlant)
-    fetchSectionData('pending', selectedPlant)
-    fetchSectionData('approved', selectedPlant)
-    fetchSectionData('rejected', selectedPlant)
-  }, [selectedPlant])
-
-  // Send approval counts to parent component whenever they change
-  useEffect(() => {
-    if (onApprovalCountsUpdate) {
-      const counts = {
-        pending: pendingVehicles.length,
-        approved: approvedVehicles.length,
-        rejected: rejectedVehicles.length
-      }
-      onApprovalCountsUpdate(counts)
-    }
-  }, [pendingVehicles.length, approvedVehicles.length, rejectedVehicles.length, onApprovalCountsUpdate])
-
-  // Create scroll functions and send them to parent component
-  useEffect(() => {
-    if (onScrollFunctionsReady) {
-      const scrollFunctions = {
-        scrollToPending: () => {
-          if (pendingSectionRef.current) {
-            const element = pendingSectionRef.current
-            const headerOffset = 120 // Offset for header height
-            const elementPosition = element.getBoundingClientRect().top
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset
-            
-            // Custom smooth scroll with easing
-            smoothScrollTo(offsetPosition, 1500) // 1.5 seconds duration
-          }
-        },
-        scrollToApproved: () => {
-          if (approvedSectionRef.current) {
-            const element = approvedSectionRef.current
-            const headerOffset = 120 // Offset for header height
-            const elementPosition = element.getBoundingClientRect().top
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset
-            
-            // Custom smooth scroll with easing
-            smoothScrollTo(offsetPosition, 1500) // 1.5 seconds duration
-          }
-        },
-        scrollToRejected: () => {
-          if (rejectedSectionRef.current) {
-            const element = rejectedSectionRef.current
-            const headerOffset = 120 // Offset for header height
-            const elementPosition = element.getBoundingClientRect().top
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset
-            
-            // Custom smooth scroll with easing
-            smoothScrollTo(offsetPosition, 1500) // 1.5 seconds duration
-          }
+        
+        // 4. Update pagination from active status response
+        const totalVehicles = activeData.pagination?.totalVehicles || activeData.totalCount || vehicles.length
+        const totalPages = activeData.pagination?.totalPages || Math.ceil(totalVehicles / 16)
+        
+        setTotalCount(totalVehicles)
+        setTotalPages(totalPages)
+        setCurrentPage(currentPage)
+        
+        // 5. Update all counts for SearchBar
+        const newCounts = {
+          pending: pendingCount.pagination?.totalVehicles || pendingCount.totalCount || 0,
+          approved: approvedCount.pagination?.totalVehicles || approvedCount.totalCount || 0,
+          rejected: rejectedCount.pagination?.totalVehicles || rejectedCount.totalCount || 0
         }
+        
+        setAllStatusCounts(newCounts)
+        
+        if (onVehicleCountsUpdate) {
+          onVehicleCountsUpdate(newCounts)
+        }
+        
+        // Cache the data for instant future access
+        const cacheData = {
+          vehicles,
+          totalVehicles,
+          totalPages,
+          timestamp: Date.now()
+        }
+        setDataCache(prev => ({
+          ...prev,
+          [cacheKey]: cacheData
+        }))
+        
+        // Pre-fetch next page for smoother navigation
+        if (currentPage < totalPages && !isPreFetching) {
+          setIsPreFetching(true)
+          setTimeout(async () => {
+            try {
+              const nextPageKey = `${selectedPlant}-${activeStatus}-${currentPage + 1}`
+              if (!dataCache[nextPageKey]) {
+                console.log('🔮 Pre-fetching next page:', currentPage + 1)
+                const nextPageData = await fetchVehicles(selectedPlant, activeStatus, currentPage + 1, 16)
+                setDataCache(prev => ({
+                  ...prev,
+                  [nextPageKey]: {
+                    vehicles: nextPageData.vehicles || [],
+                    totalVehicles: nextPageData.pagination?.totalVehicles || 0,
+                    totalPages: nextPageData.pagination?.totalPages || 1,
+                    timestamp: Date.now()
+                  }
+                }))
+              }
+            } catch (error) {
+              console.log('Pre-fetch failed:', error)
+            }
+            setIsPreFetching(false)
+          }, 1000) // Pre-fetch after 1 second
+        }
+        
+        console.log('✅ Data loaded successfully:', {
+          activeStatus,
+          vehiclesOnPage: vehicles.length,
+          totalVehicles,
+          totalPages,
+          currentPage,
+          allCounts: newCounts,
+          cached: !!dataCache[cacheKey],
+          cacheSize: Object.keys(dataCache).length
+        })
+        
+      } catch (error) {
+        console.error('❌ Error loading data:', error)
+        setError(prev => ({ ...prev, [activeStatus]: true }))
+    } finally {
+        setLoading(prev => ({ ...prev, [activeStatus]: false }))
+    }
+  }
+
+    loadData()
+  }, [selectedPlant, activeStatus, currentPage])
+
+  // Reset to page 1 when plant or status changes
+  useEffect(() => {
+    if (currentPage !== 1) {
+      console.log('🔄 Resetting to page 1 due to plant/status change')
+      setCurrentPage(1)
+    }
+  }, [selectedPlant, activeStatus])
+
+  // Cache cleanup to prevent memory leaks
+  useEffect(() => {
+    const cleanupCache = () => {
+      const now = Date.now()
+      const maxAge = 5 * 60 * 1000 // 5 minutes
+      
+      setDataCache(prev => {
+        const cleaned = {}
+        Object.keys(prev).forEach(key => {
+          if (now - prev[key].timestamp < maxAge) {
+            cleaned[key] = prev[key]
+          }
+        })
+        
+        const removedCount = Object.keys(prev).length - Object.keys(cleaned).length
+        if (removedCount > 0) {
+          console.log(`🧹 Cleaned ${removedCount} expired cache entries`)
+        }
+        
+        return cleaned
+      })
+    }
+
+    const interval = setInterval(cleanupCache, 60000) // Clean every minute
+    return () => clearInterval(interval)
+  }, [])
+
+  // Helper functions for pagination
+  const handleStatusChange = (newStatus) => {
+    setActiveStatus(newStatus)
+    setCurrentPage(1) // Reset to page 1 when changing status
+  }
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage)
+    }
+  }
+
+  // Enterprise Search Functions
+  const handleSearch = async (query) => {
+    if (!query || query.trim().length < 3) {
+      clearSearch()
+      return
+    }
+
+    setSearchLoading(true)
+    setSearchError(null)
+    setSearchMode(true)
+
+    try {
+      const result = await searchVehicle(query.trim())
+      setSearchResult(result)
+      console.log('🎯 Search completed successfully')
+    } catch (error) {
+      setSearchError(error.message)
+      setSearchResult(null)
+      console.log('💥 Search failed:', error.message)
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  const clearSearch = () => {
+    setSearchMode(false)
+    setSearchResult(null)
+    setSearchError(null)
+    setSearchLoading(false)
+    // Clear the search query in parent component
+    if (onClearSearch) {
+      onClearSearch()
+    }
+    console.log('🧹 Search cleared')
+  }
+
+  // Removed handleSearchInput - using external search from SearchBar
+
+  // Auto-search when external search query changes
+  useEffect(() => {
+    if (searchQuery && searchQuery.length >= 3) {
+      handleSearch(searchQuery)
+    } else if (searchQuery.length === 0 && searchMode) {
+      // Only clear search mode, don't call clearSearch which would trigger parent updates
+      setSearchMode(false)
+      setSearchResult(null)
+      setSearchError(null)
+      setSearchLoading(false)
+    }
+  }, [searchQuery])
+
+  // Auto-clear search when query becomes too short
+  useEffect(() => {
+    if (searchQuery.length > 0 && searchQuery.length < 3 && searchMode) {
+      // Only clear search mode, don't trigger parent search clear
+      setSearchMode(false)
+      setSearchResult(null)
+      setSearchError(null)
+      setSearchLoading(false)
+    }
+  }, [searchQuery])
+
+  // ESC key support for search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && searchMode) {
+        clearSearch()
       }
-      onScrollFunctionsReady(scrollFunctions)
-    }
-  }, [onScrollFunctionsReady])
-
-  // Custom smooth scroll function with easing
-  const smoothScrollTo = (targetPosition, duration) => {
-    const startPosition = window.pageYOffset
-    const distance = targetPosition - startPosition
-    let startTime = null
-
-    const animation = (currentTime) => {
-      if (startTime === null) startTime = currentTime
-      const timeElapsed = currentTime - startTime
-      const run = easeInOutCubic(timeElapsed, startPosition, distance, duration)
-      window.scrollTo(0, run)
-      if (timeElapsed < duration) requestAnimationFrame(animation)
     }
 
-    requestAnimationFrame(animation)
-  }
-
-  // Easing function for smooth animation
-  const easeInOutCubic = (t, b, c, d) => {
-    t /= d / 2
-    if (t < 1) return c / 2 * t * t * t + b
-    t -= 2
-    return c / 2 * (t * t * t + 2) + b
-  }
+    if (searchMode) {
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [searchMode])
 
   // Helper function to render attachments
   const renderAttachments = (attachments, documentType) => {
@@ -505,15 +685,19 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
           <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm ${
             sectionType === 'pending' ? 'bg-orange-100 text-orange-800 border border-orange-300 shadow-orange-100' :
             sectionType === 'approved' ? 'bg-green-100 text-green-800 border border-green-300 shadow-green-100' :
+            sectionType === 'rejected' ? 'bg-red-100 text-red-800 border border-red-300 shadow-red-100' :
+            sectionType === 'in-transit' ? 'bg-blue-100 text-blue-800 border border-blue-300 shadow-blue-100' :
             'bg-red-100 text-red-800 border border-red-300 shadow-red-100'
           }`}>
             <div className="flex items-center gap-1">
               <div className={`w-1 h-1 rounded-full ${
                 sectionType === 'pending' ? 'bg-orange-500' :
                 sectionType === 'approved' ? 'bg-green-500' :
+                sectionType === 'rejected' ? 'bg-red-500' :
+                sectionType === 'in-transit' ? 'bg-blue-500' :
                 'bg-red-500'
               }`}></div>
-            {vehicle.approved_by_hq || sectionType}
+            {sectionType === 'in-transit' ? 'In Transit' : (vehicle.approved_by_hq || sectionType)}
             </div>
           </div>
         </div>
@@ -657,31 +841,42 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
               </div>
             </div>
           </motion.div>
+          
+          {/* Trip Completed Button - Only for In Transit */}
+          {sectionType === 'in-transit' && (
+            <motion.button
+              className="mt-4 w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold text-sm shadow-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 flex items-center justify-center gap-2 border-2 border-green-500/20"
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleTripCompleted(vehicle)
+              }}
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>Trip Completed</span>
+            </motion.button>
+          )}
         </div>
       </div>
     </motion.div>
   )
 
-  // Helper function to render a section
+  // Helper function to render a section with enterprise animations
   const renderSection = (title, vehicles, modalState, setModalState, sectionType) => {
     const isLoading = loading[sectionType]
     const hasError = error[sectionType]
     
-    // Get the appropriate ref for this section
-    const getSectionRef = () => {
-      switch (sectionType) {
-        case 'pending': return pendingSectionRef
-        case 'approved': return approvedSectionRef
-        case 'rejected': return rejectedSectionRef
-        default: return null
-      }
-    }
-    
     return (
-      <div className="w-full mb-12" ref={getSectionRef()}>
+      <div className="w-full mb-12">
         <div className="max-w-7xl mx-auto px-4">
-          {/* Section Header */}
-          <div className="flex items-center justify-between mb-6">
+          {/* Enterprise Section Header */}
+          <motion.div 
+            className="flex items-center justify-between mb-6"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <div className="flex items-center space-x-3">
               {/* Section Icon */}
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-md ${
@@ -713,11 +908,15 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
                   <p className={`text-xs font-medium ${
                     sectionType === 'pending' ? 'text-orange-600' :
                     sectionType === 'approved' ? 'text-green-600' :
+                    sectionType === 'rejected' ? 'text-red-600' :
+                    sectionType === 'in-transit' ? 'text-blue-600' :
                     'text-red-600'
                   }`}>
-                    {sectionType === 'pending' ? 'Awaiting approval' :
-                     sectionType === 'approved' ? 'Successfully approved' :
-                     'Rejected vehicles'}
+                                      {sectionType === 'pending' ? 'Awaiting approval' :
+                   sectionType === 'approved' ? 'Successfully approved' :
+                   sectionType === 'rejected' ? 'Rejected vehicles' :
+                   sectionType === 'in-transit' ? 'Vehicles currently in transit' :
+                   'Rejected vehicles'}
                   </p>
                 </div>
                 
@@ -725,6 +924,8 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
                 <div className={`px-3 py-1 rounded-lg text-xs font-semibold ${
                   sectionType === 'pending' ? 'bg-orange-50 text-orange-700 border border-orange-200' :
                   sectionType === 'approved' ? 'bg-green-50 text-green-700 border border-green-200' :
+                  sectionType === 'rejected' ? 'bg-red-50 text-red-700 border border-red-200' :
+                  sectionType === 'in-transit' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                   'bg-red-50 text-red-700 border border-red-200'
                 }`}>
                   {vehicles.length} {vehicles.length === 1 ? 'item' : 'items'}
@@ -732,23 +933,51 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
               </div>
             </div>
             
-            {vehicles.length > 4 && (
-              <motion.button
-                className="px-4 py-2 bg-white/90 backdrop-blur-sm border border-orange-200/50 rounded-lg text-gray-700 text-sm font-semibold hover:bg-white hover:shadow-md transition-all shadow-sm hover:scale-105"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setModalState(true)}
-              >
-                View All ({vehicles.length})
-              </motion.button>
-            )}
+            {/* Removed View All button - using pagination instead */}
+          </motion.div>
+
+          {/* Enterprise Loading State - Skeleton Cards */}
+          {isLoading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+              {[...Array(16)].map((_, index) => (
+                <motion.div
+                  key={index}
+                  className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 border border-orange-200/30 shadow-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                >
+                  {/* Vehicle Info Skeleton */}
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-200 to-orange-300 rounded-xl animate-pulse"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-gradient-to-r from-orange-200 to-orange-300 rounded-lg mb-2 animate-pulse"></div>
+                      <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-2/3 animate-pulse"></div>
+                    </div>
           </div>
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, index) => (
-                <div key={index} className="h-64 bg-white/5 rounded-3xl animate-pulse"></div>
+                  {/* Content Skeleton */}
+                  <div className="space-y-3">
+                    <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
+                    <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-4/5 animate-pulse"></div>
+                    <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-3/5 animate-pulse"></div>
+                  </div>
+
+                  {/* Status Badge Skeleton */}
+                  <div className="mt-4 flex justify-between items-center">
+                    <div className="h-6 w-20 bg-gradient-to-r from-orange-200 to-orange-300 rounded-full animate-pulse"></div>
+                    <div className="h-8 w-24 bg-gradient-to-r from-orange-200 to-orange-300 rounded-lg animate-pulse"></div>
+                  </div>
+
+                  {/* Driver Section Skeleton */}
+                  <div className="mt-4 pt-4 border-t border-orange-100">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full animate-pulse"></div>
+                      <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-1/2 animate-pulse"></div>
+                    </div>
+                    <div className="h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg w-3/4 animate-pulse"></div>
+                  </div>
+                </motion.div>
               ))}
             </div>
           )}
@@ -758,7 +987,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
             <div className="text-center py-8">
               <div className="text-red-400 mb-2">Failed to load {sectionType} vehicles</div>
               <button 
-                onClick={() => fetchSectionData(sectionType, selectedPlant)}
+                onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 hover:bg-red-500/30"
               >
                 Retry
@@ -766,21 +995,42 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
             </div>
           )}
 
-          {/* Cards Grid */}
+                    {/* Enterprise Cards Grid with Smooth Transitions */}
           {!isLoading && !hasError && (
-            <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+            >
               {vehicles.length === 0 ? (
-                <div className="w-full">
+                <motion.div 
+                  className="w-full"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
                   {renderEmptyStateCard(title, sectionType)}
-                </div>
+                </motion.div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {vehicles.slice(0, 4).map((vehicle, index) => 
-                  renderCard(vehicle, index, sectionType)
-              )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                  {vehicles.map((vehicle, index) => (
+                    <motion.div
+                      key={vehicle._id}
+                      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ 
+                        delay: index * 0.05, 
+                        duration: 0.4,
+                        type: "spring",
+                        stiffness: 100
+                      }}
+                    >
+                      {renderCard(vehicle, index, sectionType)}
+                    </motion.div>
+                  ))}
             </div>
               )}
-            </>
+            </motion.div>
           )}
 
           {/* View All Modal */}
@@ -1045,7 +1295,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
         }
       }
       
-      const response = await fetch(`http://localhost:5000/vms/driver-master/approval/${driverId}`, {
+      const response = await fetch(`http://13.200.229.29:5000/vms/driver-master/approval/${driverId}`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json'
@@ -1081,7 +1331,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
         }
       }
       
-      const response = await fetch(`http://localhost:5000/vms/vehicle-master/approval/${vehicleId}`, {
+      const response = await fetch(`http://13.200.229.29:5000/vms/vehicle-master/approval/${vehicleId}`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json'
@@ -1563,22 +1813,240 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
     )
   }
 
+  // Helper function to get data for active status
+  const getActiveStatusData = () => {
+    switch (activeStatus) {
+      case 'pending':
+        return {
+          title: 'PENDING',
+          vehicles: pendingVehicles,
+          modalState: showPendingModal,
+          setModalState: setShowPendingModal
+        }
+      case 'approved':
+        return {
+          title: 'APPROVED',
+          vehicles: approvedVehicles,
+          modalState: showApprovedModal,
+          setModalState: setShowApprovedModal
+        }
+      case 'rejected':
+        return {
+          title: 'REJECTED',
+          vehicles: rejectedVehicles,
+          modalState: showRejectedModal,
+          setModalState: setShowRejectedModal
+        }
+      case 'in-transit':
+        return {
+          title: 'IN TRANSIT',
+          vehicles: inTransitVehicles,
+          modalState: showApprovedModal, // Reuse approved modal for now
+          setModalState: setShowApprovedModal
+        }
+      default:
+        return {
+          title: 'PENDING',
+          vehicles: pendingVehicles,
+          modalState: showPendingModal,
+          setModalState: setShowPendingModal
+        }
+    }
+  }
+
+  const activeStatusData = getActiveStatusData()
+
   return (
-    <div className="min-h-screen">
-      {/* PENDING Section - Main Focus */}
-      <div className="mb-12">
-        {renderSection('PENDING', pendingVehicles, showPendingModal, setShowPendingModal, 'pending')}
+    <div className="min-h-screen relative">
+
+      {/* Search Overlay */}
+      <AnimatePresence>
+        {searchMode && (
+          <motion.div
+            className="absolute inset-0 z-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Background Blur */}
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={clearSearch} />
+            
+            {/* Search Results Container */}
+            <div className="relative z-50 max-w-5xl mx-auto px-4 pt-12">
+              {searchLoading && (
+                <motion.div
+                  className="text-center py-12"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="w-16 h-16 mx-auto mb-4 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-lg font-semibold text-gray-700">Searching for {searchQuery}...</p>
+                </motion.div>
+              )}
+              
+              {searchError && (
+                <motion.div
+                  className="text-center py-12"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                    <XCircle className="w-8 h-8 text-red-500" />
+      </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Vehicle Not Found</h3>
+                  <p className="text-gray-600 mb-4">{searchError}</p>
+                  <motion.button
+                    onClick={clearSearch}
+                    className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Back to Browse
+                  </motion.button>
+                </motion.div>
+              )}
+              
+              {searchResult && (
+                <motion.div
+                  className="max-w-lg mx-auto"
+                  initial={{ opacity: 0, y: 30, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 400 }}
+                >
+                  {/* Search Result Header */}
+                  <div className="text-center mb-8">
+                    <motion.div
+                      className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-4 rounded-2xl shadow-xl mb-4"
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      whileHover={{ scale: 1.05, y: -2 }}
+                    >
+                      <Car className="w-7 h-7" />
+                      <span className="font-bold text-xl">🎯 Vehicle Found</span>
+                    </motion.div>
+                    
+                    <motion.button
+                      onClick={clearSearch}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-orange-600 transition-colors rounded-xl hover:bg-orange-50 border border-gray-200 hover:border-orange-200"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <XCircle className="w-4 h-4" />
+                      <span className="text-sm font-medium">Close Search</span>
+                    </motion.button>
+                  </div>
+
+                  {/* Enhanced Existing Card Component */}
+                  <motion.div 
+                    className="transform scale-105 shadow-2xl ring-4 ring-orange-200/50"
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1.05 }}
+                    transition={{ delay: 0.3, type: "spring", damping: 20 }}
+                    whileHover={{ scale: 1.08 }}
+                  >
+                    {renderCard(searchResult, 0, 'search')}
+                  </motion.div>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Active Status Section - Blurred when searching */}
+      <motion.div 
+        className="mb-12"
+        animate={{ 
+          opacity: searchMode ? 0.3 : 1,
+          filter: searchMode ? 'blur(4px)' : 'blur(0px)'
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        {renderSection(
+          activeStatusData.title, 
+          activeStatusData.vehicles, 
+          activeStatusData.modalState, 
+          activeStatusData.setModalState, 
+          activeStatus
+        )}
+      </motion.div>
+
+      {/* Enterprise Pagination Controls */}
+      {totalPages > 1 && !searchMode && (
+        <motion.div 
+          className="flex flex-col items-center space-y-4 mt-8 mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.4 }}
+        >
+          {/* Pagination Buttons - Perfectly Centered */}
+          <div className="flex items-center justify-center space-x-3">
+            {/* Previous Button */}
+            <motion.button
+              className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                currentPage === 1 
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg hover:from-orange-600 hover:to-orange-700 hover:shadow-xl'
+              }`}
+              disabled={currentPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+              whileHover={currentPage !== 1 ? { scale: 1.05 } : {}}
+              whileTap={currentPage !== 1 ? { scale: 0.95 } : {}}
+            >
+              Previous
+            </motion.button>
+
+            {/* Page Numbers */}
+            <div className="flex items-center space-x-2">
+              {Array.from({ length: totalPages }, (_, i) => {
+                const pageNum = i + 1
+                
+                return (
+                  <motion.button
+                    key={pageNum}
+                    className={`w-12 h-12 rounded-xl text-sm font-bold transition-all duration-300 ${
+                      pageNum === currentPage
+                        ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-xl scale-110 ring-2 ring-orange-300'
+                        : 'bg-white text-orange-600 border-2 border-orange-200 hover:bg-orange-500 hover:text-white hover:shadow-lg hover:scale-105'
+                    }`}
+                    onClick={() => handlePageChange(pageNum)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {pageNum}
+                  </motion.button>
+                )
+              })}
       </div>
 
-      {/* APPROVED Section - Separate Container */}
-      <div className="mb-12">
-        {renderSection('APPROVED', approvedVehicles, showApprovedModal, setShowApprovedModal, 'approved')}
+            {/* Next Button */}
+            <motion.button
+              className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                currentPage === totalPages 
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg hover:from-orange-600 hover:to-orange-700 hover:shadow-xl'
+              }`}
+              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+              whileHover={currentPage !== totalPages ? { scale: 1.05 } : {}}
+              whileTap={currentPage !== totalPages ? { scale: 0.95 } : {}}
+            >
+              Next
+            </motion.button>
       </div>
 
-      {/* REJECTED Section - Separate Container */}
-      <div className="mb-12">
-        {renderSection('REJECTED', rejectedVehicles, showRejectedModal, setShowRejectedModal, 'rejected')}
-      </div>
+          {/* Page Info - Centered Below */}
+          <div className="text-sm font-medium bg-gradient-to-r from-orange-50 to-orange-100 text-orange-800 px-6 py-3 rounded-xl border-2 border-orange-200 shadow-lg">
+            <span className="font-bold">Page {currentPage} of {totalPages}</span>
+            <span className="text-orange-600 ml-2">({totalCount} total {activeStatus} vehicles)</span>
+          </div>
+        </motion.div>
+      )}
 
       {/* Vehicle Details Modal */}
         <AnimatePresence>
@@ -1598,10 +2066,15 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
               />
               <motion.div
                 className="relative bg-white/95 backdrop-blur-sm rounded-3xl p-8 max-w-6xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide border border-orange-200/30 shadow-2xl"
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                transition={{ 
+                  type: "spring", 
+                  damping: 20, 
+                  stiffness: 300,
+                  duration: 0.4
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Enhanced Multi-Layer Texture Overlay */}
@@ -2441,6 +2914,70 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', onApproval
             />
           )}
         </AnimatePresence>
+
+      {/* Trip Completed Confirmation Modal */}
+      <AnimatePresence>
+        {showTripCompletedModal && selectedVehicleForTrip && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowTripCompletedModal(false)} />
+            
+            <motion.div
+              className="relative bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-green-200"
+              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            >
+              {/* Header */}
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <CheckCircle className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Trip Completed?</h3>
+                <p className="text-gray-600">Are you sure you want to mark this trip as completed?</p>
+              </div>
+
+              {/* Vehicle Info */}
+              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <Truck className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="font-semibold text-gray-900">{selectedVehicleForTrip.custrecord_vehicle_number}</p>
+                    <p className="text-sm text-gray-600">{selectedVehicleForTrip.custrecord_vehicle_type_ag}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => setShowTripCompletedModal(false)}
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Cancel
+                </motion.button>
+                
+                <motion.button
+                  onClick={confirmTripCompleted}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Complete Trip
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
