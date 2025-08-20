@@ -157,6 +157,7 @@ class BaseApiService {
 
     try {
       console.log(`🚀 API Request: ${method} ${url}`)
+      console.log(`🔧 Request config:`, requestConfig)
       
       // Create abort controller for timeout
       const controller = new AbortController()

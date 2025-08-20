@@ -22,8 +22,14 @@ export const API_ENDPOINTS = {
     // Vehicle search by number
     SEARCH: (vehicleNumber) => `/vms/vehicle/number/${vehicleNumber}`,
     
+    // In Transit vehicles (global, not plant-specific)
+    IN_TRANSIT: () => `/vms/vehicle/in-transit`,
+    
     // Vehicle approval actions
     APPROVAL: (vehicleId) => `/vms/vehicle-master/approval/${vehicleId}`,
+    
+    // Trip completion (set currentPlant to "free")
+    COMPLETE_TRIP: (vehicleNumber) => `/vms/vehicle/${vehicleNumber}`,
     
     // Vehicle details
     DETAILS: (vehicleId) => `/vms/vehicle/details/${vehicleId}`,

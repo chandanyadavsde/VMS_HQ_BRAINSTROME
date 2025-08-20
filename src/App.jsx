@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { Truck } from 'lucide-react'
 import AlternativeWindCard from './components/AlternativeWindCard.jsx'
 import ApprovalCard from './components/ApprovalCard.jsx'
 import LoginScreen from './components/LoginScreen.jsx'
@@ -235,6 +236,15 @@ const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlan
                   <div className={`text-sm font-bold ${activeStatus === 'rejected' ? 'text-red-700' : 'text-red-600'}`}>{vehicleCounts?.rejected ?? '...'}</div>
                   <div className={`text-xs ${activeStatus === 'rejected' ? 'text-red-600' : 'text-gray-500'}`}>Rejected</div>
                 </button>
+                <button
+                  onClick={() => onStatusChange && onStatusChange('in-transit')}
+                  className={`flex items-center space-x-2 cursor-pointer hover:bg-blue-50 px-3 py-2 rounded-lg transition-all duration-200 ${
+                    activeStatus === 'in-transit' ? 'bg-blue-50 border border-blue-200' : ''
+                  }`}
+                >
+                  <Truck className={`w-4 h-4 ${activeStatus === 'in-transit' ? 'text-blue-700' : 'text-blue-600'}`} />
+                  <span className={`text-sm font-semibold ${activeStatus === 'in-transit' ? 'text-blue-700' : 'text-blue-600'}`}>In Transit</span>
+                </button>
               </div>
             )}
           </div>
@@ -258,7 +268,7 @@ const Approvals = ({ currentTheme }) => {
   const [selectedPlant, setSelectedPlant] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [activeStatus, setActiveStatus] = useState('pending')
-  const [vehicleCounts, setVehicleCounts] = useState({ pending: 0, approved: 0, rejected: 0 })
+  const [vehicleCounts, setVehicleCounts] = useState({ pending: 0, approved: 0, rejected: 0, 'in-transit': 0 })
 
   const handleStatusChange = useCallback((newStatus) => {
     setActiveStatus(newStatus)

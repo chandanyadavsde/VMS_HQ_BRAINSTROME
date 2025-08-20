@@ -79,8 +79,9 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
   const [pendingVehicles, setPendingVehicles] = useState([])
   const [approvedVehicles, setApprovedVehicles] = useState([])
   const [rejectedVehicles, setRejectedVehicles] = useState([])
-  const [loading, setLoading] = useState({ pending: false, approved: false, rejected: false })
-  const [error, setError] = useState({ pending: false, approved: false, rejected: false })
+  const [inTransitVehicles, setInTransitVehicles] = useState([])
+  const [loading, setLoading] = useState({ pending: false, approved: false, rejected: false, 'in-transit': false })
+  const [error, setError] = useState({ pending: false, approved: false, rejected: false, 'in-transit': false })
   
   const themeColors = getThemeColors(currentTheme)
 
@@ -108,6 +109,63 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
   // Helper function to hide toast
   const hideToast = () => {
     setToast({ show: false, message: '', type: 'success' })
+  }
+
+  // Trip Completed state
+  const [showTripCompletedModal, setShowTripCompletedModal] = useState(false)
+  const [selectedVehicleForTrip, setSelectedVehicleForTrip] = useState(null)
+
+  // Handle Trip Completed action
+  const handleTripCompleted = (vehicle) => {
+    setSelectedVehicleForTrip(vehicle)
+    setShowTripCompletedModal(true)
+  }
+
+  // Confirm Trip Completed
+  const confirmTripCompleted = async () => {
+    if (!selectedVehicleForTrip) return
+
+    try {
+      const vehicleNumber = selectedVehicleForTrip.custrecord_vehicle_number
+      console.log('🎯 Trip Completed for vehicle:', vehicleNumber)
+      
+      // Call real API to complete trip
+      await apiService.vehicles.completeTrip(vehicleNumber)
+      
+      // Show success message
+      showToast(`Trip completed for ${vehicleNumber}! Vehicle is now free.`, 'success')
+      
+      // Close modal
+      setShowTripCompletedModal(false)
+      setSelectedVehicleForTrip(null)
+      
+      // Immediately remove vehicle from In Transit list
+      setInTransitVehicles(prevVehicles => 
+        prevVehicles.filter(vehicle => 
+          vehicle.custrecord_vehicle_number !== vehicleNumber
+        )
+      )
+      
+      // Update counts to reflect the removal
+      setAllStatusCounts(prevCounts => ({
+        ...prevCounts,
+        'in-transit': Math.max(0, (prevCounts['in-transit'] || 0) - 1)
+      }))
+      
+      // Update parent counts if callback provided
+      if (onVehicleCountsUpdate) {
+        onVehicleCountsUpdate(prevCounts => ({
+          ...prevCounts,
+          'in-transit': Math.max(0, (prevCounts['in-transit'] || 0) - 1)
+        }))
+      }
+      
+      console.log(`✅ Vehicle ${vehicleNumber} removed from In Transit list`)
+      
+    } catch (error) {
+      console.error('Trip completion failed:', error)
+      showToast(`Failed to complete trip: ${error.message}`, 'error')
+    }
   }
 
   // Enterprise API Service Functions
@@ -142,7 +200,7 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
   // Removed legacy fetchSectionData - using enterprise solution only
 
   // ENTERPRISE SOLUTION: Smart data loading with caching
-  const [allStatusCounts, setAllStatusCounts] = useState({ pending: 0, approved: 0, rejected: 0 })
+  const [allStatusCounts, setAllStatusCounts] = useState({ pending: 0, approved: 0, rejected: 0, 'in-transit': 0 })
   const [dataCache, setDataCache] = useState({})
   const [isPreFetching, setIsPreFetching] = useState(false)
 
@@ -160,6 +218,8 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
     const loadData = async () => {
       const cacheKey = `${selectedPlant}-${activeStatus}-${currentPage}`
       console.log('🚀 Loading data for plant:', selectedPlant, 'status:', activeStatus, 'page:', currentPage)
+      console.log(`🔍 Active status type check: "${activeStatus}"`)
+      console.log(`🔍 Is In Transit: ${activeStatus === 'in-transit'}`)
       
       // Check cache first for instant loading
       if (dataCache[cacheKey]) {
@@ -177,6 +237,9 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
           break
         case 'rejected':
           setRejectedVehicles(vehicles)
+          break
+        case 'in-transit':
+          setInTransitVehicles(vehicles)
           break
       }
         
@@ -215,6 +278,8 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
         
         // 3. Update active status vehicles
         const vehicles = activeData.vehicles || []
+        console.log(`🚗 Setting ${activeStatus} vehicles:`, vehicles.length, 'vehicles')
+        
         switch (activeStatus) {
         case 'pending':
           setPendingVehicles(vehicles)
@@ -224,6 +289,10 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
           break
         case 'rejected':
           setRejectedVehicles(vehicles)
+          break
+        case 'in-transit':
+          console.log('🚛 Setting In Transit vehicles:', vehicles)
+          setInTransitVehicles(vehicles)
           break
       }
         
@@ -616,15 +685,19 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
           <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm ${
             sectionType === 'pending' ? 'bg-orange-100 text-orange-800 border border-orange-300 shadow-orange-100' :
             sectionType === 'approved' ? 'bg-green-100 text-green-800 border border-green-300 shadow-green-100' :
+            sectionType === 'rejected' ? 'bg-red-100 text-red-800 border border-red-300 shadow-red-100' :
+            sectionType === 'in-transit' ? 'bg-blue-100 text-blue-800 border border-blue-300 shadow-blue-100' :
             'bg-red-100 text-red-800 border border-red-300 shadow-red-100'
           }`}>
             <div className="flex items-center gap-1">
               <div className={`w-1 h-1 rounded-full ${
                 sectionType === 'pending' ? 'bg-orange-500' :
                 sectionType === 'approved' ? 'bg-green-500' :
+                sectionType === 'rejected' ? 'bg-red-500' :
+                sectionType === 'in-transit' ? 'bg-blue-500' :
                 'bg-red-500'
               }`}></div>
-            {vehicle.approved_by_hq || sectionType}
+            {sectionType === 'in-transit' ? 'In Transit' : (vehicle.approved_by_hq || sectionType)}
             </div>
           </div>
         </div>
@@ -768,6 +841,22 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
               </div>
             </div>
           </motion.div>
+          
+          {/* Trip Completed Button - Only for In Transit */}
+          {sectionType === 'in-transit' && (
+            <motion.button
+              className="mt-4 w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold text-sm shadow-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 flex items-center justify-center gap-2 border-2 border-green-500/20"
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleTripCompleted(vehicle)
+              }}
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>Trip Completed</span>
+            </motion.button>
+          )}
         </div>
       </div>
     </motion.div>
@@ -819,11 +908,15 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
                   <p className={`text-xs font-medium ${
                     sectionType === 'pending' ? 'text-orange-600' :
                     sectionType === 'approved' ? 'text-green-600' :
+                    sectionType === 'rejected' ? 'text-red-600' :
+                    sectionType === 'in-transit' ? 'text-blue-600' :
                     'text-red-600'
                   }`}>
-                    {sectionType === 'pending' ? 'Awaiting approval' :
-                     sectionType === 'approved' ? 'Successfully approved' :
-                     'Rejected vehicles'}
+                                      {sectionType === 'pending' ? 'Awaiting approval' :
+                   sectionType === 'approved' ? 'Successfully approved' :
+                   sectionType === 'rejected' ? 'Rejected vehicles' :
+                   sectionType === 'in-transit' ? 'Vehicles currently in transit' :
+                   'Rejected vehicles'}
                   </p>
                 </div>
                 
@@ -831,6 +924,8 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
                 <div className={`px-3 py-1 rounded-lg text-xs font-semibold ${
                   sectionType === 'pending' ? 'bg-orange-50 text-orange-700 border border-orange-200' :
                   sectionType === 'approved' ? 'bg-green-50 text-green-700 border border-green-200' :
+                  sectionType === 'rejected' ? 'bg-red-50 text-red-700 border border-red-200' :
+                  sectionType === 'in-transit' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                   'bg-red-50 text-red-700 border border-red-200'
                 }`}>
                   {vehicles.length} {vehicles.length === 1 ? 'item' : 'items'}
@@ -1741,6 +1836,13 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
           vehicles: rejectedVehicles,
           modalState: showRejectedModal,
           setModalState: setShowRejectedModal
+        }
+      case 'in-transit':
+        return {
+          title: 'IN TRANSIT',
+          vehicles: inTransitVehicles,
+          modalState: showApprovedModal, // Reuse approved modal for now
+          setModalState: setShowApprovedModal
         }
       default:
         return {
@@ -2812,6 +2914,70 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
             />
           )}
         </AnimatePresence>
+
+      {/* Trip Completed Confirmation Modal */}
+      <AnimatePresence>
+        {showTripCompletedModal && selectedVehicleForTrip && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowTripCompletedModal(false)} />
+            
+            <motion.div
+              className="relative bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-green-200"
+              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            >
+              {/* Header */}
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <CheckCircle className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Trip Completed?</h3>
+                <p className="text-gray-600">Are you sure you want to mark this trip as completed?</p>
+              </div>
+
+              {/* Vehicle Info */}
+              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <Truck className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="font-semibold text-gray-900">{selectedVehicleForTrip.custrecord_vehicle_number}</p>
+                    <p className="text-sm text-gray-600">{selectedVehicleForTrip.custrecord_vehicle_type_ag}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => setShowTripCompletedModal(false)}
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Cancel
+                </motion.button>
+                
+                <motion.button
+                  onClick={confirmTripCompleted}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Complete Trip
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
