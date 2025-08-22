@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Car, User, CheckSquare, FileText, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Truck, UserCheck, ClipboardCheck, Calendar, Image, FileText as DocumentIcon } from 'lucide-react'
 import { getThemeColors } from '../utils/theme.js'
+import useApprovalShortcuts from '../hooks/useApprovalShortcuts.js'
 
 // Toast notification component
 const Toast = ({ message, type, onClose }) => {
@@ -74,6 +75,51 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
   // Use external activeStatus if provided, otherwise use internal
   const activeStatus = externalActiveStatus || internalActiveStatus
   const setActiveStatus = onStatusChange || setInternalActiveStatus
+
+  // Keyboard shortcuts
+  const searchInputRef = useRef(null)
+
+  // Keyboard shortcuts handlers
+  const handleSearchFocus = useCallback(() => {
+    // Search focused via keyboard shortcut
+  }, [])
+
+  const handleSearchClear = useCallback(() => {
+    setSearchTerm('')
+  }, [])
+
+  // Initialize keyboard shortcuts
+  useApprovalShortcuts({
+    onStatusChange: setActiveStatus,
+    onSearchFocus: handleSearchFocus,
+    onSearchClear: handleSearchClear,
+    searchInputRef,
+    enabled: true
+  })
+
+  // Add direct Ctrl+K handler as backup
+  useEffect(() => {
+    const handleDirectCtrlK = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        console.log('🚨 Direct Ctrl+K handler triggered!')
+        event.preventDefault()
+        event.stopPropagation()
+        
+        if (searchInputRef?.current) {
+          console.log('🎯 Direct focus attempt')
+          searchInputRef.current.focus()
+          searchInputRef.current.select()
+        }
+      }
+    }
+
+    // Add to window to catch it everywhere
+    window.addEventListener('keydown', handleDirectCtrlK, { capture: true })
+    
+    return () => {
+      window.removeEventListener('keydown', handleDirectCtrlK, { capture: true })
+    }
+  }, [])
   
   // API-driven state - keeping existing structure for backward compatibility
   const [pendingVehicles, setPendingVehicles] = useState([])
@@ -1109,14 +1155,15 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
 
                     {/* Enhanced Search Box */}
                     <div className="mb-8">
-                    <div className="relative">
+                      <div className="relative">
                         <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                           </svg>
                         </div>
-                      <input
-                        type="text"
+                        <input
+                          ref={searchInputRef}
+                          type="text"
                           placeholder="Search by vehicle number..."
                           value={searchTerm}
                           className="w-full pl-12 pr-4 py-4 bg-white/80 backdrop-blur-sm border border-orange-200/30 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
@@ -1134,8 +1181,8 @@ const ApprovalCard = ({ selectedPlant = 'all', currentTheme = 'teal', activeStat
                             </svg>
                           </button>
                         )}
+                      </div>
                     </div>
-                  </div>
 
                     {/* Enhanced Cards Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 overflow-y-auto max-h-[65vh] pr-2">
