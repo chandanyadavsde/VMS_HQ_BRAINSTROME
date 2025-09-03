@@ -1,14 +1,17 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Filter, MoreHorizontal, Plus, Car, User, Phone, MapPin, Building2, Calendar, UserCheck } from 'lucide-react'
+import { Search, Filter, MoreHorizontal, Plus, Car, User, Phone, MapPin, Building2, Calendar, UserCheck, Eye, FileText } from 'lucide-react'
 import VehicleDetailsPopup from './VehicleDetailsPopup'
 import CreateOptionsModal from './CreateOptionsModal'
 import ContactManagementModal from './ContactManagementModal'
 import DriverManagementModal from './DriverManagementModal'
+import DriverDetailsModal from './DriverDetailsModal'
 
 const MastersTable = () => {
   const [searchQuery, setSearchQuery] = useState('')
+  const [viewMode, setViewMode] = useState('vehicle') // 'vehicle' or 'driver'
   const [selectedVehicle, setSelectedVehicle] = useState(null)
+  const [selectedDriver, setSelectedDriver] = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showContactModal, setShowContactModal] = useState(false)
   const [showDriverModal, setShowDriverModal] = useState(false)
@@ -113,6 +116,70 @@ const MastersTable = () => {
     }
   ]
 
+  // Mock data for drivers
+  const mockDrivers = [
+    {
+      id: 1,
+      name: 'John Doe',
+      contact: '+91-9876543210',
+      licenseNumber: 'DL123456789',
+      licenseExpireDate: '2025-12-31',
+      vehicleAttached: 'MH-12-AB-1234',
+      createdBy: 'Admin User',
+      imageUrl: '/images/drivers/john-doe.jpg'
+    },
+    {
+      id: 2,
+      name: 'Jane Smith',
+      contact: '+91-9876543211',
+      licenseNumber: 'DL987654321',
+      licenseExpireDate: '2024-08-15',
+      vehicleAttached: 'MH-12-CD-5678',
+      createdBy: 'Manager',
+      imageUrl: '/images/drivers/jane-smith.jpg'
+    },
+    {
+      id: 3,
+      name: 'Mike Wilson',
+      contact: '+91-9876543212',
+      licenseNumber: 'DL456789123',
+      licenseExpireDate: '2026-03-20',
+      vehicleAttached: 'MH-12-EF-9012',
+      createdBy: 'Supervisor',
+      imageUrl: '/images/drivers/mike-wilson.jpg'
+    },
+    {
+      id: 4,
+      name: 'Sarah Johnson',
+      contact: '+91-9876543213',
+      licenseNumber: 'DL789123456',
+      licenseExpireDate: '2024-11-10',
+      vehicleAttached: 'MH-12-GH-3456',
+      createdBy: 'Admin User',
+      imageUrl: '/images/drivers/sarah-johnson.jpg'
+    },
+    {
+      id: 5,
+      name: 'David Brown',
+      contact: '+91-9876543214',
+      licenseNumber: 'DL321654987',
+      licenseExpireDate: '2025-07-25',
+      vehicleAttached: 'MH-12-IJ-7890',
+      createdBy: 'Manager',
+      imageUrl: '/images/drivers/david-brown.jpg'
+    },
+    {
+      id: 6,
+      name: 'Emily Davis',
+      contact: '+91-9876543215',
+      licenseNumber: 'DL654987321',
+      licenseExpireDate: '2024-09-30',
+      vehicleAttached: 'MH-12-KL-2468',
+      createdBy: 'Supervisor',
+      imageUrl: '/images/drivers/emily-davis.jpg'
+    }
+  ]
+
   const filteredVehicles = mockVehicles.filter(vehicle =>
     vehicle.vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
     vehicle.driverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -123,8 +190,20 @@ const MastersTable = () => {
     vehicle.createdBy.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  const filteredDrivers = mockDrivers.filter(driver =>
+    driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    driver.contact.includes(searchQuery) ||
+    driver.licenseNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    driver.vehicleAttached.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    driver.createdBy.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   const handleVehicleClick = (vehicle) => {
     setSelectedVehicle(vehicle)
+  }
+
+  const handleDriverClick = (driver) => {
+    setSelectedDriver(driver)
   }
 
   const handleContactAction = (vehicle) => {
@@ -172,96 +251,175 @@ const MastersTable = () => {
           </motion.button>
         </div>
 
-        {/* Search and Filter Bar */}
-        <div className="bg-slate-50 rounded-lg p-3 mb-4">
-          <div className="flex items-center gap-3">
-            {/* Search Box */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search vehicles, drivers, plants..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-sm"
-              />
-            </div>
+                        {/* Search and Filter Bar */}
+                <div className="bg-slate-50 rounded-lg p-3 mb-4">
+                  <div className="flex items-center gap-3">
+                    {/* Search Box */}
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                      <input
+                        type="text"
+                        placeholder={viewMode === 'vehicle' ? "Search vehicles, drivers, plants..." : "Search drivers, license, vehicles..."}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-sm"
+                      />
+                    </div>
 
-            {/* Filter and Group Buttons */}
-            <div className="flex items-center gap-2">
-              <button className="flex items-center gap-1.5 px-2.5 py-2 bg-white hover:bg-orange-50 border border-slate-200 rounded-lg text-slate-700 transition-colors text-xs font-medium">
-                <Filter className="w-3.5 h-3.5" />
-                Filter
-              </button>
-              <button className="flex items-center gap-1.5 px-2.5 py-2 bg-white hover:bg-orange-50 border border-slate-200 rounded-lg text-slate-700 transition-colors text-xs font-medium">
-                Group
-              </button>
-              <button className="p-2 bg-white hover:bg-orange-50 border border-slate-200 rounded-lg text-slate-700 transition-colors">
-                <MoreHorizontal className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
+                    {/* View Mode Toggle Icons */}
+                    <div className="flex items-center gap-1 bg-white rounded-lg border border-slate-200 p-1">
+                      <button
+                        onClick={() => setViewMode('vehicle')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all text-xs font-medium ${
+                          viewMode === 'vehicle'
+                            ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                            : 'text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        <Car className="w-3.5 h-3.5" />
+                        Vehicle
+                      </button>
+                      <button
+                        onClick={() => setViewMode('driver')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all text-xs font-medium ${
+                          viewMode === 'driver'
+                            ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                            : 'text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        <User className="w-3.5 h-3.5" />
+                        Driver
+                      </button>
+                    </div>
 
-        {/* Modern Card-Based Table */}
+                    {/* Filter and Group Buttons - Only show in Vehicle mode */}
+                    {viewMode === 'vehicle' && (
+                      <div className="flex items-center gap-2">
+                        <button className="flex items-center gap-1.5 px-2.5 py-2 bg-white hover:bg-orange-50 border border-slate-200 rounded-lg text-slate-700 transition-colors text-xs font-medium">
+                          <Filter className="w-3.5 h-3.5" />
+                          Filter
+                        </button>
+                        <button className="flex items-center gap-1.5 px-2.5 py-2 bg-white hover:bg-orange-50 border border-slate-200 rounded-lg text-slate-700 transition-colors text-xs font-medium">
+                          Group
+                        </button>
+                        <button className="p-2 bg-white hover:bg-orange-50 border border-slate-200 rounded-lg text-slate-700 transition-colors">
+                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Modern Card-Based Table */}
         <div className="space-y-2">
           {/* Header Row - Sticky */}
           <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-slate-100">
-            <div className="grid grid-cols-12 gap-3 items-center">
-              <div className="col-span-2">
-                <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
-                  <Car className="w-3.5 h-3.5" />
-                  Vehicle
+            {viewMode === 'vehicle' ? (
+              // Vehicle Table Header
+              <div className="grid grid-cols-12 gap-3 items-center">
+                <div className="col-span-2">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <Car className="w-3.5 h-3.5" />
+                    Vehicle
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <User className="w-3.5 h-3.5" />
+                    Driver
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <Phone className="w-3.5 h-3.5" />
+                    Mobile
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <div className="text-slate-600 font-semibold text-xs uppercase tracking-wide">Status</div>
+                </div>
+                <div className="col-span-1">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <MapPin className="w-3.5 h-3.5" />
+                    Plant
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <Building2 className="w-3.5 h-3.5" />
+                    Vendor
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Arrived
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <UserCheck className="w-3.5 h-3.5" />
+                    Created
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <div className="text-slate-600 font-semibold text-xs uppercase tracking-wide">Other</div>
                 </div>
               </div>
-              <div className="col-span-2">
-                <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
-                  <User className="w-3.5 h-3.5" />
-                  Driver
+            ) : (
+              // Driver Table Header
+              <div className="grid grid-cols-12 gap-3 items-center">
+                <div className="col-span-2">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <User className="w-3.5 h-3.5" />
+                    Name
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <Phone className="w-3.5 h-3.5" />
+                    Contact
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <FileText className="w-3.5 h-3.5" />
+                    License
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Expire Date
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <Car className="w-3.5 h-3.5" />
+                    Vehicle Attached
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <UserCheck className="w-3.5 h-3.5" />
+                    Created
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
+                    <Eye className="w-3.5 h-3.5" />
+                    Image
+                  </div>
                 </div>
               </div>
-                             <div className="col-span-2">
-                 <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
-                   <Phone className="w-3.5 h-3.5" />
-                   Mobile
-                 </div>
-               </div>
-              <div className="col-span-1">
-                <div className="text-slate-600 font-semibold text-xs uppercase tracking-wide">Status</div>
-              </div>
-              <div className="col-span-1">
-                <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
-                  <MapPin className="w-3.5 h-3.5" />
-                  Plant
-                </div>
-              </div>
-              <div className="col-span-1">
-                <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
-                  <Building2 className="w-3.5 h-3.5" />
-                  Vendor
-                </div>
-              </div>
-              <div className="col-span-1">
-                <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Arrived
-                </div>
-              </div>
-              <div className="col-span-1">
-                <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-xs uppercase tracking-wide">
-                  <UserCheck className="w-3.5 h-3.5" />
-                  Created
-                </div>
-              </div>
-              <div className="col-span-1">
-                <div className="text-slate-600 font-semibold text-xs uppercase tracking-wide">Actions</div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Data Rows - Card Style */}
           <div className="space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-            {filteredVehicles.map((vehicle, index) => (
+            {viewMode === 'vehicle' ? (
+              // Vehicle Data Rows
+              filteredVehicles.map((vehicle, index) => (
               <motion.div
                 key={vehicle.id}
                 className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md border border-slate-100 hover:border-orange-200 transition-all duration-300 group"
@@ -287,18 +445,21 @@ const MastersTable = () => {
                     </button>
                   </div>
 
-                  {/* Driver */}
-                  <div className="col-span-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <User className="w-3 h-3 text-blue-600" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-slate-800 text-xs">{vehicle.driverName}</div>
-                        <div className="text-xs text-slate-500">Driver</div>
-                      </div>
-                    </div>
-                  </div>
+                                     {/* Driver */}
+                   <div className="col-span-2">
+                     <button
+                       onClick={() => handleDriverAction(vehicle)}
+                       className="flex items-center gap-2 text-left w-full group-hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
+                     >
+                       <div className="w-6 h-6 rounded-lg bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors">
+                         <User className="w-3 h-3 text-blue-600" />
+                       </div>
+                       <div>
+                         <div className="font-medium text-slate-800 text-xs">{vehicle.driverName}</div>
+                         <div className="text-xs text-slate-500">Driver</div>
+                       </div>
+                     </button>
+                   </div>
 
                                      {/* Mobile */}
                    <div className="col-span-2">
@@ -352,37 +513,136 @@ const MastersTable = () => {
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="col-span-1">
-                    <div className="flex items-center gap-1">
+                                     {/* Actions */}
+                   <div className="col-span-1 flex justify-center">
+                     <button
+                       onClick={() => handleContactAction(vehicle)}
+                       className="p-1.5 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors"
+                       title="Manage Contacts"
+                     >
+                       <User className="w-3 h-3 text-purple-600" />
+                     </button>
+                   </div>
+                </div>
+              </motion.div>
+              ))
+            ) : (
+              // Driver Data Rows
+              filteredDrivers.map((driver, index) => (
+                <motion.div
+                  key={driver.id}
+                  className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md border border-slate-100 hover:border-orange-200 transition-all duration-300 group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  whileHover={{ scale: 1.01 }}
+                >
+                  <div className="grid grid-cols-12 gap-3 items-center">
+                    {/* Name */}
+                    <div className="col-span-2">
                       <button
-                        onClick={() => handleContactAction(vehicle)}
-                        className="p-1.5 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors"
-                        title="Manage Contacts"
+                        onClick={() => handleDriverClick(driver)}
+                        className="flex items-center gap-2 text-left w-full group-hover:bg-orange-50 p-1.5 rounded-lg transition-colors"
                       >
-                        <User className="w-3 h-3 text-purple-600" />
+                        <div className="w-7 h-7 rounded-lg bg-orange-100 group-hover:bg-orange-200 flex items-center justify-center transition-colors">
+                          <User className="w-3.5 h-3.5 text-orange-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-800 text-xs">{driver.name}</div>
+                          <div className="text-xs text-slate-500">Driver</div>
+                        </div>
                       </button>
+                    </div>
+
+                    {/* Contact */}
+                    <div className="col-span-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 rounded bg-green-100 flex items-center justify-center">
+                          <Phone className="w-2.5 h-2.5 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-slate-800 text-xs">{driver.contact}</div>
+                          <div className="text-xs text-slate-500">Contact</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* License */}
+                    <div className="col-span-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 rounded bg-blue-100 flex items-center justify-center">
+                          <FileText className="w-2.5 h-2.5 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-slate-800 text-xs">{driver.licenseNumber}</div>
+                          <div className="text-xs text-slate-500">License</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Expire Date */}
+                    <div className="col-span-2">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-slate-400" />
+                        <div>
+                          <div className="font-medium text-slate-800 text-xs">{driver.licenseExpireDate}</div>
+                          <div className="text-xs text-slate-500">Expires</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Vehicle Attached */}
+                    <div className="col-span-2">
+                      <div className="flex items-center gap-1">
+                        <Car className="w-3 h-3 text-slate-400" />
+                        <div>
+                          <div className="font-medium text-slate-800 text-xs">{driver.vehicleAttached}</div>
+                          <div className="text-xs text-slate-500">Vehicle</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Created */}
+                    <div className="col-span-1">
+                      <div className="flex items-center gap-1">
+                        <UserCheck className="w-3 h-3 text-slate-400" />
+                        <span className="text-slate-700 text-xs font-medium">{driver.createdBy}</span>
+                      </div>
+                    </div>
+
+                    {/* Image */}
+                    <div className="col-span-1 flex justify-center">
                       <button
-                        onClick={() => handleDriverAction(vehicle)}
-                        className="p-1.5 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors"
-                        title="Manage Driver"
+                        className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                        title="View Driver Image"
                       >
-                        <User className="w-3 h-3 text-blue-600" />
+                        <Eye className="w-3 h-3 text-slate-600" />
                       </button>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </div>
 
-          {/* Footer Info */}
-          <div className="bg-slate-50 rounded-lg p-3 text-center">
-            <p className="text-slate-600 text-xs">
-              {filteredVehicles.length > 0 ? `${filteredVehicles.length} records found` : 'No records found'} • 
-              <span className="ml-1 text-orange-600 font-medium">Click on vehicle to view details</span>
-            </p>
-          </div>
+                     {/* Footer Info */}
+           <div className="bg-slate-50 rounded-lg p-3 text-center">
+             <p className="text-slate-600 text-xs">
+               {viewMode === 'vehicle' ? (
+                 <>
+                   {filteredVehicles.length > 0 ? `${filteredVehicles.length} records found` : 'No records found'} • 
+                   <span className="ml-1 text-orange-600 font-medium">Click vehicle for details</span> • 
+                   <span className="ml-1 text-blue-600 font-medium">Click driver to manage</span>
+                 </>
+               ) : (
+                 <>
+                   {filteredDrivers.length > 0 ? `${filteredDrivers.length} records found` : 'No records found'} • 
+                   <span className="ml-1 text-orange-600 font-medium">Click driver name for details</span> • 
+                   <span className="ml-1 text-slate-600 font-medium">Click eye icon to view image</span>
+                 </>
+               )}
+             </p>
+           </div>
         </div>
 
 
@@ -432,6 +692,16 @@ const MastersTable = () => {
                 setShowDriverModal(false)
                 setSelectedVehicleForAction(null)
               }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Driver Details Modal */}
+        <AnimatePresence>
+          {selectedDriver && (
+            <DriverDetailsModal
+              driver={selectedDriver}
+              onClose={() => setSelectedDriver(null)}
             />
           )}
         </AnimatePresence>
