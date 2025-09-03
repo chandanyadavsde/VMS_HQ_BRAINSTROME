@@ -1,443 +1,471 @@
-# 🎨 VMS Design System & Pattern Analysis
+# 🎨 **VMS Design System & Component Library**
 
-## 📋 Overview
-This document analyzes the design patterns, colors, animations, and UI/UX elements used in the current VMS application (specifically the Approval page) to maintain consistency when building the new Masters page.
-
----
-
-## 🎯 Current Application State
-
-### **Masters Page (Current State)**
-- **Status**: Placeholder/Basic Implementation
-- **Content**: Simple card layout with static content
-- **Components**: Basic grid with project templates, user management, and system settings
-- **Theme**: Uses basic `themeColors.accentText` and glass morphism
-
-### **Approval Page (Reference Design)**
-- **Status**: Fully Implemented & Production Ready
-- **Content**: Dynamic data with complex interactions
-- **Components**: Advanced card systems, modals, animations, and enterprise features
-- **Theme**: Comprehensive design system with consistent patterns
+> **Central reference for all UI/UX patterns, animations, and reusable components across the VMS application**
 
 ---
 
-## 🎨 Color Palette & Theme System
+## 📋 **Table of Contents**
 
-### **Primary Theme Colors**
-```javascript
-// Main Theme (Teal-based)
-const tealTheme = {
-  background: 'from-slate-900 via-teal-900 to-slate-900',
-  cardGradient: 'from-teal-900 via-teal-800 to-teal-900',
-  cardBackground: 'linear-gradient(135deg, #134e4a 0%, #0f766e 50%, #115e59 100%)',
-  logoGradient: 'from-teal-400 to-teal-500',
-  accentText: 'text-teal-200',
-  accentColor: 'text-teal-400',
-  accentBg: 'bg-teal-500/20'
-}
-```
-
-### **Status Colors**
-```javascript
-// Status-based color system
-const statusColors = {
-  pending: {
-    bg: 'bg-orange-50', text: 'text-orange-700', 
-    border: 'border-orange-200', gradient: 'from-orange-500 to-orange-600'
-  },
-  approved: {
-    bg: 'bg-green-50', text: 'text-green-700', 
-    border: 'border-green-200', gradient: 'from-green-500 to-green-600'
-  },
-  rejected: {
-    bg: 'bg-red-50', text: 'text-red-700', 
-    border: 'border-red-200', gradient: 'from-red-500 to-red-600'
-  },
-  inTransit: {
-    bg: 'bg-blue-50', text: 'text-blue-700', 
-    border: 'border-blue-200', gradient: 'from-blue-500 to-blue-600'
-  }
-}
-```
-
-### **Glass Morphism Pattern**
-```css
-/* Consistent Glass Effect */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 24px;
-}
-
-/* Glass variations */
-.glass-strong: bg-white/20, backdrop-blur-md, border-white/30
-.glass-medium: bg-white/10, backdrop-blur-sm, border-white/20  
-.glass-subtle: bg-white/5, backdrop-blur-sm, border-white/10
-```
+1. [🎭 Modal & Popup Patterns](#-modal--popup-patterns)
+2. [🎨 Animation System](#-animation-system)
+3. [🎯 Interactive Components](#-interactive-components)
+4. [🎨 Visual Design Elements](#-visual-design-elements)
+5. [📱 Responsive Patterns](#-responsive-patterns)
+6. [🔧 Reusable Components](#-reusable-components)
+7. [🎨 Color System](#-color-system)
+8. [📐 Layout Patterns](#-layout-patterns)
+9. [🚀 Implementation Guidelines](#-implementation-guidelines)
+10. [📚 Component API Reference](#-component-api-reference)
 
 ---
 
-## 🎭 Animation Patterns
+## 🎭 **Modal & Popup Patterns**
 
-### **Framer Motion Standards**
+### **1. BaseModal Component**
+**Location:** `src/components/common/BaseModal.jsx`
 
-#### **Page Transitions**
 ```javascript
-const pageVariants = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
-  transition: { duration: 0.3, ease: "easeOut" }
-}
+// Standard modal structure with consistent animations
+<AnimatePresence>
+  <motion.div
+    className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
+    initial={{ opacity: 0 }} 
+    animate={{ opacity: 1 }} 
+    exit={{ opacity: 0 }} 
+    transition={{ duration: 0.3 }}
+  >
+    <motion.div
+      className="bg-black/95 border border-white/20 rounded-3xl p-6 max-w-5xl w-full h-[85vh] flex flex-col"
+      initial={{ scale: 0.9, opacity: 0 }} 
+      animate={{ scale: 1, opacity: 1 }} 
+      exit={{ scale: 0.9, opacity: 0 }} 
+      transition={{ duration: 0.3 }}
+    >
+      {/* Header with close button */}
+      {/* Scrollable content */}
+    </motion.div>
+  </motion.div>
+</AnimatePresence>
 ```
 
-#### **Card Animations**
+**Props:**
+- `isOpen` - Boolean to control visibility
+- `onClose` - Function to handle close action
+- `title` - Optional modal title
+- `maxWidth` - Modal width (default: "max-w-5xl")
+- `height` - Modal height (default: "h-[85vh]")
+- `showCloseButton` - Show/hide close button (default: true)
+
+### **2. Modal Variants**
+
+#### **A. View All Modal (Large Content)**
 ```javascript
-const cardAnimations = {
-  // Hover effects
-  whileHover: { 
-    scale: 1.02, 
-    boxShadow: "0 25px 50px rgba(0,0,0,0.4)",
-    y: -2
-  },
-  
-  // Tap effects  
-  whileTap: { scale: 0.98 },
-  
-  // Spring transitions
-  transition: { 
+// For detailed views with extensive content
+<motion.div
+  className="relative bg-white/95 backdrop-blur-sm rounded-3xl p-8 max-w-[95vw] w-full max-h-[90vh] overflow-hidden border border-orange-200/30 shadow-2xl"
+  initial={{ scale: 0.9, opacity: 0 }}
+  animate={{ scale: 1, opacity: 1 }}
+  exit={{ scale: 0.9, opacity: 0 }}
+  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+>
+```
+
+#### **B. Confirmation Modal (Compact)**
+```javascript
+// For confirmations and simple actions
+<motion.div
+  className="relative bg-slate-900/95 rounded-3xl p-6 max-w-md w-full"
+  initial={{ scale: 0.9, opacity: 0 }}
+  animate={{ scale: 1, opacity: 1 }}
+  exit={{ scale: 0.9, opacity: 0 }}
+  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+>
+```
+
+#### **C. Detail Modal (Medium)**
+```javascript
+// For detailed information display
+<motion.div
+  className="relative bg-white/95 backdrop-blur-sm rounded-3xl p-8 max-w-6xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide border border-orange-200/30 shadow-2xl"
+  initial={{ scale: 0.8, opacity: 0, y: 50 }}
+  animate={{ scale: 1, opacity: 1, y: 0 }}
+  exit={{ scale: 0.8, opacity: 0, y: 50 }}
+  transition={{ 
     type: "spring", 
-    stiffness: 300, 
-    damping: 30 
-  }
-}
-```
-
-#### **Staggered Animations**
-```javascript
-// Grid items appear with delay
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.05
-    }
-  }
-}
-
-const staggerItem = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 }
-}
-```
-
-#### **Loading States**
-```javascript
-// Skeleton loading
-const skeletonAnimation = {
-  animate: { opacity: [0.5, 1, 0.5] },
-  transition: { 
-    duration: 1.5, 
-    repeat: Infinity, 
-    ease: "easeInOut" 
-  }
-}
-
-// Spinner animation
-const spinnerAnimation = {
-  animate: { rotate: 360 },
-  transition: { 
-    duration: 1, 
-    repeat: Infinity, 
-    ease: "linear" 
-  }
-}
+    damping: 20, 
+    stiffness: 300,
+    duration: 0.4
+  }}
+>
 ```
 
 ---
 
-## 🧩 Component Architecture
+## 🎨 **Animation System**
 
-### **Card System Hierarchy**
+### **1. Entry/Exit Animations**
 
-#### **BaseCard Component**
-```jsx
-const BaseCard = ({ gradient, isHoverable, onClick, children }) => (
-  <motion.div
-    className={`relative bg-gradient-to-br ${gradient} rounded-3xl p-6`}
-    whileHover={isHoverable ? cardAnimations.whileHover : {}}
-    transition={cardAnimations.transition}
-  >
-    {children}
-  </motion.div>
-)
+#### **Standard Fade + Scale**
+```javascript
+initial={{ opacity: 0, scale: 0.9 }}
+animate={{ opacity: 1, scale: 1 }}
+exit={{ opacity: 0, scale: 0.9 }}
+transition={{ duration: 0.3 }}
 ```
 
-#### **Status Cards** (Approval Page Pattern)
-```jsx
-const StatusCard = ({ status, count, isActive, onClick }) => (
-  <button
-    className={`text-center cursor-pointer hover:bg-${status}-50 px-2 py-1 rounded-lg 
-    transition-all duration-200 ${isActive ? `bg-${status}-50 border-${status}-200` : ''}`}
-    onClick={onClick}
-  >
-    <div className={`text-sm font-bold text-${status}-700`}>{count}</div>
-    <div className={`text-xs text-${status}-600`}>{status}</div>
-  </button>
-)
+#### **Spring-Based Animation**
+```javascript
+transition={{ type: "spring", damping: 25, stiffness: 300 }}
 ```
 
-#### **Data Cards** (Vehicle/Master Cards)
-```jsx
-const DataCard = ({ data, sectionType, onClick }) => (
-  <motion.div
-    className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 cursor-pointer overflow-hidden border shadow-lg hover:shadow-xl"
-    style={{ borderColor: `rgba(${statusColors[sectionType].rgb}, 0.3)` }}
-    whileHover={{ scale: 1.01, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
-    onClick={onClick}
-  >
-    {/* Card content */}
-  </motion.div>
-)
+#### **Slide Up Animation**
+```javascript
+initial={{ scale: 0.8, opacity: 0, y: 50 }}
+animate={{ scale: 1, opacity: 1, y: 0 }}
+exit={{ scale: 0.8, opacity: 0, y: 50 }}
 ```
 
-### **Modal System**
+### **2. Toast Notifications**
+```javascript
+<motion.div
+  className="fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-lg"
+  initial={{ opacity: 0, y: -50, scale: 0.3 }}
+  animate={{ opacity: 1, y: 0, scale: 1 }}
+  exit={{ opacity: 0, y: -50, scale: 0.3 }}
+  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+>
+```
 
-#### **BaseModal Pattern**
-```jsx
-const BaseModal = ({ isOpen, onClose, children, title }) => (
-  <AnimatePresence>
-    {isOpen && (
-      <motion.div
-        className="fixed inset-0 bg-black/90 backdrop-blur-md z-50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <motion.div
-          className="bg-black/95 border-white/20 rounded-3xl p-6 max-w-5xl w-full h-[85vh]"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-        >
-          {children}
-        </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-)
+### **3. Card Hover Effects**
+```javascript
+whileHover={{ scale: 1.02, boxShadow: "0 25px 50px rgba(0,0,0,0.4)" }}
+transition={{ type: "spring", stiffness: 300, damping: 30 }}
 ```
 
 ---
 
-## 🎪 UI/UX Patterns
+## 🎯 **Interactive Components**
 
-### **Layout Patterns**
+### **1. ActionButton Component**
+**Location:** `src/components/common/ActionButton.jsx`
 
-#### **Section Headers**
-```jsx
-const SectionHeader = ({ title, subtitle, icon, count, sectionType }) => (
-  <motion.div 
-    className="flex items-center justify-between mb-6"
-    initial={{ opacity: 0, y: -20 }}
-    animate={{ opacity: 1, y: 0 }}
-  >
-    <div className="flex items-center space-x-3">
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center 
-        bg-gradient-to-br from-${sectionType}-500 to-${sectionType}-600`}>
-        {icon}
-      </div>
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-        <p className={`text-xs font-medium text-${sectionType}-600`}>{subtitle}</p>
-      </div>
-      <div className={`px-3 py-1 rounded-lg text-xs font-semibold 
-        bg-${sectionType}-50 text-${sectionType}-700 border-${sectionType}-200`}>
-        {count} items
-      </div>
-    </div>
-  </motion.div>
-)
+```javascript
+<ActionButton
+  variant="primary" // "primary", "secondary", "success", "danger", "warning"
+  size="md"        // "sm", "md", "lg"
+  icon={Icon}      // Lucide React icon
+  iconPosition="left" // "left", "right"
+  onClick={handleClick}
+>
+  Button Text
+</ActionButton>
 ```
 
-#### **Grid Systems**
+**Variants:**
+- `primary` - Teal gradient
+- `secondary` - White/10 with border
+- `success` - Emerald gradient
+- `danger` - Red gradient
+- `warning` - Amber gradient
+
+### **2. StatusBadge Component**
+**Location:** `src/components/common/StatusBadge.jsx`
+
+```javascript
+<StatusBadge
+  status="approved" // "approved", "pending", "rejected", "completed", etc.
+  text="Approved"
+  size="sm"         // "xs", "sm", "md", "lg"
+  showIcon={true}
+  icon={CheckCircle}
+/>
+```
+
+**Status Colors:**
+- `approved/completed/success` - Emerald
+- `pending/in-progress` - Amber
+- `rejected/error/failed` - Red
+- `not-started/waiting` - Slate
+
+### **3. ProgressBar Component**
+**Location:** `src/components/common/ProgressBar.jsx`
+
+```javascript
+<ProgressBar
+  progress={75}
+  height="h-2"
+  showLabel={true}
+  labelPosition="top" // "top", "bottom", "inside"
+  animated={true}
+/>
+```
+
+---
+
+## 🎨 **Visual Design Elements**
+
+### **1. Glassmorphism Effects**
 ```css
-/* Responsive grid patterns */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+/* Backdrop blur with transparency */
+bg-white/95 backdrop-blur-sm
+bg-black/90 backdrop-blur-md
+bg-black/95 border border-white/20
+```
+
+### **2. Gradient Backgrounds**
+```css
+/* Teal gradient (primary theme) */
+bg-gradient-to-br from-teal-900 via-teal-800 to-teal-900
+background: linear-gradient(135deg, #134e4a 0%, #0f766e 50%, #115e59 100%)
+
+/* Button gradients */
+bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700
+```
+
+### **3. Border Radius & Shadows**
+```css
+/* Consistent rounded corners */
+rounded-3xl  /* Large modals */
+rounded-xl   /* Buttons */
+rounded-full /* Badges */
+
+/* Shadow effects */
+shadow-lg
+shadow-2xl
+boxShadow: "0 25px 50px rgba(0,0,0,0.4)"
+```
+
+---
+
+## 📱 **Responsive Patterns**
+
+### **1. Modal Sizing**
+```javascript
+// Responsive modal widths
+max-w-[95vw] w-full  // Large content
+max-w-6xl w-full     // Medium content  
+max-w-md w-full      // Small content
+max-w-5xl w-full     // Default
+```
+
+### **2. Height Management**
+```javascript
+// Flexible height with overflow
+max-h-[90vh] overflow-y-auto scrollbar-hide
+h-[85vh] flex flex-col
+```
+
+### **3. Grid Layouts**
+```javascript
+// Responsive grids
+grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6
+grid grid-cols-2 md:grid-cols-4 gap-4
+```
+
+---
+
+## 🔧 **Reusable Components**
+
+### **1. BaseCard Component**
+**Location:** `src/components/common/BaseCard.jsx`
+
+```javascript
+<BaseCard
+  gradient="from-teal-900 via-teal-800 to-teal-900"
+  isHoverable={true}
+  onClick={handleClick}
+>
+  Card content
+</BaseCard>
+```
+
+### **2. Component Exports**
+**Location:** `src/components/common/index.js`
+
+```javascript
+export { default as BaseCard } from './BaseCard.jsx'
+export { default as BaseModal } from './BaseModal.jsx'
+export { default as StatusBadge } from './StatusBadge.jsx'
+export { default as ActionButton } from './ActionButton.jsx'
+export { default as ProgressBar } from './ProgressBar.jsx'
+```
+
+---
+
+## 🎨 **Color System**
+
+### **1. Theme Colors**
+**Location:** `src/utils/theme.js`
+
+```javascript
+// Teal Theme (Primary)
+const tealTheme = {
+  primary: '#0f766e',
+  secondary: '#134e4a',
+  accent: '#14b8a6',
+  background: '#0f172a',
+  surface: '#1e293b',
+  text: '#f8fafc'
 }
+```
 
-/* Breakpoint-specific grids */
-.grid-responsive {
-  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6;
+### **2. Status Colors**
+```javascript
+// Status color mapping
+const statusColors = {
+  approved: 'text-emerald-400 bg-emerald-500/20',
+  pending: 'text-amber-400 bg-amber-500/20',
+  rejected: 'text-red-400 bg-red-500/20',
+  inTransit: 'text-blue-400 bg-blue-500/20'
 }
 ```
 
-### **Search & Filter Patterns**
+---
 
-#### **Search Box Design**
-```jsx
-const SearchBox = ({ searchTerm, setSearchTerm, placeholder }) => (
-  <div className="relative">
-    <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-      <SearchIcon className="w-5 h-5 text-gray-400" />
-    </div>
-    <input
-      type="text"
-      placeholder={placeholder}
-      value={searchTerm}
-      className="w-full pl-12 pr-4 py-4 bg-white/80 backdrop-blur-sm border border-orange-200/30 
-        rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 
-        focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
-      onChange={(e) => setSearchTerm(e.target.value)}
-    />
-  </div>
-)
+## 📐 **Layout Patterns**
+
+### **1. Page Structure**
+```javascript
+// Standard page layout
+<div className="min-h-screen bg-gradient-to-br from-slate-900 via-teal-900 to-slate-900">
+  {/* Header */}
+  <header className="bg-black/20 backdrop-blur-md border-b border-white/10">
+    {/* Navigation */}
+  </header>
+  
+  {/* Main Content */}
+  <main className="container mx-auto px-4 py-8">
+    {/* Page content */}
+  </main>
+</div>
 ```
 
-#### **Filter Tabs**
-```jsx
-const FilterTabs = ({ activeTab, onTabChange, tabs }) => (
-  <div className="flex items-center space-x-3">
-    {tabs.map(tab => (
-      <button
-        key={tab.id}
-        onClick={() => onTabChange(tab.id)}
-        className={`text-center cursor-pointer hover:bg-${tab.color}-50 px-2 py-1 rounded-lg 
-          transition-all duration-200 ${activeTab === tab.id ? 
-          `bg-${tab.color}-50 border border-${tab.color}-200` : ''}`}
-      >
-        <div className={`text-sm font-bold text-${tab.color}-700`}>{tab.count}</div>
-        <div className={`text-xs text-${tab.color}-600`}>{tab.name}</div>
-      </button>
-    ))}
-  </div>
-)
+### **2. Card Grid Layout**
+```javascript
+// Responsive card grid
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  {items.map(item => (
+    <BaseCard key={item.id} onClick={() => handleClick(item)}>
+      {/* Card content */}
+    </BaseCard>
+  ))}
+</div>
 ```
 
 ---
 
-## 🔧 Interactive Elements
+## 🚀 **Implementation Guidelines**
 
-### **Button Patterns**
+### **1. Component Creation Checklist**
+- [ ] Use Framer Motion for animations
+- [ ] Follow glassmorphism design patterns
+- [ ] Implement responsive design
+- [ ] Add proper TypeScript types
+- [ ] Include accessibility attributes
+- [ ] Test with different themes
 
-#### **Primary Action Buttons**
-```jsx
-const PrimaryButton = ({ children, onClick, disabled, variant = "approve" }) => (
-  <motion.button
-    onClick={onClick}
-    disabled={disabled}
-    className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-all 
-      flex items-center justify-center gap-2 relative overflow-hidden ${
-      disabled ? 'bg-gray-400 cursor-not-allowed opacity-50' :
-      variant === 'approve' ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl' :
-      'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl'
-    }`}
-    whileHover={!disabled ? { scale: 1.02 } : {}}
-    whileTap={!disabled ? { scale: 0.98 } : {}}
-  >
-    {children}
-  </motion.button>
-)
+### **2. Animation Best Practices**
+- Use `AnimatePresence` for enter/exit animations
+- Keep animations under 300ms for UI elements
+- Use spring animations for interactive elements
+- Provide reduced motion alternatives
+
+### **3. Accessibility Guidelines**
+- Include proper ARIA labels
+- Ensure keyboard navigation
+- Maintain color contrast ratios
+- Provide focus indicators
+
+---
+
+## 📚 **Component API Reference**
+
+### **BaseModal**
+```typescript
+interface BaseModalProps {
+  isOpen: boolean
+  onClose: () => void
+  title?: string
+  maxWidth?: string
+  height?: string
+  showCloseButton?: boolean
+  children: React.ReactNode
+}
 ```
 
-#### **Status Badges**
-```jsx
-const StatusBadge = ({ status, text }) => (
-  <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm ${
-    status === 'pending' ? 'bg-orange-100 text-orange-800 border border-orange-300' :
-    status === 'approved' ? 'bg-green-100 text-green-800 border border-green-300' :
-    status === 'rejected' ? 'bg-red-100 text-red-800 border border-red-300' :
-    'bg-blue-100 text-blue-800 border border-blue-300'
-  }`}>
-    <div className="flex items-center gap-1">
-      <div className={`w-1 h-1 rounded-full ${
-        status === 'pending' ? 'bg-orange-500' :
-        status === 'approved' ? 'bg-green-500' :
-        status === 'rejected' ? 'bg-red-500' : 'bg-blue-500'
-      }`}></div>
-      {text}
-    </div>
-  </div>
-)
+### **ActionButton**
+```typescript
+interface ActionButtonProps {
+  children: React.ReactNode
+  onClick: () => void
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning'
+  size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean
+  icon?: LucideIcon
+  iconPosition?: 'left' | 'right'
+  className?: string
+}
 ```
 
-### **Toast Notifications**
-```jsx
-const Toast = ({ message, type, onClose }) => (
-  <motion.div
-    className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-lg ${
-      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-    }`}
-    initial={{ opacity: 0, y: -50, scale: 0.3 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: -50, scale: 0.3 }}
-    transition={{ type: "spring", damping: 25, stiffness: 300 }}
-  >
-    <div className="flex items-center gap-3">
-      {type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-      <span className="font-medium">{message}</span>
-    </div>
-  </motion.div>
-)
+### **StatusBadge**
+```typescript
+interface StatusBadgeProps {
+  status: string
+  text: string
+  size?: 'xs' | 'sm' | 'md' | 'lg'
+  showIcon?: boolean
+  icon?: LucideIcon
+}
+```
+
+### **ProgressBar**
+```typescript
+interface ProgressBarProps {
+  progress: number
+  height?: string
+  showLabel?: boolean
+  labelPosition?: 'top' | 'bottom' | 'inside'
+  className?: string
+  animated?: boolean
+}
 ```
 
 ---
 
-## 🏗️ Recommended Masters Page Architecture
+## 🔄 **Update Log**
 
-### **Component Structure**
-```
-Masters/
-├── MastersContainer.jsx          # Main container
-├── MastersTabs.jsx              # Vehicle/Driver master tabs
-├── MastersSearch.jsx            # Search & filters
-├── MastersGrid.jsx              # Data grid
-├── MasterCard.jsx               # Individual master cards
-├── MasterModal.jsx              # Add/Edit modal
-├── MasterForm.jsx               # Form components
-└── components/
-    ├── VehicleMasterCard.jsx    # Vehicle-specific card
-    ├── DriverMasterCard.jsx     # Driver-specific card
-    ├── MasterActions.jsx        # Action buttons
-    └── MasterValidation.jsx     # Validation components
-```
-
-### **Consistent Patterns to Apply**
-
-1. **Use Same Color System**: Apply the status color patterns for different master types
-2. **Maintain Animation Standards**: Use identical framer-motion patterns
-3. **Glass Morphism**: Apply the same backdrop-blur and transparency effects
-4. **Card Hierarchy**: Follow the BaseCard → StatusCard → DataCard pattern
-5. **Modal System**: Use BaseModal for add/edit forms
-6. **Search Pattern**: Implement the same search box and filter design
-7. **Grid Layout**: Use the responsive grid system with consistent spacing
-8. **Loading States**: Apply skeleton loading and spinner patterns
-9. **Toast Notifications**: Use the same notification system
-10. **Hover Effects**: Maintain consistent hover and tap animations
+### **Version 1.0.0** - Initial Design System
+- ✅ Modal patterns documented
+- ✅ Animation system defined
+- ✅ Component library established
+- ✅ Color system standardized
+- ✅ Responsive patterns documented
 
 ---
 
-## 🎨 Implementation Guidelines
+## 📝 **Notes for Master Page Implementation**
 
-### **Color Coding for Masters**
-- **Vehicle Master**: Use orange/teal theme
-- **Driver Master**: Use blue/indigo theme  
-- **Active/Selected**: Use green highlights
-- **Inactive/Disabled**: Use gray variations
+### **Recommended Modal Types:**
+1. **`BaseModal`** - Standard modal with header/close button
+2. **`ConfirmationModal`** - For delete/approve actions
+3. **`DetailModal`** - For viewing master records
+4. **`FormModal`** - For creating/editing masters
 
-### **Animation Timing**
-- **Page transitions**: 300ms
-- **Card hovers**: 200ms spring
-- **Modal open/close**: 300ms ease-out
-- **Stagger delays**: 50ms between items
+### **Animation Variants to Use:**
+- **Fade + Scale** - Standard modal entrance
+- **Slide Up** - For form modals
+- **Spring Bounce** - For interactive elements
+- **Toast Slide** - For notifications
 
-### **Spacing Standards**
-- **Card padding**: 24px (p-6)
-- **Grid gaps**: 24px (gap-6)
-- **Section margins**: 48px (mb-12)
-- **Border radius**: 24px (rounded-3xl) for cards, 12px (rounded-xl) for buttons
+### **Visual Consistency:**
+- **Teal gradient theme** (modern design preference)
+- **Glassmorphism effects**
+- **Rounded corners (3xl)**
+- **Backdrop blur**
+- **White/black transparency layers**
 
-This design system ensures the Masters page will feel cohesive and consistent with the existing Approval page while maintaining the high-quality user experience. 🚀
+---
+
+**🎯 Ready for Master Page Implementation!**
+
+This design system provides a complete foundation for building consistent, beautiful, and functional components across the VMS application. All patterns are battle-tested from the approval page and ready for reuse in the Master page implementation.

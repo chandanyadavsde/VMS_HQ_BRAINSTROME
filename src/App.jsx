@@ -5,6 +5,8 @@ import AlternativeWindCard from './components/AlternativeWindCard.jsx'
 import ApprovalCard from './components/ApprovalCard.jsx'
 import LoginScreen from './components/LoginScreen.jsx'
 import LegalModal from './components/LegalModal.jsx'
+import MastersContainer from './components/Masters/MastersContainer.jsx'
+import MastersTable from './components/Masters/MastersTable.jsx'
 import { getCurrentTheme, setTheme, getThemeColors } from './utils/theme.js'
 
 // Header Component
@@ -318,48 +320,7 @@ const Approvals = ({ currentTheme }) => {
 
 // Masters Component
 const Masters = ({ currentTheme }) => {
-  const [searchQuery, setSearchQuery] = useState('')
-  const themeColors = getThemeColors(currentTheme)
-
-  return (
-    <>
-      <SearchBar 
-        searchQuery={searchQuery} 
-        setSearchQuery={setSearchQuery} 
-        selectedPlant="all" 
-        setSelectedPlant={() => {}}
-        activeSection="masters"
-        currentTheme={currentTheme}
-      />
-      <div className="flex items-center justify-center">
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 max-w-4xl">
-          <div className="text-center">
-            <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-4">Master Data</h3>
-            <p className={`text-lg mb-6 ${themeColors.accentText}`}>Manage core data, configurations, and system settings</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-                <h4 className="text-lg font-semibold text-white mb-2">Project Templates</h4>
-                <p className={`text-sm ${themeColors.accentText}`}>Configure project templates and standards</p>
-              </div>
-              <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-                <h4 className="text-lg font-semibold text-white mb-2">User Management</h4>
-                <p className={`text-sm ${themeColors.accentText}`}>Manage users, roles, and permissions</p>
-              </div>
-              <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-                <h4 className="text-lg font-semibold text-white mb-2">System Settings</h4>
-                <p className={`text-sm ${themeColors.accentText}`}>Configure system parameters and defaults</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  )
+  return <MastersTable currentTheme={currentTheme} />
 }
 
 // Awesome Footer Component
