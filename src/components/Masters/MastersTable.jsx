@@ -1,11 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Filter, MoreHorizontal, Plus, Car, User, Phone, MapPin, Building2, Calendar, UserCheck, Eye, FileText } from 'lucide-react'
+import { Search, Filter, MoreHorizontal, Plus, Car, User, Phone, MapPin, Building2, Calendar, UserCheck, Eye, FileText, AlertCircle, RefreshCw } from 'lucide-react'
 import VehicleDetailsPopup from './VehicleDetailsPopup'
 import CreateOptionsModal from './CreateOptionsModal'
 import ContactManagementModal from './ContactManagementModal'
 import DriverManagementModal from './DriverManagementModal'
 import DriverDetailsModal from './DriverDetailsModal'
+import LoadingSkeleton from './LoadingSkeleton'
+import SearchResult from './SearchResult'
+import PaginationControls from './PaginationControls'
+import VehicleService from '../../services/VehicleService'
 
 const MastersTable = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -17,8 +21,94 @@ const MastersTable = () => {
   const [showDriverModal, setShowDriverModal] = useState(false)
   const [selectedVehicleForAction, setSelectedVehicleForAction] = useState(null)
 
+  // API State
+  const [vehicles, setVehicles] = useState([])
+  const [drivers, setDrivers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [searchResult, setSearchResult] = useState(null)
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalVehicles: 0,
+    limit: 20,
+    hasNext: false,
+    hasPrev: false
+  })
 
-  // Mock data for demonstration
+
+  // API Functions
+  const fetchVehicles = async (page = 1) => {
+    try {
+      setLoading(true)
+      setError(null)
+      console.log('🔄 MastersTable: Fetching vehicles for page:', page)
+      const response = await VehicleService.getAllVehicles({ page, limit: 20 })
+      console.log('📥 MastersTable: Received response:', response)
+      setVehicles(response.vehicles || [])
+      setPagination(response.pagination || {})
+      console.log('✅ MastersTable: State updated with', response.vehicles?.length || 0, 'vehicles')
+    } catch (err) {
+      setError(err.message)
+      console.error('❌ MastersTable: Error fetching vehicles:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const searchVehicle = async (vehicleNumber) => {
+    if (!vehicleNumber.trim()) {
+      setSearchResult(null)
+      return
+    }
+
+    try {
+      setSearchLoading(true)
+      setError(null)
+      console.log('🔍 MastersTable: Searching for vehicle:', vehicleNumber.trim())
+      const response = await VehicleService.searchVehicle(vehicleNumber.trim())
+      console.log('📥 MastersTable: Search response received:', response)
+      setSearchResult(response)
+    } catch (err) {
+      console.error('❌ MastersTable: Search error:', err)
+      setError(err.message)
+      setSearchResult(null)
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      fetchVehicles(newPage)
+    }
+  }
+
+  const clearSearch = () => {
+    setSearchQuery('')
+    setSearchResult(null)
+    setError(null)
+  }
+
+  // Effects
+  useEffect(() => {
+    fetchVehicles()
+  }, [])
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim()) {
+        searchVehicle(searchQuery)
+      } else {
+        setSearchResult(null)
+      }
+    }, 500) // Debounce search
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery])
+
+  // Mock data for demonstration (will be removed after API integration)
   const mockVehicles = [
     {
       id: 1,
@@ -232,12 +322,12 @@ const MastersTable = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white p-6">
+    <div className="min-h-screen bg-white p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-4 flex items-center justify-between">
+        {/* Header Section - Compressed */}
+        <div className="mb-3 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-800">Master Page</h1>
+            <h1 className="text-lg font-bold text-slate-800">Master Page</h1>
             <p className="text-slate-600 text-xs">Manage vehicles, drivers, and their relationships</p>
           </div>
           <motion.button
@@ -252,18 +342,30 @@ const MastersTable = () => {
         </div>
 
                         {/* Search and Filter Bar */}
-                <div className="bg-slate-50 rounded-lg p-3 mb-4">
+                <div className="bg-slate-50 rounded-lg p-2 mb-3">
                   <div className="flex items-center gap-3">
                     {/* Search Box */}
                     <div className="flex-1 relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                      {searchLoading ? (
+                        <RefreshCw className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500 w-4 h-4 animate-spin" />
+                      ) : (
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                      )}
                       <input
                         type="text"
-                        placeholder={viewMode === 'vehicle' ? "Search vehicles, drivers, plants..." : "Search drivers, license, vehicles..."}
+                        placeholder={viewMode === 'vehicle' ? "Search by vehicle number..." : "Search drivers, license, vehicles..."}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-sm"
                       />
+                      {searchQuery && (
+                        <button
+                          onClick={clearSearch}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          <AlertCircle className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
 
                     {/* View Mode Toggle Icons */}
@@ -307,13 +409,65 @@ const MastersTable = () => {
                         </button>
                       </div>
                     )}
-                  </div>
+                                    </div>
                 </div>
 
-                {/* Modern Card-Based Table */}
-        <div className="space-y-2">
+                {/* Search Result Display */}
+                <AnimatePresence>
+                  {searchResult && (
+                    <SearchResult
+                      result={searchResult}
+                      onClose={clearSearch}
+                      viewMode={viewMode}
+                    />
+                  )}
+                </AnimatePresence>
+
+                {/* Error Display */}
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4"
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <AlertCircle className="w-5 h-5 text-red-500" />
+                        <div>
+                          <h3 className="text-sm font-semibold text-red-800">Error</h3>
+                          <p className="text-sm text-red-600">{error}</p>
+                        </div>
+                        <button
+                          onClick={() => setError(null)}
+                          className="ml-auto p-1 hover:bg-red-100 rounded-lg transition-colors"
+                        >
+                          <AlertCircle className="w-4 h-4 text-red-500" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+        {/* Top Pagination - Extra Compact */}
+        {!loading && !error && vehicles.length > 0 && (
+          <PaginationControls
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalVehicles}
+            itemsPerPage={pagination.limit}
+            onPageChange={handlePageChange}
+            hasNext={pagination.hasNext}
+            hasPrev={pagination.hasPrev}
+            position="top"
+            compact={true}
+          />
+        )}
+
+        {/* Modern Card-Based Table - Compressed */}
+        <div className="space-y-1">
           {/* Header Row - Sticky */}
-          <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-slate-100">
+          <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-sm border border-slate-100">
             {viewMode === 'vehicle' ? (
               // Vehicle Table Header
               <div className="grid grid-cols-12 gap-3 items-center">
@@ -416,13 +570,15 @@ const MastersTable = () => {
           </div>
 
           {/* Data Rows - Card Style */}
-          <div className="space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-            {viewMode === 'vehicle' ? (
+          <div className="space-y-1 max-h-[75vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
+            {loading ? (
+              <LoadingSkeleton viewMode={viewMode} />
+            ) : viewMode === 'vehicle' ? (
               // Vehicle Data Rows
-              filteredVehicles.map((vehicle, index) => (
+              vehicles.map((vehicle, index) => (
               <motion.div
                 key={vehicle.id}
-                className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md border border-slate-100 hover:border-orange-200 transition-all duration-300 group"
+                className="bg-white rounded-lg p-2 shadow-sm hover:shadow-md border border-slate-100 hover:border-orange-200 transition-all duration-300 group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -531,7 +687,7 @@ const MastersTable = () => {
               filteredDrivers.map((driver, index) => (
                 <motion.div
                   key={driver.id}
-                  className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md border border-slate-100 hover:border-orange-200 transition-all duration-300 group"
+                  className="bg-white rounded-lg p-2 shadow-sm hover:shadow-md border border-slate-100 hover:border-orange-200 transition-all duration-300 group"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -630,19 +786,34 @@ const MastersTable = () => {
              <p className="text-slate-600 text-xs">
                {viewMode === 'vehicle' ? (
                  <>
-                   {filteredVehicles.length > 0 ? `${filteredVehicles.length} records found` : 'No records found'} • 
+                   {searchResult ? '1 search result found' : vehicles.length > 0 ? `${pagination.totalVehicles} total vehicles` : 'No records found'} • 
                    <span className="ml-1 text-orange-600 font-medium">Click vehicle for details</span> • 
                    <span className="ml-1 text-blue-600 font-medium">Click driver to manage</span>
                  </>
                ) : (
                  <>
-                   {filteredDrivers.length > 0 ? `${filteredDrivers.length} records found` : 'No records found'} • 
+                   {drivers.length > 0 ? `${drivers.length} records found` : 'No records found'} • 
                    <span className="ml-1 text-orange-600 font-medium">Click driver name for details</span> • 
                    <span className="ml-1 text-slate-600 font-medium">Click eye icon to view image</span>
                  </>
                )}
              </p>
            </div>
+
+           {/* Bottom Pagination Controls */}
+           {!searchResult && !loading && (
+             <PaginationControls
+               currentPage={pagination.currentPage}
+               totalPages={pagination.totalPages}
+               totalItems={pagination.totalVehicles}
+               itemsPerPage={pagination.limit}
+               onPageChange={handlePageChange}
+               hasNext={pagination.hasNext}
+               hasPrev={pagination.hasPrev}
+               position="bottom"
+               compact={false}
+             />
+           )}
         </div>
 
 

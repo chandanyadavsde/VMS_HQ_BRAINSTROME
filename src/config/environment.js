@@ -5,7 +5,7 @@
 
 const environment = {
   // API Configuration
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://13.200.229.29:5000',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT) || 10000,
   CACHE_TTL: parseInt(import.meta.env.VITE_CACHE_TTL) || 300000, // 5 minutes
 
