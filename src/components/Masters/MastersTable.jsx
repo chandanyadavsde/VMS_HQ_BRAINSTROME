@@ -170,8 +170,45 @@ const MastersTable = () => {
       const response = await DriverService.createDriver(driverData)
       console.log('✅ MastersTable: Driver created successfully:', response)
       
-      // Refresh the driver list
-      await fetchDrivers()
+      // Add the new driver to the existing list (optimistic update)
+      if (response && response._id) {
+        const newDriver = {
+          ...response,
+          // Transform API response to match our UI format
+          name: response.custrecord_driver_name,
+          contact: {
+            phone: response.custrecord_driver_mobile_no
+          },
+          identification: {
+            licenseNumber: response.custrecord_driving_license_no,
+            licenseType: response.custrecord_license_category_ag,
+            licenseStart: response.custrecord_driving_license_s_date,
+            licenseExpiry: response.custrecord_driver_license_e_date,
+            licenseTestStatus: response.custrecord_driving_lca_test || 'passed'
+          },
+          documents: response.custrecord_driving_license_attachment?.map(url => ({
+            id: Date.now().toString(),
+            fileName: url.split('/').pop(),
+            url: url,
+            uploadDate: new Date().toISOString().split('T')[0],
+            status: 'Uploaded'
+          })) || [],
+          // Add missing properties that the UI expects
+          assignedVehicles: response.assignedVehicle ? [response.assignedVehicle] : [],
+          assignedVehicle: response.assignedVehicle || null
+        }
+        
+        // Add to the beginning of the drivers list
+        setDrivers(prev => [newDriver, ...prev])
+        
+        // Update pagination count
+        setPagination(prev => ({
+          ...prev,
+          totalDrivers: (prev.totalDrivers || 0) + 1
+        }))
+        
+        console.log('✅ MastersTable: Driver added to list successfully')
+      }
       
       // Close the modal
       setShowDriverFormModal(false)
@@ -206,7 +243,12 @@ const MastersTable = () => {
     console.log('🔄 View mode changed to:', viewMode)
     if (viewMode === 'driver') {
       console.log('🚀 Fetching drivers...')
-      fetchDrivers()
+      // Only fetch if we don't have drivers already
+      if (drivers.length === 0) {
+        fetchDrivers()
+      } else {
+        console.log('✅ Drivers already loaded, skipping fetch')
+      }
     } else if (viewMode === 'vehicle') {
       // Clear driver data to prevent interference
       clearDriverData()
@@ -244,7 +286,7 @@ const MastersTable = () => {
     driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     driver.contact.phone.includes(searchQuery) ||
     driver.identification.licenseNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (driver.assignedVehicles.length > 0 && driver.assignedVehicles[0].vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (driver.assignedVehicles && driver.assignedVehicles.length > 0 && driver.assignedVehicles[0].vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
     driver.createdAt.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -258,7 +300,7 @@ const MastersTable = () => {
       name: driver.name,
       contact: driver.contact,
       identification: driver.identification,
-      assignedVehicles: driver.assignedVehicles,
+      assignedVehicles: driver.assignedVehicles || [],
       documents: driver.documents
     })
     setSelectedDriver(driver)
@@ -776,7 +818,7 @@ const MastersTable = () => {
                         <Car className="w-3 h-3 text-slate-400" />
                         <div>
                           <div className="font-medium text-slate-800 text-xs">
-                            {driver.assignedVehicles.length > 0 ? driver.assignedVehicles[0].vehicleNumber : 'No Vehicle'}
+                            {driver.assignedVehicles && driver.assignedVehicles.length > 0 ? driver.assignedVehicles[0].vehicleNumber : 'No Vehicle'}
                           </div>
                         </div>
                       </div>

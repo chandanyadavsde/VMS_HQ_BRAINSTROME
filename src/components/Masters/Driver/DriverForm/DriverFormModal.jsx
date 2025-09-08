@@ -28,6 +28,7 @@ const DriverFormModal = ({
   const [loading, setLoading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
   const isEditing = !!driver
 
   // Initialize form data when driver is provided
@@ -51,8 +52,9 @@ const DriverFormModal = ({
         documents: []
       })
     }
-    // Clear any errors when modal opens
+    // Clear any errors and success when modal opens
     setError(null)
+    setSuccess(false)
   }, [driver, isOpen])
 
   const handleInputChange = (field, value) => {
@@ -126,6 +128,7 @@ const DriverFormModal = ({
     e.preventDefault()
     setLoading(true)
     setError(null) // Clear any previous errors
+    setSuccess(false) // Clear any previous success
     
     try {
       // Clean the form data to only include required fields
@@ -151,7 +154,15 @@ const DriverFormModal = ({
       } else {
         await onCreateDriver(cleanFormData)
       }
-      onClose() // Only close on success
+      
+      // Show success message
+      setSuccess(true)
+      
+      // Close modal after a short delay to show success message
+      setTimeout(() => {
+        onClose()
+      }, 1500)
+      
     } catch (error) {
       console.error('Error saving driver:', error)
       // Extract error message from API response
@@ -219,6 +230,19 @@ const DriverFormModal = ({
             </div>
           )}
 
+          {/* Success Display */}
+          {success && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                  <span className="text-green-600 text-sm font-bold">✓</span>
+                </div>
+                <p className="text-green-800 font-medium">Success!</p>
+              </div>
+              <p className="text-green-700 mt-1">Driver created successfully. Closing modal...</p>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
@@ -252,9 +276,9 @@ const DriverFormModal = ({
                     placeholder="Enter mobile number"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                     required
-                  />
-                </div>
-              </div>
+            />
+          </div>
+        </div>
             </div>
 
             {/* License Information */}
@@ -392,16 +416,16 @@ const DriverFormModal = ({
                   ))}
                 </div>
               )}
-            </div>
+        </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
               <button
                 type="button"
-                onClick={onClose}
+              onClick={onClose}
                 className="px-4 py-2 text-slate-600 hover:text-slate-800 transition-colors"
-              >
-                Cancel
+            >
+              Cancel
               </button>
               <button
                 type="submit"
@@ -415,12 +439,12 @@ const DriverFormModal = ({
                   </>
                 ) : (
                   <>
-                    <Save className="w-4 h-4" />
-                    {isEditing ? 'Update Driver' : 'Create Driver'}
+                <Save className="w-4 h-4" />
+                {isEditing ? 'Update Driver' : 'Create Driver'}
                   </>
-                )}
+            )}
               </button>
-            </div>
+          </div>
           </form>
         </motion.div>
       </motion.div>
