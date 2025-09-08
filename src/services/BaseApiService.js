@@ -147,9 +147,19 @@ class BaseApiService {
       ...config,
     }
 
+    // Handle FormData for file uploads
+    if (data instanceof FormData) {
+      // Don't set Content-Type for FormData, let browser set it with boundary
+      delete requestConfig.headers['Content-Type']
+    }
+
     // Add body for non-GET requests
     if (data && method !== HTTP_METHODS.GET) {
-      requestConfig.body = JSON.stringify(data)
+      if (data instanceof FormData) {
+        requestConfig.body = data
+      } else {
+        requestConfig.body = JSON.stringify(data)
+      }
     }
 
     // Apply request interceptors

@@ -1,109 +1,181 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FileText, Upload, X, Calendar, CheckCircle, AlertCircle } from 'lucide-react'
+import { FileText, Upload, X, CheckCircle, AlertCircle, Calendar } from 'lucide-react'
 import { getThemeColors } from '../../../../utils/theme.js'
 
 const VehicleDocuments = ({ formData, setFormData, currentTheme = 'teal' }) => {
   const themeColors = getThemeColors(currentTheme)
   const [dragActive, setDragActive] = useState(false)
+  const [uploadingFiles, setUploadingFiles] = useState({})
 
-  const documentTypes = [
-    'Registration Certificate',
-    'Insurance Certificate',
-    'PUC Certificate',
-    'Fitness Certificate',
-    'Permit',
-    'Tax Certificate',
-    'Other'
-  ]
+  const handleInputChange = (field, value) => {
+    console.log('VehicleDocuments: handleInputChange called with:', field, value)
+    setFormData({
+      [field]: value
+    })
+  }
 
-  const handleDocumentAdd = (type, file) => {
-    const newDocument = {
-      id: Date.now().toString(),
-      type,
-      fileName: file.name,
-      url: URL.createObjectURL(file),
-      uploadDate: new Date().toISOString().split('T')[0],
-      expiryDate: '',
-      status: 'Uploaded'
+  const handleFileUpload = (documentType, files) => {
+    const fileList = Array.from(files)
+    const fieldName = `${documentType}_files`
+    
+    // Update the form data with the new files
+    const existingFiles = formData[fieldName] || []
+    const newFiles = [...existingFiles, ...fileList]
+    
+    handleInputChange(fieldName, newFiles)
+    
+    // Set uploading state
+    setUploadingFiles(prev => ({
+      ...prev,
+      [documentType]: true
+    }))
+    
+    // Simulate upload completion
+    setTimeout(() => {
+      setUploadingFiles(prev => ({
+        ...prev,
+        [documentType]: false
+      }))
+    }, 1000)
+  }
+
+  const handleFileRemove = (documentType, fileIndex) => {
+    const fieldName = `${documentType}_files`
+    const currentFiles = formData[fieldName] || []
+    const updatedFiles = currentFiles.filter((_, index) => index !== fileIndex)
+    handleInputChange(fieldName, updatedFiles)
+  }
+
+  const handleDrop = (e, documentType) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileUpload(documentType, e.dataTransfer.files)
     }
-
-    setFormData(prev => ({
-      ...prev,
-      documents: [...prev.documents, newDocument]
-    }))
-  }
-
-  const handleDocumentRemove = (documentId) => {
-    setFormData(prev => ({
-      ...prev,
-      documents: prev.documents.filter(doc => doc.id !== documentId)
-    }))
-  }
-
-  const handleExpiryDateChange = (documentId, expiryDate) => {
-    setFormData(prev => ({
-      ...prev,
-      documents: prev.documents.map(doc =>
-        doc.id === documentId ? { ...doc, expiryDate } : doc
-      )
-    }))
   }
 
   const handleDrag = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true)
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false)
     }
   }
 
-  const handleDrop = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
+  const FileUploadSection = ({ documentType, title, icon: Icon, fields }) => {
+    const files = formData[`${documentType}_files`] || []
+    const isUploading = uploadingFiles[documentType]
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0]
-      handleDocumentAdd('Other', file)
-    }
-  }
+    return (
+      <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <Icon className="w-5 h-5 text-blue-500" />
+          <h4 className="font-medium text-gray-800">{title}</h4>
+        </div>
 
-  const handleFileInput = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      handleDocumentAdd('Other', file)
-    }
-  }
+        {/* Document Fields */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {fields.map((field) => (
+            <div key={field.name} className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+                {field.type === 'date' && <Calendar className="w-3.5 h-3.5 text-blue-500" />}
+                {field.type === 'text' && <FileText className="w-3.5 h-3.5 text-blue-500" />}
+                {field.label} {field.required && '*'}
+              </label>
+              <input
+                type={field.type}
+                value={formData[field.name] || ''}
+                onChange={(e) => handleInputChange(field.name, e.target.value)}
+                placeholder={field.placeholder}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                required={field.required}
+              />
+            </div>
+          ))}
+        </div>
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Valid':
-        return 'text-emerald-400 bg-emerald-500/20'
-      case 'Expired':
-        return 'text-red-400 bg-red-500/20'
-      case 'Expiring Soon':
-        return 'text-amber-400 bg-amber-500/20'
-      default:
-        return 'text-cyan-400 bg-cyan-500/20'
-    }
-  }
+        {/* File Upload Area */}
+        <div
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+            dragActive
+              ? 'border-blue-400 bg-blue-50'
+              : 'border-gray-300 hover:border-gray-400'
+          }`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={(e) => handleDrop(e, documentType)}
+        >
+          <input
+            type="file"
+            id={`${documentType}-upload`}
+            className="hidden"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+            onChange={(e) => handleFileUpload(documentType, e.target.files)}
+          />
+          
+          <div className="space-y-2">
+            <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+            <div>
+              <label
+                htmlFor={`${documentType}-upload`}
+                className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+              >
+                Click to upload
+              </label>
+              <span className="text-gray-500"> or drag and drop</span>
+            </div>
+            <p className="text-sm text-gray-400">PDF, DOC, JPG, PNG up to 10MB each</p>
+          </div>
+        </div>
 
-  const isExpiringSoon = (expiryDate) => {
-    if (!expiryDate) return false
-    const expiry = new Date(expiryDate)
-    const today = new Date()
-    const daysUntilExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
-    return daysUntilExpiry <= 30 && daysUntilExpiry > 0
-  }
+        {/* Uploaded Files */}
+        {files.length > 0 && (
+          <div className="space-y-2">
+            <h5 className="text-sm font-medium text-gray-700">Uploaded Files:</h5>
+            <AnimatePresence>
+              {files.map((file, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex items-center justify-between bg-white p-3 rounded-lg border"
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-blue-500" />
+                    <span className="text-sm text-gray-700">{file.name}</span>
+                    <span className="text-xs text-gray-500">
+                      ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleFileRemove(documentType, index)}
+                    className="text-red-500 hover:text-red-700 p-1"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
 
-  const isExpired = (expiryDate) => {
-    if (!expiryDate) return false
-    const expiry = new Date(expiryDate)
-    const today = new Date()
-    return expiry < today
+        {isUploading && (
+          <div className="flex items-center gap-2 text-blue-600">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm">Uploading files...</span>
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -113,152 +185,146 @@ const VehicleDocuments = ({ formData, setFormData, currentTheme = 'teal' }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <FileText className="w-8 h-8 text-purple-400" />
-        </div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">Vehicle Documents</h3>
-        <p className="text-gray-800/70">Upload and manage vehicle-related documents</p>
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-1">Vehicle Documents</h3>
+        <p className="text-sm text-gray-600">Upload required legal documents for the vehicle</p>
       </div>
 
-      {/* Document Upload Area */}
-      <div
-        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-          dragActive
-            ? 'border-teal-400 bg-teal-500/10'
-            : 'border-gray-300 bg-gray-50'
-        }`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-      >
-        <div className="space-y-4">
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto">
-            <Upload className="w-8 h-8 text-gray-800/60" />
-          </div>
-          <div>
-            <h4 className="text-lg font-semibold text-gray-800 mb-2">Upload Documents</h4>
-            <p className="text-gray-800/70 mb-4">
-              Drag and drop files here, or click to browse
-            </p>
-            <input
-              type="file"
-              onChange={handleFileInput}
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              className="hidden"
-              id="document-upload"
-            />
-            <label
-              htmlFor="document-upload"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-gray-800 font-medium rounded-xl cursor-pointer transition-colors"
-            >
-              <Upload className="w-4 h-4" />
-              Choose Files
-            </label>
-          </div>
-          <p className="text-xs text-gray-800/50">
-            Supported formats: PDF, JPG, PNG, DOC, DOCX (Max 10MB)
-          </p>
-        </div>
+      <div className="space-y-6">
+        {/* RC (Registration Certificate) */}
+        <FileUploadSection
+          documentType="rc"
+          title="Registration Certificate (RC)"
+          icon={FileText}
+          fields={[
+            {
+              name: 'custrecord_rc_no',
+              label: 'RC Number',
+              type: 'text',
+              placeholder: 'e.g., RC123456789',
+              required: true
+            },
+            {
+              name: 'custrecord_rc_start_date',
+              label: 'RC Start Date',
+              type: 'date',
+              required: true
+            },
+            {
+              name: 'custrecord_rc_end_date',
+              label: 'RC End Date',
+              type: 'date',
+              required: true
+            }
+          ]}
+        />
+
+        {/* Insurance */}
+        <FileUploadSection
+          documentType="insurance"
+          title="Insurance Certificate"
+          icon={FileText}
+          fields={[
+            {
+              name: 'custrecord_insurance_company_name_ag',
+              label: 'Insurance Company',
+              type: 'text',
+              placeholder: 'e.g., Insurance Company Name',
+              required: true
+            },
+            {
+              name: 'custrecord_insurance_number_ag',
+              label: 'Insurance Number',
+              type: 'text',
+              placeholder: 'e.g., INS123456',
+              required: true
+            },
+            {
+              name: 'custrecord_insurance_start_date_ag',
+              label: 'Insurance Start Date',
+              type: 'date',
+              required: true
+            },
+            {
+              name: 'custrecord_insurance_end_date_ag',
+              label: 'Insurance End Date',
+              type: 'date',
+              required: true
+            }
+          ]}
+        />
+
+        {/* Permit */}
+        <FileUploadSection
+          documentType="permit"
+          title="Permit Certificate"
+          icon={FileText}
+          fields={[
+            {
+              name: 'custrecord_permit_number_ag',
+              label: 'Permit Number',
+              type: 'text',
+              placeholder: 'e.g., PERMIT123456',
+              required: true
+            },
+            {
+              name: 'custrecord_permit_start_date',
+              label: 'Permit Start Date',
+              type: 'date',
+              required: true
+            },
+            {
+              name: 'custrecord_permit_end_date',
+              label: 'Permit End Date',
+              type: 'date',
+              required: true
+            }
+          ]}
+        />
+
+        {/* PUC */}
+        <FileUploadSection
+          documentType="puc"
+          title="PUC Certificate"
+          icon={FileText}
+          fields={[
+            {
+              name: 'custrecord_puc_number',
+              label: 'PUC Number',
+              type: 'text',
+              placeholder: 'e.g., PUC123456',
+              required: true
+            },
+            {
+              name: 'custrecord_puc_start_date_ag',
+              label: 'PUC Start Date',
+              type: 'date',
+              required: true
+            },
+            {
+              name: 'custrecord_puc_end_date_ag',
+              label: 'PUC End Date',
+              type: 'date',
+              required: true
+            }
+          ]}
+        />
+
+        {/* Fitness Certificate */}
+        <FileUploadSection
+          documentType="fitness"
+          title="Fitness Certificate"
+          icon={FileText}
+          fields={[
+            {
+              name: 'custrecord_tms_vehicle_fit_cert_vld_upto',
+              label: 'Fitness Valid Up To',
+              type: 'date',
+              required: true
+            }
+          ]}
+        />
       </div>
-
-      {/* Document List */}
-      {formData.documents.length > 0 && (
-        <div className="space-y-4">
-          <h4 className="text-lg font-semibold text-gray-800">Uploaded Documents</h4>
-          <div className="space-y-3">
-            {formData.documents.map((document) => {
-              const status = isExpired(document.expiryDate) 
-                ? 'Expired' 
-                : isExpiringSoon(document.expiryDate) 
-                ? 'Expiring Soon' 
-                : 'Valid'
-
-              return (
-                <motion.div
-                  key={document.id}
-                  className="bg-gray-50 rounded-xl p-4 border border-white/10"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-gray-800" />
-                      </div>
-                      <div>
-                        <h5 className="text-gray-800 font-medium">{document.fileName}</h5>
-                        <p className="text-gray-800/60 text-sm">{document.type}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(status)}`}>
-                        {status}
-                      </span>
-                      <button
-                        onClick={() => handleDocumentRemove(document.id)}
-                        className="w-8 h-8 rounded-lg bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center transition-colors"
-                      >
-                        <X className="w-4 h-4 text-red-400" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-gray-800/70 text-sm">Upload Date</label>
-                      <div className="flex items-center gap-2 text-gray-800/80">
-                        <Calendar className="w-4 h-4" />
-                        <span className="text-sm">{document.uploadDate}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <label className="text-gray-800/70 text-sm">Expiry Date</label>
-                      <input
-                        type="date"
-                        value={document.expiryDate}
-                        onChange={(e) => handleExpiryDateChange(document.id, e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Document Types Guide */}
-      <div className="bg-gray-50 rounded-xl p-4">
-        <h4 className="text-lg font-semibold text-gray-800 mb-3">Required Documents</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {documentTypes.map((type) => (
-            <div key={type} className="flex items-center gap-2 text-gray-800/80">
-              <CheckCircle className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm">{type}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Validation Messages */}
-      {formData.documents.length === 0 && (
-        <motion.div
-          className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-400" />
-            <p className="text-amber-300 text-sm">No documents uploaded yet. Documents are optional but recommended.</p>
-          </div>
-        </motion.div>
-      )}
     </motion.div>
   )
 }

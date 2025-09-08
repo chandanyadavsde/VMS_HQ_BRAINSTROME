@@ -54,8 +54,8 @@ const PaginationControls = ({
   if (totalPages <= 1) return null
 
   // Different styles for top vs bottom position
-  const containerClass = position === 'top' 
-    ? "bg-slate-50 rounded-lg p-2 border border-slate-200 mb-2"
+  const containerClass = position === 'top'
+    ? "bg-slate-50 rounded-md p-1.5 border border-slate-200 mb-1"
     : "bg-white rounded-lg p-4 border border-slate-200 shadow-sm"
 
   const infoClass = compact 
@@ -89,20 +89,20 @@ const PaginationControls = ({
         {/* Pagination Controls */}
         <div className="flex items-center gap-2">
           {/* Previous Button */}
-          <motion.button
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={!hasPrev}
-            className={`flex items-center gap-1 ${compact ? 'px-2 py-1' : 'px-3 py-2'} rounded-lg ${compact ? 'text-xs' : 'text-sm'} font-medium transition-all ${
-              hasPrev
-                ? 'bg-white hover:bg-orange-50 text-slate-700 border border-slate-200 hover:border-orange-300'
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-            }`}
-            whileHover={hasPrev ? { scale: 1.05 } : {}}
-            whileTap={hasPrev ? { scale: 0.95 } : {}}
-          >
-            <ChevronLeft className={compact ? "w-3 h-3" : "w-4 h-4"} />
-            {!compact && "Previous"}
-          </motion.button>
+        <motion.button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={!hasPrev}
+          className={`flex items-center gap-1 ${compact ? 'px-1.5 py-0.5' : 'px-3 py-2'} rounded-md ${compact ? 'text-xs' : 'text-sm'} font-medium transition-all ${
+            hasPrev
+              ? 'bg-white hover:bg-orange-50 text-slate-700 border border-slate-200 hover:border-orange-300'
+              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+          }`}
+          whileHover={hasPrev ? { scale: 1.05 } : {}}
+          whileTap={hasPrev ? { scale: 0.95 } : {}}
+        >
+          <ChevronLeft className={compact ? "w-3 h-3" : "w-4 h-4"} />
+          {!compact && "Previous"}
+        </motion.button>
 
           {/* Page Numbers */}
           <div className="flex items-center gap-1">
@@ -115,7 +115,7 @@ const PaginationControls = ({
                 ) : (
                   <motion.button
                     onClick={() => onPageChange(page)}
-                    className={`${compact ? 'px-2 py-1' : 'px-3 py-2'} rounded-lg ${compact ? 'text-xs' : 'text-sm'} font-medium transition-all ${
+                    className={`${compact ? 'w-5 h-5' : 'px-3 py-2'} rounded-md ${compact ? 'text-xs' : 'text-sm'} font-medium transition-all ${
                       page === currentPage
                         ? 'bg-orange-500 text-white shadow-md'
                         : 'bg-white hover:bg-orange-50 text-slate-700 border border-slate-200 hover:border-orange-300'
@@ -131,20 +131,20 @@ const PaginationControls = ({
           </div>
 
           {/* Next Button */}
-          <motion.button
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={!hasNext}
-            className={`flex items-center gap-1 ${compact ? 'px-2 py-1' : 'px-3 py-2'} rounded-lg ${compact ? 'text-xs' : 'text-sm'} font-medium transition-all ${
-              hasNext
-                ? 'bg-white hover:bg-orange-50 text-slate-700 border border-slate-200 hover:border-orange-300'
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-            }`}
-            whileHover={hasNext ? { scale: 1.05 } : {}}
-            whileTap={hasNext ? { scale: 0.95 } : {}}
-          >
-            {!compact && "Next"}
-            <ChevronRight className={compact ? "w-3 h-3" : "w-4 h-4"} />
-          </motion.button>
+        <motion.button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={!hasNext}
+          className={`flex items-center gap-1 ${compact ? 'px-1.5 py-0.5' : 'px-3 py-2'} rounded-md ${compact ? 'text-xs' : 'text-sm'} font-medium transition-all ${
+            hasNext
+              ? 'bg-white hover:bg-orange-50 text-slate-700 border border-slate-200 hover:border-orange-300'
+              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+          }`}
+          whileHover={hasNext ? { scale: 1.05 } : {}}
+          whileTap={hasNext ? { scale: 0.95 } : {}}
+        >
+          {!compact && "Next"}
+          <ChevronRight className={compact ? "w-3 h-3" : "w-4 h-4"} />
+        </motion.button>
         </div>
       </div>
     </motion.div>

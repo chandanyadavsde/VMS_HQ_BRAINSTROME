@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Users, Save, ArrowLeft, ArrowRight } from 'lucide-react'
-import { BaseModal } from '../../../common'
-import DriverBasicInfo from './DriverBasicInfo.jsx'
-import DriverLicense from './DriverLicense.jsx'
-import DriverDocuments from './DriverDocuments.jsx'
+import { X, User, Phone, CreditCard, Calendar, Upload, FileText, Save } from 'lucide-react'
 
 const DriverFormModal = ({
   isOpen,
@@ -14,27 +10,24 @@ const DriverFormModal = ({
   onUpdateDriver,
   currentTheme = 'teal'
 }) => {
-  const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     name: '',
     contact: {
-      phone: '',
-      email: '',
-      address: ''
+      phone: ''
     },
     identification: {
       licenseNumber: '',
-      licenseType: 'Heavy Vehicle',
+      licenseType: 'Light Motor Vehicle',
+      licenseStartDate: '',
       licenseExpiry: '',
-      aadharNumber: '',
-      panNumber: ''
+      licenseTestStatus: 'passed'
     },
-    documents: [],
-    status: 'Active',
-    assignedVehicles: []
+    documents: []
   })
 
-  const totalSteps = 3
+  const [loading, setLoading] = useState(false)
+  const [dragActive, setDragActive] = useState(false)
+  const [error, setError] = useState(null)
   const isEditing = !!driver
 
   // Initialize form data when driver is provided
@@ -46,229 +39,392 @@ const DriverFormModal = ({
       setFormData({
         name: '',
         contact: {
-          phone: '',
-          email: '',
-          address: ''
+          phone: ''
         },
         identification: {
           licenseNumber: '',
-          licenseType: 'Heavy Vehicle',
+          licenseType: 'Light Motor Vehicle',
+          licenseStartDate: '',
           licenseExpiry: '',
-          aadharNumber: '',
-          panNumber: ''
+          licenseTestStatus: 'passed'
         },
-        documents: [],
-        status: 'Active',
-        assignedVehicles: []
+        documents: []
       })
     }
-    setCurrentStep(1)
+    // Clear any errors when modal opens
+    setError(null)
   }, [driver, isOpen])
 
-  const handleNext = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1)
+  const handleInputChange = (field, value) => {
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.')
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }))
     }
   }
 
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+  const handleFileUpload = (file) => {
+    const newDocument = {
+      id: Date.now().toString(),
+      fileName: file.name,
+      file: file,
+      url: URL.createObjectURL(file),
+      uploadDate: new Date().toISOString().split('T')[0],
+      status: 'Uploaded'
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      documents: [...prev.documents, newDocument]
+    }))
+  }
+
+  const handleFileRemove = (documentId) => {
+    setFormData(prev => ({
+      ...prev,
+      documents: prev.documents.filter(doc => doc.id !== documentId)
+    }))
+  }
+
+  const handleDrag = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
     }
   }
 
-  const handleSubmit = async () => {
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload(e.dataTransfer.files[0])
+    }
+  }
+
+  const handleFileInput = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0])
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null) // Clear any previous errors
+    
     try {
-      if (isEditing) {
-        await onUpdateDriver(driver.id, formData)
-      } else {
-        await onCreateDriver(formData)
+      // Clean the form data to only include required fields
+      const cleanFormData = {
+        name: formData.name,
+        contact: {
+          phone: formData.contact.phone
+        },
+        identification: {
+          licenseNumber: formData.identification.licenseNumber,
+          licenseType: formData.identification.licenseType,
+          licenseStartDate: formData.identification.licenseStartDate,
+          licenseExpiry: formData.identification.licenseExpiry,
+          licenseTestStatus: formData.identification.licenseTestStatus
+        },
+        documents: formData.documents
       }
-      onClose()
+      
+      console.log('📝 Clean form data being sent:', cleanFormData)
+      
+      if (isEditing) {
+        await onUpdateDriver(driver.id, cleanFormData)
+      } else {
+        await onCreateDriver(cleanFormData)
+      }
+      onClose() // Only close on success
     } catch (error) {
       console.error('Error saving driver:', error)
-    }
-  }
-
-  const updateFormData = (updates) => {
-    setFormData(prev => ({ ...prev, ...updates }))
-  }
-
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <DriverBasicInfo
-            formData={formData}
-            setFormData={updateFormData}
-            currentTheme={currentTheme}
-          />
-        )
-      case 2:
-        return (
-          <DriverLicense
-            formData={formData}
-            setFormData={updateFormData}
-            currentTheme={currentTheme}
-          />
-        )
-      case 3:
-        return (
-          <DriverDocuments
-            formData={formData}
-            setFormData={updateFormData}
-            currentTheme={currentTheme}
-          />
-        )
-      default:
-        return null
-    }
-  }
-
-  const getStepTitle = () => {
-    switch (currentStep) {
-      case 1:
-        return 'Basic Information'
-      case 2:
-        return 'License & Identification'
-      case 3:
-        return 'Documents'
-      default:
-        return 'Driver Form'
-    }
-  }
-
-  const isStepValid = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.name && formData.contact.phone && formData.contact.email
-      case 2:
-        return formData.identification.licenseNumber && formData.identification.licenseExpiry
-      case 3:
-        return true // Documents are optional
-      default:
-        return false
+      // Extract error message from API response
+      const errorMessage = error.message || 'Failed to create driver. Please try again.'
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
     }
   }
 
   if (!isOpen) return null
 
   return (
-    <BaseModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`${isEditing ? 'Edit' : 'Create'} Driver - ${getStepTitle()}`}
-      maxWidth="max-w-4xl"
-      height="h-[90vh]"
-    >
-      <div className="flex flex-col h-full">
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Step {currentStep} of {totalSteps}</span>
-            <span className="text-sm text-gray-600">{Math.round((currentStep / totalSteps) * 100)}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <motion.div
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-        </div>
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={onClose}
+        />
 
-        {/* Step Indicators */}
-        <div className="flex items-center justify-between mb-8">
-          {[1, 2, 3].map((step) => (
-            <div key={step} className="flex items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                  step <= currentStep
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-gray-200 text-gray-500'
-                }`}
-              >
-                {step < currentStep ? '✓' : step}
+        <motion.div
+          className="relative bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 shadow-2xl"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                <User className="w-6 h-6 text-orange-600" />
               </div>
-              {step < 3 && (
-                <div
-                  className={`w-12 h-0.5 mx-2 transition-all ${
-                    step < currentStep ? 'bg-emerald-500' : 'bg-gray-200'
-                  }`}
-                />
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800">
+                  {isEditing ? 'Edit Driver' : 'Add New Driver'}
+                </h2>
+                <p className="text-slate-600">Enter driver information and documents</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6 text-slate-400" />
+            </button>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
+                  <span className="text-red-600 text-sm font-bold">!</span>
+                </div>
+                <p className="text-red-800 font-medium">Error</p>
+              </div>
+              <p className="text-red-700 mt-1">{error}</p>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Information */}
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                <User className="w-5 h-5 text-orange-500" />
+                Basic Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Driver Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="Enter driver name"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Mobile Number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.contact.phone}
+                    onChange={(e) => handleInputChange('contact.phone', e.target.value)}
+                    placeholder="Enter mobile number"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* License Information */}
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-orange-500" />
+                License Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    License Number *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.identification.licenseNumber}
+                    onChange={(e) => handleInputChange('identification.licenseNumber', e.target.value)}
+                    placeholder="e.g., DL123456789"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    License Type *
+                  </label>
+                  <select
+                    value={formData.identification.licenseType}
+                    onChange={(e) => handleInputChange('identification.licenseType', e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    required
+                  >
+                    <option value="Light Motor Vehicle">Light Motor Vehicle</option>
+                    <option value="Heavy Vehicle">Heavy Vehicle</option>
+                    <option value="Motorcycle">Motorcycle</option>
+                    <option value="Commercial Vehicle">Commercial Vehicle</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    License Start Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.identification.licenseStartDate}
+                    onChange={(e) => handleInputChange('identification.licenseStartDate', e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    License Expiry Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.identification.licenseExpiry}
+                    onChange={(e) => handleInputChange('identification.licenseExpiry', e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    License Test Status *
+                  </label>
+                  <select
+                    value={formData.identification.licenseTestStatus}
+                    onChange={(e) => handleInputChange('identification.licenseTestStatus', e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    required
+                  >
+                    <option value="passed">Passed</option>
+                    <option value="fail">Failed</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Document Upload */}
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-orange-500" />
+                License Document
+              </h3>
+              
+              {/* File Upload Area */}
+              <div
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  dragActive
+                    ? 'border-orange-500 bg-orange-50'
+                    : 'border-slate-300 hover:border-orange-400'
+                }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-slate-600 mb-2">
+                  Drag and drop license document here, or{' '}
+                  <label className="text-orange-600 cursor-pointer hover:underline">
+                    browse files
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={handleFileInput}
+                      className="hidden"
+                    />
+                  </label>
+                </p>
+                <p className="text-xs text-slate-500">Supports JPG, PNG, PDF files</p>
+              </div>
+
+              {/* Uploaded Files */}
+              {formData.documents.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {formData.documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-4 h-4 text-orange-500" />
+                        <span className="text-sm text-slate-700">{doc.fileName}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleFileRemove(doc.id)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-          ))}
-        </div>
 
-        {/* Form Content */}
-        <div className="flex-1 overflow-y-auto">
-          {renderStepContent()}
-        </div>
-
-        {/* Navigation Buttons */}
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/10">
-          <motion.button
-            onClick={handlePrevious}
-            disabled={currentStep === 1}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
-              currentStep === 1
-                ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                : 'bg-white/10 hover:bg-white/20 text-white'
-            }`}
-            whileHover={currentStep > 1 ? { scale: 1.02 } : {}}
-            whileTap={currentStep > 1 ? { scale: 0.98 } : {}}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Previous
-          </motion.button>
-
-          <div className="flex items-center gap-3">
-            <motion.button
-              onClick={onClose}
-              className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Cancel
-            </motion.button>
-
-            {currentStep < totalSteps ? (
-              <motion.button
-                onClick={handleNext}
-                disabled={!isStepValid()}
-                className={`flex items-center gap-2 px-6 py-2 rounded-xl font-medium transition-all ${
-                  isStepValid()
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-white/5 text-white/30 cursor-not-allowed'
-                }`}
-                whileHover={isStepValid() ? { scale: 1.02 } : {}}
-                whileTap={isStepValid() ? { scale: 0.98 } : {}}
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-slate-600 hover:text-slate-800 transition-colors"
               >
-                Next
-                <ArrowRight className="w-4 h-4" />
-              </motion.button>
-            ) : (
-              <motion.button
-                onClick={handleSubmit}
-                disabled={!isStepValid()}
-                className={`flex items-center gap-2 px-6 py-2 rounded-xl font-medium transition-all ${
-                  isStepValid()
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-white/5 text-white/30 cursor-not-allowed'
-                }`}
-                whileHover={isStepValid() ? { scale: 1.02 } : {}}
-                whileTap={isStepValid() ? { scale: 0.98 } : {}}
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white rounded-lg transition-colors flex items-center gap-2"
               >
-                <Save className="w-4 h-4" />
-                {isEditing ? 'Update Driver' : 'Create Driver'}
-              </motion.button>
-            )}
-          </div>
-        </div>
-      </div>
-    </BaseModal>
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    {isEditing ? 'Update Driver' : 'Create Driver'}
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   )
 }
 

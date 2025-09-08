@@ -1,19 +1,15 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Car, Building2, Activity, Tag } from 'lucide-react'
+import { Building2, Activity, Tag, FileText, User, Phone } from 'lucide-react'
 import { getThemeColors } from '../../../../utils/theme.js'
 
 const VehicleBasicInfo = ({ formData, setFormData, currentTheme = 'teal' }) => {
   const themeColors = getThemeColors(currentTheme)
 
+  // API Contract Vehicle Types
   const vehicleTypes = [
-    'Truck',
-    'Van',
-    'Car',
-    'Bus',
-    'Motorcycle',
-    'Trailer',
-    'Other'
+    'ODC',
+    'Lattice Tower'
   ]
 
   const vehicleStatuses = [
@@ -23,23 +19,19 @@ const VehicleBasicInfo = ({ formData, setFormData, currentTheme = 'teal' }) => {
     'Retired'
   ]
 
+  // API Contract Plants
   const plants = [
-    'Mumbai North',
-    'Mumbai South',
-    'Delhi Central',
-    'Delhi East',
-    'Bangalore North',
-    'Bangalore South',
-    'Chennai Central',
-    'Kolkata East',
-    'Hyderabad North'
+    'pune',
+    'solapur', 
+    'surat',
+    'free'
   ]
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
+    console.log('VehicleBasicInfo: handleInputChange called with:', field, value)
+    setFormData({
       [field]: value
-    }))
+    })
   }
 
   return (
@@ -49,43 +41,57 @@ const VehicleBasicInfo = ({ formData, setFormData, currentTheme = 'teal' }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Car className="w-8 h-8 text-orange-500" />
-        </div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">Basic Vehicle Information</h3>
-        <p className="text-gray-600">Enter the essential details for the vehicle</p>
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-1">Basic Vehicle Information</h3>
+        <p className="text-sm text-gray-600">Enter the essential details for the vehicle</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Vehicle Number */}
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 text-gray-700 font-medium">
-            <Tag className="w-4 h-4 text-orange-500" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Vehicle Number - API: custrecord_vehicle_number */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <Tag className="w-3.5 h-3.5 text-orange-500" />
             Vehicle Number *
           </label>
           <input
             type="text"
-            value={formData.vehicleNumber}
-            onChange={(e) => handleInputChange('vehicleNumber', e.target.value)}
-            placeholder="e.g., MH01AB1234"
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+            value={formData.custrecord_vehicle_number || ''}
+            onChange={(e) => handleInputChange('custrecord_vehicle_number', e.target.value)}
+            placeholder="e.g., MH-12-AB-1234"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
             required
           />
         </div>
 
-        {/* Vehicle Type */}
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 text-gray-700 font-medium">
-            <Car className="w-4 h-4 text-orange-500" />
+        {/* Vehicle Name - API: custrecord_vehicle_name_ag */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <FileText className="w-3.5 h-3.5 text-orange-500" />
+            Vehicle Name *
+          </label>
+          <input
+            type="text"
+            value={formData.custrecord_vehicle_name_ag || ''}
+            onChange={(e) => handleInputChange('custrecord_vehicle_name_ag', e.target.value)}
+            placeholder="e.g., Blade Transport Vehicle"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+            required
+          />
+        </div>
+
+        {/* Vehicle Type - API: custrecord_vehicle_type_ag */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <Activity className="w-3.5 h-3.5 text-orange-500" />
             Vehicle Type *
           </label>
           <select
-            value={formData.type}
-            onChange={(e) => handleInputChange('type', e.target.value)}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all appearance-none cursor-pointer"
+            value={formData.custrecord_vehicle_type_ag || ''}
+            onChange={(e) => handleInputChange('custrecord_vehicle_type_ag', e.target.value)}
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all appearance-none cursor-pointer"
             required
           >
+            <option value="" className="bg-white text-gray-900">Select Vehicle Type</option>
             {vehicleTypes.map(type => (
               <option key={type} value={type} className="bg-white text-gray-900">
                 {type}
@@ -94,94 +100,186 @@ const VehicleBasicInfo = ({ formData, setFormData, currentTheme = 'teal' }) => {
           </select>
         </div>
 
-        {/* Plant */}
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 text-gray-700 font-medium">
-            <Building2 className="w-4 h-4 text-orange-500" />
-            Plant Location *
+        {/* Current Plant - API: currentPlant */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <Building2 className="w-3.5 h-3.5 text-orange-500" />
+            Current Plant *
           </label>
           <select
-            value={formData.plant}
-            onChange={(e) => handleInputChange('plant', e.target.value)}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all appearance-none cursor-pointer"
+            value={formData.currentPlant || ''}
+            onChange={(e) => handleInputChange('currentPlant', e.target.value)}
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all appearance-none cursor-pointer"
             required
           >
             <option value="" className="bg-white text-gray-900">Select Plant</option>
             {plants.map(plant => (
               <option key={plant} value={plant} className="bg-white text-gray-900">
-                {plant}
+                {plant.charAt(0).toUpperCase() + plant.slice(1)}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Status */}
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 text-gray-700 font-medium">
-            <Activity className="w-4 h-4 text-orange-500" />
-            Status *
+        {/* Owner Name - API: custrecord_owner_name_ag */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <User className="w-3.5 h-3.5 text-orange-500" />
+            Owner Name *
           </label>
-          <select
-            value={formData.status}
-            onChange={(e) => handleInputChange('status', e.target.value)}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all appearance-none cursor-pointer"
+          <input
+            type="text"
+            value={formData.custrecord_owner_name_ag || ''}
+            onChange={(e) => handleInputChange('custrecord_owner_name_ag', e.target.value)}
+            placeholder="e.g., ABC Transport Company"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
             required
-          >
-            {vehicleStatuses.map(status => (
-              <option key={status} value={status} className="bg-white text-gray-900">
-                {status}
-              </option>
-            ))}
-          </select>
+          />
+        </div>
+
+        {/* Owner Phone - API: custrecord_owner_no_ag */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <Phone className="w-3.5 h-3.5 text-orange-500" />
+            Owner Phone *
+          </label>
+          <input
+            type="tel"
+            value={formData.custrecord_owner_no_ag || ''}
+            onChange={(e) => handleInputChange('custrecord_owner_no_ag', e.target.value)}
+            placeholder="e.g., +91-9876543210"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+            required
+          />
+        </div>
+
+        {/* Chassis Number - API: custrecord_chassis_number */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <Tag className="w-3.5 h-3.5 text-orange-500" />
+            Chassis Number *
+          </label>
+          <input
+            type="text"
+            value={formData.custrecord_chassis_number || ''}
+            onChange={(e) => handleInputChange('custrecord_chassis_number', e.target.value)}
+            placeholder="e.g., CHASSIS123456"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+            required
+          />
+        </div>
+
+        {/* Engine Number - API: custrecord_engine_number_ag */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <Activity className="w-3.5 h-3.5 text-orange-500" />
+            Engine Number *
+          </label>
+          <input
+            type="text"
+            value={formData.custrecord_engine_number_ag || ''}
+            onChange={(e) => handleInputChange('custrecord_engine_number_ag', e.target.value)}
+            placeholder="e.g., ENGINE123456"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+            required
+          />
+        </div>
+
+        {/* Age of Vehicle - API: custrecord_age_of_vehicle */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <Activity className="w-3.5 h-3.5 text-orange-500" />
+            Age of Vehicle
+          </label>
+          <input
+            type="text"
+            value={formData.custrecord_age_of_vehicle || ''}
+            onChange={(e) => handleInputChange('custrecord_age_of_vehicle', e.target.value)}
+            placeholder="e.g., 5 years"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+          />
+        </div>
+
+        {/* GPS Available - API: custrecord_vehicle_master_gps_available */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <Activity className="w-3.5 h-3.5 text-orange-500" />
+            GPS Available *
+          </label>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="gps_available"
+                value="true"
+                checked={formData.custrecord_vehicle_master_gps_available === true}
+                onChange={() => handleInputChange('custrecord_vehicle_master_gps_available', true)}
+                className="w-3.5 h-3.5 text-orange-500 focus:ring-orange-500 focus:ring-2"
+              />
+              <span className="text-gray-700">Yes</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="gps_available"
+                value="false"
+                checked={formData.custrecord_vehicle_master_gps_available === false}
+                onChange={() => handleInputChange('custrecord_vehicle_master_gps_available', false)}
+                className="w-3.5 h-3.5 text-orange-500 focus:ring-orange-500 focus:ring-2"
+              />
+              <span className="text-gray-700">No</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Vendor Name - API: custrecord_vendor_name_ag */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <Building2 className="w-3.5 h-3.5 text-orange-500" />
+            Vendor Name *
+          </label>
+          <input
+            type="text"
+            value={formData.custrecord_vendor_name_ag || ''}
+            onChange={(e) => handleInputChange('custrecord_vendor_name_ag', e.target.value)}
+            placeholder="e.g., ABC Logistics"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+            required
+          />
+        </div>
+
+        {/* Created By - API: custrecord_create_by */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <User className="w-3.5 h-3.5 text-orange-500" />
+            Created By *
+          </label>
+          <input
+            type="text"
+            value={formData.custrecord_create_by || ''}
+            onChange={(e) => handleInputChange('custrecord_create_by', e.target.value)}
+            placeholder="e.g., admin"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+            required
+          />
+        </div>
+
+        {/* FCM Token - API: fcm_token */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
+            <Phone className="w-3.5 h-3.5 text-orange-500" />
+            FCM Token
+          </label>
+          <input
+            type="text"
+            value={formData.fcm_token || ''}
+            onChange={(e) => handleInputChange('fcm_token', e.target.value)}
+            placeholder="Firebase token (optional)"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+          />
         </div>
       </div>
 
-      {/* Additional Information */}
-      <div className="bg-gray-50 rounded-xl p-4">
-        <h4 className="text-lg font-semibold text-gray-800 mb-3">Additional Information</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-gray-600 text-sm">Description</label>
-            <textarea
-              value={formData.description || ''}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Optional description or notes about the vehicle"
-              rows={3}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-gray-600 text-sm">Purchase Date</label>
-            <input
-              type="date"
-              value={formData.purchaseDate || ''}
-              onChange={(e) => handleInputChange('purchaseDate', e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Validation Messages */}
-      {!formData.vehicleNumber && (
-        <motion.div
-          className="bg-red-100 border border-red-300 rounded-xl p-3"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <p className="text-red-600 text-sm">Vehicle number is required</p>
-        </motion.div>
-      )}
-
-      {!formData.plant && (
-        <motion.div
-          className="bg-red-100 border border-red-300 rounded-xl p-3"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <p className="text-red-600 text-sm">Plant location is required</p>
-        </motion.div>
-      )}
     </motion.div>
   )
 }

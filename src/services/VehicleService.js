@@ -32,8 +32,8 @@ class VehicleService {
       return this.transformVehicleResponse(response)
     } catch (error) {
       console.error('❌ Error fetching vehicles:', error)
-      // Return mock data if API fails
-      return this.getMockData()
+      // Don't return mock data - let the error propagate to prevent interference
+      throw this.handleError(error)
     }
   }
 
@@ -258,6 +258,158 @@ class VehicleService {
 
     // Transform the mock data using the same method as real API
     return this.transformVehicleResponse(mockApiResponse)
+  }
+
+  /**
+   * Create a new vehicle
+   * @param {Object} vehicleData - Vehicle data to create
+   * @returns {Promise<Object>} Created vehicle data
+   */
+  async createVehicle(vehicleData) {
+    try {
+      console.log('🚀 Creating vehicle with data:', vehicleData)
+      
+      // Transform form data to API format
+      const apiData = this.transformFormDataToAPI(vehicleData)
+      
+      // Create FormData for multipart/form-data
+      const formData = new FormData()
+      
+      // Add all text fields
+      Object.keys(apiData).forEach(key => {
+        if (apiData[key] !== null && apiData[key] !== undefined && apiData[key] !== '') {
+          formData.append(key, apiData[key])
+        }
+      })
+      
+      // Add file uploads for document attachments (multiple files per field)
+      const fileFields = [
+        'custrecord_rc_doc_attach',
+        'custrecord_insurance_attachment_ag',
+        'custrecord_permit_attachment_ag',
+        'custrecord_puc_attachment_ag',
+        'custrecord_tms_vehicle_fit_cert_attach'
+      ]
+      
+      fileFields.forEach(fieldName => {
+        const files = vehicleData[fieldName]
+        if (files && Array.isArray(files) && files.length > 0) {
+          // Append each file with the same field name (for multiple files)
+          files.forEach(file => {
+            formData.append(fieldName, file)
+          })
+        }
+      })
+      
+      console.log('📤 Sending API request to create vehicle...')
+      
+      // Debug FormData contents
+      console.log('📋 FormData contents:')
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`)
+        } else {
+          console.log(`  ${key}: ${value}`)
+        }
+      }
+      
+      // Use fetch directly for FormData to avoid BaseApiService JSON handling
+      const response = await fetch(`${baseApiService.baseURL}/vms/vehicle`, {
+        method: 'POST',
+        body: formData
+        // Don't set Content-Type - let browser set it with boundary
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      
+      console.log('✅ Vehicle created successfully:', responseData)
+      return {
+        success: true,
+        message: 'Vehicle created successfully',
+        vehicle: responseData
+      }
+      
+    } catch (error) {
+      console.error('❌ Error creating vehicle:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
+   * Transform form data to API format
+   * @param {Object} formData - Form data from UI
+   * @returns {Object} API-formatted data
+   */
+  transformFormDataToAPI(formData) {
+    console.log('🔄 Transforming form data to API format:', formData)
+    
+    const apiData = {
+      // REQUIRED API Fields
+      custrecord_vehicle_number: formData.custrecord_vehicle_number,
+      custrecord_vehicle_type_ag: formData.custrecord_vehicle_type_ag,
+      custrecord_driving_license_no: formData.custrecord_driving_license_no,
+      
+      // Optional Basic Information
+      custrecord_vehicle_name_ag: formData.custrecord_vehicle_name_ag || '',
+      custrecord_age_of_vehicle: formData.custrecord_age_of_vehicle || '',
+      custrecord_expire_date: formData.custrecord_expire_date || '',
+      approved_by_hq: formData.approved_by_hq || 'pending',
+      currentPlant: formData.currentPlant || '',
+      
+      // Technical Identifiers
+      custrecord_engine_number_ag: formData.custrecord_engine_number_ag || '',
+      custrecord_chassis_number: formData.custrecord_chassis_number || '',
+      
+      // Owner Information
+      custrecord_owner_name_ag: formData.custrecord_owner_name_ag || '',
+      custrecord_owner_no_ag: formData.custrecord_owner_no_ag || '',
+      
+      // RC (Registration Certificate)
+      custrecord_rc_no: formData.custrecord_rc_no || '',
+      custrecord_rc_start_date: formData.custrecord_rc_start_date || '',
+      custrecord_rc_end_date: formData.custrecord_rc_end_date || '',
+      
+      // Insurance
+      custrecord_insurance_company_name_ag: formData.custrecord_insurance_company_name_ag || '',
+      custrecord_insurance_number_ag: formData.custrecord_insurance_number_ag || '',
+      custrecord_insurance_start_date_ag: formData.custrecord_insurance_start_date_ag || '',
+      custrecord_insurance_end_date_ag: formData.custrecord_insurance_end_date_ag || '',
+      
+      // Permit
+      custrecord_permit_number_ag: formData.custrecord_permit_number_ag || '',
+      custrecord_permit_start_date: formData.custrecord_permit_start_date || '',
+      custrecord_permit_end_date: formData.custrecord_permit_end_date || '',
+      
+      // PUC
+      custrecord_puc_number: formData.custrecord_puc_number || '',
+      custrecord_puc_start_date_ag: formData.custrecord_puc_start_date_ag || '',
+      custrecord_puc_end_date_ag: formData.custrecord_puc_end_date_ag || '',
+      
+      // Fitness Certificate
+      custrecord_tms_vehicle_fit_cert_vld_upto: formData.custrecord_tms_vehicle_fit_cert_vld_upto || '',
+      
+      // Flags & Settings
+      custrecord_vehicle_master_gps_available: formData.custrecord_vehicle_master_gps_available || false,
+      
+      // Audit Fields
+      custrecord_create_by: formData.custrecord_create_by || 'admin',
+      fcm_token: formData.fcm_token || '',
+      
+      // Vendor Information (JSON string as per API contract)
+      custrecord_vendor_name_ag: JSON.stringify({
+        id: 'VEN001',
+        name: formData.custrecord_vendor_name_ag || 'Default Vendor',
+        isInactive: false
+      }),
+      
+    }
+    
+    console.log('✅ Transformed API data:', apiData)
+    return apiData
   }
 
   /**

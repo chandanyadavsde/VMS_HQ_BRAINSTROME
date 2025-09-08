@@ -115,12 +115,22 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-3 hover:bg-orange-50 rounded-xl transition-colors"
-          >
-            <X className="w-6 h-6 text-slate-400" />
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Modify Button - Reusable Design */}
+            <button
+              onClick={() => console.log('Modify vehicle:', vehicle.vehicleNumber)}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 font-medium text-sm"
+            >
+              <Edit className="w-4 h-4" />
+              Modify
+            </button>
+            <button
+              onClick={onClose}
+              className="p-3 hover:bg-orange-50 rounded-xl transition-colors"
+            >
+              <X className="w-6 h-6 text-slate-400" />
+            </button>
+          </div>
         </div>
 
         {/* Main Content Grid */}
@@ -246,10 +256,19 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
 
             {/* Legal Documents Tabs */}
             <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
-              <h3 className="text-xl font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-orange-600" />
-                Legal Documents
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-orange-600" />
+                  Legal Documents
+                </h3>
+                <button
+                  onClick={() => console.log('Modify legal documents for vehicle:', vehicle.vehicleNumber)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-md shadow-sm hover:shadow-md transition-all duration-300 font-medium text-xs"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  Modify
+                </button>
+              </div>
               
               {/* Tab Navigation */}
               <div className="flex space-x-1 mb-6 bg-slate-200 rounded-lg p-1">
@@ -402,16 +421,16 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
               </div>
             </div>
 
-            {/* Document Attachments Gallery */}
+            {/* Document Attachments Gallery - Tab Specific */}
             <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
               <h3 className="text-xl font-semibold text-slate-800 mb-4 flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-orange-600" />
-                Document Attachments
+                Document Attachments - {activeTab === 'rc' ? 'RC Document' : activeTab === 'insurance' ? 'Insurance' : activeTab === 'permit' ? 'Permit' : 'PUC'}
               </h3>
               
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {/* RC Documents */}
-                {vehicle.rawData?.custrecord_rc_doc_attach?.map((doc, index) => (
+                {/* Show only images for the active tab */}
+                {activeTab === 'rc' && vehicle.rawData?.custrecord_rc_doc_attach?.map((doc, index) => (
                   <div key={index} className="group cursor-pointer" onClick={() => setSelectedImage(doc)}>
                     <div className="aspect-square bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
                       <img 
@@ -424,8 +443,7 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
                   </div>
                 ))}
 
-                {/* Insurance Documents */}
-                {vehicle.rawData?.custrecord_insurance_attachment_ag?.map((doc, index) => (
+                {activeTab === 'insurance' && vehicle.rawData?.custrecord_insurance_attachment_ag?.map((doc, index) => (
                   <div key={`insurance-${index}`} className="group cursor-pointer" onClick={() => setSelectedImage(doc)}>
                     <div className="aspect-square bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
                       <img 
@@ -438,8 +456,7 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
                   </div>
                 ))}
 
-                {/* Permit Documents */}
-                {vehicle.rawData?.custrecord_permit_attachment_ag?.map((doc, index) => (
+                {activeTab === 'permit' && vehicle.rawData?.custrecord_permit_attachment_ag?.map((doc, index) => (
                   <div key={`permit-${index}`} className="group cursor-pointer" onClick={() => setSelectedImage(doc)}>
                     <div className="aspect-square bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
                       <img 
@@ -452,8 +469,7 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
                   </div>
                 ))}
 
-                {/* PUC Documents */}
-                {vehicle.rawData?.custrecord_puc_attachment_ag?.map((doc, index) => (
+                {activeTab === 'puc' && vehicle.rawData?.custrecord_puc_attachment_ag?.map((doc, index) => (
                   <div key={`puc-${index}`} className="group cursor-pointer" onClick={() => setSelectedImage(doc)}>
                     <div className="aspect-square bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
                       <img 
@@ -466,19 +482,17 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
                   </div>
                 ))}
 
-                {/* Fitness Documents */}
-                {vehicle.rawData?.custrecord_tms_vehicle_fit_cert_attach?.map((doc, index) => (
-                  <div key={`fitness-${index}`} className="group cursor-pointer" onClick={() => setSelectedImage(doc)}>
-                    <div className="aspect-square bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
-                      <img 
-                        src={doc.url} 
-                        alt={doc.fileName}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                    </div>
-                    <p className="text-xs text-slate-600 mt-1 truncate">{doc.fileName}</p>
+                {/* Show empty state if no documents for active tab */}
+                {((activeTab === 'rc' && (!vehicle.rawData?.custrecord_rc_doc_attach || vehicle.rawData.custrecord_rc_doc_attach.length === 0)) ||
+                  (activeTab === 'insurance' && (!vehicle.rawData?.custrecord_insurance_attachment_ag || vehicle.rawData.custrecord_insurance_attachment_ag.length === 0)) ||
+                  (activeTab === 'permit' && (!vehicle.rawData?.custrecord_permit_attachment_ag || vehicle.rawData.custrecord_permit_attachment_ag.length === 0)) ||
+                  (activeTab === 'puc' && (!vehicle.rawData?.custrecord_puc_attachment_ag || vehicle.rawData.custrecord_puc_attachment_ag.length === 0))) && (
+                  <div className="col-span-full text-center py-8">
+                    <ImageIcon className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                    <p className="text-slate-600 font-medium">No documents uploaded</p>
+                    <p className="text-slate-500 text-sm">Documents will appear here when uploaded</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>

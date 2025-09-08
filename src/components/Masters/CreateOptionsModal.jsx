@@ -2,10 +2,12 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { X, Car, User, Plus } from 'lucide-react'
 
-const CreateOptionsModal = ({ onClose }) => {
+const CreateOptionsModal = ({ onClose, onOptionSelect }) => {
   const handleOptionClick = (option) => {
     console.log(`Selected option: ${option}`)
-    // Here you would handle the different creation flows
+    if (onOptionSelect) {
+      onOptionSelect(option)
+    }
     onClose()
   }
 

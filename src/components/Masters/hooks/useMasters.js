@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { apiService } from '../../../services/index.js'
+import VehicleService from '../../../services/VehicleService.js'
+import DriverService from '../../../services/DriverService.js'
 
 const useMasters = () => {
   // State
@@ -8,6 +9,16 @@ const useMasters = () => {
   const [assignments, setAssignments] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalDrivers: 0,
+    limit: 20,
+    hasNext: false,
+    hasPrev: false
+  })
 
   // Mock data for development
   const mockVehicles = [
@@ -165,30 +176,43 @@ const useMasters = () => {
       setLoading(true)
       setError(null)
       
-      // For now, use mock data
-      // In production, this would be: const response = await apiService.get('/vehicles')
-      await new Promise(resolve => setTimeout(resolve, 500)) // Simulate API delay
-      setVehicles(mockVehicles)
+      console.log('🔍 Fetching vehicles from API...')
+      const response = await VehicleService.getAllVehicles()
+      
+      console.log('📥 Vehicles fetched successfully:', response)
+      setVehicles(response.vehicles || [])
     } catch (err) {
-      setError('Failed to fetch vehicles')
-      console.error('Error fetching vehicles:', err)
+      const errorMessage = err.message || 'Failed to fetch vehicles'
+      setError(errorMessage)
+      console.error('❌ Error fetching vehicles:', err)
+      
+      // Fallback to mock data if API fails
+      console.log('🔄 Using mock data as fallback...')
+      setVehicles(mockVehicles)
     } finally {
       setLoading(false)
     }
   }, [])
 
-  const fetchDrivers = useCallback(async () => {
+  const fetchDrivers = useCallback(async (page = 1) => {
     try {
       setLoading(true)
       setError(null)
       
-      // For now, use mock data
-      // In production, this would be: const response = await apiService.get('/drivers')
-      await new Promise(resolve => setTimeout(resolve, 500)) // Simulate API delay
-      setDrivers(mockDrivers)
+      console.log('🔍 Fetching drivers from API...')
+      const response = await DriverService.getAllDrivers({ page, limit: 20 })
+      
+      console.log('📥 Drivers fetched successfully:', response)
+      setDrivers(response.drivers || [])
+      setPagination(response.pagination || pagination)
     } catch (err) {
-      setError('Failed to fetch drivers')
-      console.error('Error fetching drivers:', err)
+      const errorMessage = err.message || 'Failed to fetch drivers'
+      setError(errorMessage)
+      console.error('❌ Error fetching drivers:', err)
+      
+      // Fallback to mock data if API fails
+      console.log('🔄 Using mock data as fallback...')
+      setDrivers(mockDrivers)
     } finally {
       setLoading(false)
     }
@@ -211,62 +235,30 @@ const useMasters = () => {
     }
   }, [])
 
-  const createVehicle = useCallback(async (vehicleData) => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      // For now, use mock data
-      // In production, this would be: const response = await apiService.post('/vehicles', vehicleData)
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API delay
-      
-      const newVehicle = {
-        id: `VH${String(vehicles.length + 1).padStart(3, '0')}`,
-        ...vehicleData,
-        drivers: [],
-        otherPersonnel: [],
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0]
-      }
-      
-      setVehicles(prev => [...prev, newVehicle])
-      return newVehicle
-    } catch (err) {
-      setError('Failed to create vehicle')
-      console.error('Error creating vehicle:', err)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [vehicles.length])
 
   const createDriver = useCallback(async (driverData) => {
     try {
       setLoading(true)
       setError(null)
       
-      // For now, use mock data
-      // In production, this would be: const response = await apiService.post('/drivers', driverData)
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API delay
+      console.log('🚀 Creating driver with data:', driverData)
+      const response = await DriverService.createDriver(driverData)
       
-      const newDriver = {
-        id: `D${String(drivers.length + 1).padStart(3, '0')}`,
-        ...driverData,
-        assignedVehicles: [],
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0]
-      }
+      console.log('✅ Driver created successfully:', response)
       
-      setDrivers(prev => [...prev, newDriver])
-      return newDriver
+      // Refresh the driver list
+      await fetchDrivers()
+      
+      return response.driver
     } catch (err) {
-      setError('Failed to create driver')
-      console.error('Error creating driver:', err)
+      const errorMessage = err.message || 'Failed to create driver'
+      setError(errorMessage)
+      console.error('❌ Error creating driver:', err)
       throw err
     } finally {
       setLoading(false)
     }
-  }, [drivers.length])
+  }, [fetchDrivers])
 
   const updateVehicle = useCallback(async (vehicleId, vehicleData) => {
     try {
@@ -413,12 +405,12 @@ const useMasters = () => {
     // State
     loading,
     error,
+    pagination,
     
     // Actions
     fetchVehicles,
     fetchDrivers,
     fetchAssignments,
-    createVehicle,
     createDriver,
     updateVehicle,
     updateDriver,

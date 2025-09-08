@@ -124,18 +124,36 @@ const DriverLicense = ({ formData, setFormData, currentTheme = 'teal' }) => {
           />
         </div>
 
-        {/* License Issue Date */}
+        {/* License Start Date */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-gray-800 font-medium">
             <Calendar className="w-4 h-4 text-blue-400" />
-            License Issue Date
+            License Start Date *
           </label>
           <input
             type="date"
-            value={formData.identification.licenseIssueDate || ''}
-            onChange={(e) => handleIdentificationChange('licenseIssueDate', e.target.value)}
+            value={formData.identification.licenseStartDate || ''}
+            onChange={(e) => handleIdentificationChange('licenseStartDate', e.target.value)}
             className="w-full px-4 py-3 bg-white backdrop-blur-sm border border-gray-300 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            required
           />
+        </div>
+
+        {/* License Test Status */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-gray-800 font-medium">
+            <FileText className="w-4 h-4 text-blue-400" />
+            License Test Status *
+          </label>
+          <select
+            value={formData.identification.licenseTestStatus || 'passed'}
+            onChange={(e) => handleIdentificationChange('licenseTestStatus', e.target.value)}
+            className="w-full px-4 py-3 bg-white backdrop-blur-sm border border-gray-300 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+            required
+          >
+            <option value="passed" className="bg-white text-gray-800">Passed</option>
+            <option value="fail" className="bg-white text-gray-800">Failed</option>
+          </select>
         </div>
       </div>
 

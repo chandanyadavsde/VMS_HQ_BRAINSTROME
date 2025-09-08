@@ -1,12 +1,12 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { X, User, Phone, FileText, Calendar, Car, UserCheck, Edit, Trash2, Settings, Eye, MapPin, Building2 } from 'lucide-react'
+import { X, User, Phone, FileText, Calendar, Car, UserCheck, Edit, Eye } from 'lucide-react'
 
 const DriverDetailsModal = ({ driver, onClose }) => {
   if (!driver) return null
 
-  const isLicenseExpired = new Date(driver.licenseExpireDate) < new Date()
-  const isLicenseExpiringSoon = new Date(driver.licenseExpireDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+  const isLicenseExpired = new Date(driver.identification?.licenseExpiry) < new Date()
+  const isLicenseExpiringSoon = new Date(driver.identification?.licenseExpiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
   return (
     <motion.div
@@ -80,14 +80,27 @@ const DriverDetailsModal = ({ driver, onClose }) => {
                   <span className="text-slate-600">Contact Number:</span>
                   <span className="text-slate-800 font-medium flex items-center gap-1">
                     <Phone className="w-4 h-4" />
-                    {driver.contact}
+                    {driver.contact?.phone || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">License Number:</span>
                   <span className="text-slate-800 font-medium flex items-center gap-1">
                     <FileText className="w-4 h-4" />
-                    {driver.licenseNumber}
+                    {driver.identification?.licenseNumber || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">License Type:</span>
+                  <span className="text-slate-800 font-medium">
+                    {driver.identification?.licenseType || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">License Start Date:</span>
+                  <span className="text-slate-800 font-medium flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    {driver.identification?.licenseStart || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -96,16 +109,70 @@ const DriverDetailsModal = ({ driver, onClose }) => {
                     isLicenseExpired ? 'text-red-600' : isLicenseExpiringSoon ? 'text-orange-600' : 'text-green-600'
                   }`}>
                     <Calendar className="w-4 h-4" />
-                    {driver.licenseExpireDate}
+                    {driver.identification?.licenseExpiry || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">License Test Status:</span>
+                  <span className={`font-medium ${
+                    driver.rawData?.custrecord_driving_lca_test === 'passed' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {driver.rawData?.custrecord_driving_lca_test || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Created By:</span>
                   <span className="text-slate-800 font-medium flex items-center gap-1">
                     <UserCheck className="w-4 h-4" />
-                    {driver.createdBy}
+                    {driver.rawData?.custrecord_create_by_driver_master || 'N/A'}
                   </span>
                 </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Column - License Document and Vehicle Assignment */}
+          <div className="space-y-6">
+            {/* License Photo */}
+            <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                <Eye className="w-5 h-5 text-orange-600" />
+                License Document
+              </h3>
+              <div className="flex items-center justify-center p-8 bg-white rounded-lg border border-slate-200">
+                {driver.rawData?.custrecord_driving_license_attachment && driver.rawData.custrecord_driving_license_attachment.length > 0 ? (
+                  <div className="text-center">
+                    <div className="w-32 h-24 mx-auto mb-4 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={driver.rawData.custrecord_driving_license_attachment[0]} 
+                        alt="Driving License Document"
+                        className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.nextSibling.style.display = 'flex'
+                        }}
+                      />
+                      <div className="hidden w-full h-full items-center justify-center">
+                        <FileText className="w-8 h-8 text-slate-400" />
+                      </div>
+                    </div>
+                    <p className="text-slate-600 text-sm">Driving License Document</p>
+                    <button 
+                      onClick={() => window.open(driver.rawData.custrecord_driving_license_attachment[0], '_blank')}
+                      className="mt-2 px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors text-sm font-medium"
+                    >
+                      View Full Image
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="w-24 h-24 mx-auto mb-4 rounded-lg bg-slate-100 flex items-center justify-center">
+                      <FileText className="w-12 h-12 text-slate-400" />
+                    </div>
+                    <p className="text-slate-600 text-sm">No License Document Available</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -116,136 +183,46 @@ const DriverDetailsModal = ({ driver, onClose }) => {
                 Vehicle Assignment
               </h3>
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Assigned Vehicle:</span>
-                  <span className="text-slate-800 font-medium flex items-center gap-1">
-                    <Car className="w-4 h-4" />
-                    {driver.vehicleAttached}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Assignment Status:</span>
-                  <span className="text-green-600 font-medium">Active</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Assignment Date:</span>
-                  <span className="text-slate-800 font-medium">2024-01-15</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Additional Details */}
-          <div className="space-y-6">
-            {/* Driver Photo */}
-            <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <Eye className="w-5 h-5 text-orange-600" />
-                Driver Photo
-              </h3>
-              <div className="flex items-center justify-center p-8 bg-white rounded-lg border border-slate-200">
-                <div className="text-center">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                    <User className="w-12 h-12 text-slate-400" />
+                {driver.assignedVehicles && driver.assignedVehicles.length > 0 ? (
+                  driver.assignedVehicles.map((vehicle, index) => (
+                    <div key={index} className="bg-white rounded-lg p-4 border border-slate-200">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-slate-600">Vehicle {index + 1}:</span>
+                        <span className="text-slate-800 font-medium flex items-center gap-1">
+                          <Car className="w-4 h-4" />
+                          {vehicle.vehicleNumber}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Vehicle Type:</span>
+                        <span className="text-slate-800 font-medium">{vehicle.vehicleType || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Plant:</span>
+                        <span className="text-slate-800 font-medium">{vehicle.plant || 'N/A'}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-slate-500">
+                    <Car className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    <p>No vehicles assigned</p>
                   </div>
-                  <p className="text-slate-600 text-sm">Driver Photo</p>
-                  <button className="mt-2 px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors text-sm font-medium">
-                    View Full Image
-                  </button>
-                </div>
+                )}
               </div>
             </div>
 
-            {/* License Documents */}
-            <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-orange-600" />
-                License Documents
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-800">Driving License</span>
-                  </div>
-                  <span className={`text-sm font-medium ${
-                    isLicenseExpired ? 'text-red-600' : isLicenseExpiringSoon ? 'text-orange-600' : 'text-green-600'
-                  }`}>
-                    {isLicenseExpired ? 'Expired' : isLicenseExpiringSoon ? 'Expires Soon' : 'Valid'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-800">Medical Certificate</span>
-                  </div>
-                  <span className="text-green-600 text-sm font-medium">Valid</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-800">Background Check</span>
-                  </div>
-                  <span className="text-green-600 text-sm font-medium">Cleared</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Recent Activity */}
-            <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-orange-600" />
-                Recent Activity
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div>
-                    <p className="text-slate-800 text-sm">Driver assigned to vehicle</p>
-                    <p className="text-slate-500 text-xs">2 days ago</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div>
-                    <p className="text-slate-800 text-sm">License verification completed</p>
-                    <p className="text-slate-500 text-xs">1 week ago</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <div>
-                    <p className="text-slate-800 text-sm">Medical certificate renewed</p>
-                    <p className="text-slate-500 text-xs">2 weeks ago</p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
+
         {/* Action Buttons */}
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors font-medium">
-              <Edit className="w-4 h-4" />
-              Edit Driver
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors font-medium">
-              <Car className="w-4 h-4" />
-              Change Vehicle
-            </button>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors font-medium">
-              <Settings className="w-4 h-4" />
-              Settings
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium">
-              <Trash2 className="w-4 h-4" />
-              Delete
-            </button>
-          </div>
+        <div className="flex items-center justify-center mt-8 pt-6 border-t border-slate-200">
+          <button className="flex items-center gap-2 px-6 py-3 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors font-medium">
+            <Edit className="w-4 h-4" />
+            Edit Driver
+          </button>
         </div>
       </motion.div>
     </motion.div>

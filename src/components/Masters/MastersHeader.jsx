@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, Plus, Building2, Activity, X } from 'lucide-react'
+import { Search, Filter, Car, Building2, Activity, X } from 'lucide-react'
 import { getThemeColors } from '../../utils/theme.js'
 
 const MastersHeader = ({
@@ -13,6 +13,7 @@ const MastersHeader = ({
   availablePlants,
   availableStatuses,
   onAddNew,
+  activeTab = 'vehicles',
   currentTheme = 'teal'
 }) => {
   const themeColors = getThemeColors(currentTheme)
@@ -46,8 +47,8 @@ const MastersHeader = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Plus className="w-4 h-4" />
-            Add New
+            <Car className="w-4 h-4" />
+            {activeTab === 'drivers' ? 'Create Driver' : 'Create Vehicle'}
           </motion.button>
         </div>
 

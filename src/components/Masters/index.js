@@ -7,7 +7,6 @@ export { default as MastersSearch } from './MastersSearch.jsx'
 // Vehicle Components
 export { default as VehicleGrid } from './Vehicle/VehicleGrid.jsx'
 export { default as VehicleCard } from './Vehicle/VehicleCard.jsx'
-export { default as VehicleFormModal } from './Vehicle/VehicleForm/VehicleFormModal.jsx'
 
 // Driver Components
 export { default as DriverGrid } from './Driver/DriverGrid.jsx'
