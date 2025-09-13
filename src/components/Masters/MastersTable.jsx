@@ -306,6 +306,50 @@ const MastersTable = () => {
     setSelectedDriver(driver)
   }
 
+  const handleDriverUpdate = (updatedDriverData) => {
+    console.log('🔄 Updating driver in list:', updatedDriverData)
+    
+    // Transform the API response to match our UI format
+    const updatedDriver = {
+      id: updatedDriverData._id,
+      name: updatedDriverData.custrecord_driver_name || 'N/A',
+      contact: {
+        phone: updatedDriverData.custrecord_driver_mobile_no || 'N/A',
+        email: updatedDriverData.custrecord_driver_email || 'N/A',
+        address: updatedDriverData.custrecord_driver_address || 'N/A'
+      },
+      identification: {
+        licenseNumber: updatedDriverData.custrecord_driving_license_no || 'N/A',
+        licenseType: updatedDriverData.custrecord_license_category_ag || 'N/A',
+        licenseExpiry: updatedDriverData.custrecord_driver_license_e_date || 'N/A',
+        licenseStart: updatedDriverData.custrecord_driving_license_s_date || 'N/A',
+        aadharNumber: updatedDriverData.custrecord_driver_aadhar || 'N/A',
+        panNumber: updatedDriverData.custrecord_driver_pan || 'N/A'
+      },
+      documents: updatedDriverData.custrecord_driving_license_attachment?.map((url, index) => ({
+        id: `license_${index}`,
+        type: 'Driving License',
+        url: url,
+        status: 'Valid'
+      })) || [],
+      status: updatedDriverData.approved_by_hq === 'approved' ? 'Active' : 'Pending',
+      assignedVehicles: [],
+      createdAt: updatedDriverData.createdAt || 'N/A',
+      updatedAt: updatedDriverData.updatedAt || 'N/A',
+      rawData: updatedDriverData
+    }
+    
+    // Update the driver in the drivers list
+    setDrivers(prev => prev.map(driver => 
+      driver.id === updatedDriver.id ? updatedDriver : driver
+    ))
+    
+    // Update the selected driver if it's the same one
+    setSelectedDriver(updatedDriver)
+    
+    console.log('✅ Driver updated in list successfully')
+  }
+
   const handleContactAction = (vehicle) => {
     setSelectedVehicleForAction(vehicle)
     setShowContactModal(true)
@@ -931,6 +975,7 @@ const MastersTable = () => {
             <DriverDetailsModal
               driver={selectedDriver}
               onClose={() => setSelectedDriver(null)}
+              onDriverUpdate={handleDriverUpdate}
             />
           )}
         </AnimatePresence>

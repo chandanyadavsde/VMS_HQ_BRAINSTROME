@@ -61,6 +61,85 @@ class DriverService {
   }
 
   /**
+   * Update an existing driver
+   * @param {string} driverId - Driver ID to update
+   * @param {Object} driverData - Driver data to update
+   * @returns {Promise<Object>} Updated driver data
+   */
+  async updateDriver(driverId, driverData) {
+    try {
+      console.log('🚀 Updating driver with ID:', driverId)
+      console.log('📝 Update data:', driverData)
+      
+      // Transform the data to match API format
+      const formData = this.transformDriverUpdateDataForAPI(driverData)
+      
+      // Use fetch directly for FormData to avoid double wrapping
+      const response = await fetch(`${baseApiService.baseURL}/vms/driver-master/${driverId}`, {
+        method: 'PATCH',
+        body: formData
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.text()
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`
+        
+        try {
+          const errorJson = JSON.parse(errorData)
+          errorMessage = errorJson.error || errorMessage
+        } catch (parseError) {
+          // Use the text error if JSON parsing fails
+        }
+        
+        throw new Error(errorMessage)
+      }
+      
+      const responseData = await response.json()
+      console.log('📥 Driver update response:', responseData)
+      
+      return responseData
+    } catch (error) {
+      console.error('❌ Error updating driver:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
+   * Transform driver update data for API format
+   * @param {Object} driverData - Driver data from form
+   * @returns {FormData} API-formatted data as FormData for multipart upload
+   */
+  transformDriverUpdateDataForAPI(driverData) {
+    const formData = new FormData()
+    
+    // Add ONLY the fields that can be updated
+    if (driverData.phone) {
+      formData.append('custrecord_driver_mobile_no', driverData.phone)
+    }
+    
+    if (driverData.licenseExpiry) {
+      formData.append('custrecord_driver_license_e_date', driverData.licenseExpiry)
+    }
+    
+    // Add file attachments if new image is provided
+    if (driverData.newImage) {
+      // driverData.newImage is the file object itself in update mode
+      formData.append('custrecord_driving_license_attachment', driverData.newImage)
+    }
+    
+    // Debug: Log what we're sending
+    console.log('📤 Driver Update API Payload:')
+    console.log('📤 newImage:', driverData.newImage)
+    console.log('📤 newImage type:', typeof driverData.newImage)
+    console.log('📤 newImage instanceof File:', driverData.newImage instanceof File)
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value instanceof File ? `File(${value.name})` : value}`)
+    }
+    
+    return formData
+  }
+
+  /**
    * Create a new driver
    * @param {Object} driverData - Driver data to create
    * @returns {Promise<Object>} Created driver data

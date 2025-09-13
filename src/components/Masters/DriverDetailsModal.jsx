@@ -1,12 +1,133 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { X, User, Phone, FileText, Calendar, Car, UserCheck, Edit, Eye } from 'lucide-react'
+import { X, User, Phone, FileText, Calendar, Car, UserCheck, Edit, Eye, Upload, Save, RotateCcw, Loader2 } from 'lucide-react'
+import DriverService from '../../services/DriverService'
 
-const DriverDetailsModal = ({ driver, onClose }) => {
+const DriverDetailsModal = ({ driver, onClose, onDriverUpdate }) => {
   if (!driver) return null
+
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editData, setEditData] = useState({
+    phone: '',
+    licenseExpiry: '',
+    newImage: null,
+    previewUrl: null
+  })
+  const [showImageControls, setShowImageControls] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
+
+  // Initialize edit data when driver changes
+  useEffect(() => {
+    if (driver) {
+      setEditData({
+        phone: driver.contact?.phone || '',
+        licenseExpiry: driver.identification?.licenseExpiry || '',
+        newImage: null,
+        previewUrl: null
+      })
+    }
+  }, [driver])
 
   const isLicenseExpired = new Date(driver.identification?.licenseExpiry) < new Date()
   const isLicenseExpiringSoon = new Date(driver.identification?.licenseExpiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+  // Edit mode handlers
+  const handleEditMode = () => {
+    setIsEditMode(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false)
+    setEditData({
+      phone: driver.contact?.phone || '',
+      licenseExpiry: driver.identification?.licenseExpiry || '',
+      newImage: null,
+      previewUrl: null
+    })
+  }
+
+  const handleSaveEdit = async () => {
+    setIsLoading(true)
+    setError(null)
+    setSuccess(false)
+    
+    try {
+      console.log('💾 Saving driver edit:', editData)
+      
+      // Prepare update data
+      const updateData = {
+        phone: editData.phone,
+        licenseExpiry: editData.licenseExpiry,
+        newImage: editData.newImage
+      }
+      
+      console.log('📝 Update data being sent:', updateData)
+      console.log('📝 newImage:', editData.newImage)
+      console.log('📝 newImage type:', typeof editData.newImage)
+      console.log('📝 newImage instanceof File:', editData.newImage instanceof File)
+      
+      // Call API to update driver
+      const response = await DriverService.updateDriver(driver.id, updateData)
+      
+      if (response && response.driver) {
+        console.log('✅ Driver updated successfully:', response)
+        
+        // Show success message
+        setSuccess(true)
+        
+        // Update the driver data in parent component
+        if (onDriverUpdate) {
+          onDriverUpdate(response.driver)
+        }
+        
+        // Close edit mode after a short delay
+        setTimeout(() => {
+          setIsEditMode(false)
+          setSuccess(false)
+        }, 2000)
+      }
+    } catch (error) {
+      console.error('❌ Error updating driver:', error)
+      setError(error.message || 'Failed to update driver. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleInputChange = (field, value) => {
+    setEditData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleFileUpload = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      const previewUrl = URL.createObjectURL(file)
+      setEditData(prev => ({
+        ...prev,
+        newImage: file,
+        previewUrl: previewUrl
+      }))
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setEditData(prev => ({
+      ...prev,
+      newImage: null,
+      previewUrl: null
+    }))
+  }
+
+  const handleFileInput = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0])
+    }
+  }
 
   return (
     <motion.div
@@ -22,7 +143,11 @@ const DriverDetailsModal = ({ driver, onClose }) => {
 
       {/* Modal Content */}
       <motion.div
-        className="relative bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 shadow-2xl"
+        className={`relative bg-white rounded-lg max-w-4xl w-full max-h-[95vh] border shadow-2xl transition-colors flex flex-col ${
+          isEditMode 
+            ? 'border-orange-200' 
+            : 'border-slate-200'
+        }`}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -30,23 +155,71 @@ const DriverDetailsModal = ({ driver, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between p-6 pb-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
               <User className="w-6 h-6 text-orange-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-800">{driver.name}</h2>
-              <p className="text-slate-600">Driver Details</p>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-slate-800">{driver.name}</h2>
+                {isEditMode && (
+                  <span className="px-3 py-1 bg-orange-100 text-orange-700 text-sm font-medium rounded-full">
+                    Editing...
+                  </span>
+                )}
+              </div>
+              <p className="text-slate-600">
+                {isEditMode ? 'Edit Driver Information' : 'Driver Details'}
+              </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            <X className="w-6 h-6 text-slate-400" />
-          </button>
+          <div className="flex items-center gap-2">
+            {!isEditMode && (
+              <button
+                onClick={handleEditMode}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium shadow-sm"
+              >
+                <Edit className="w-4 h-4" />
+                Modify
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6 text-slate-400" />
+            </button>
+          </div>
         </div>
+
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto px-6">
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
+                <span className="text-red-600 text-sm font-bold">!</span>
+              </div>
+              <p className="text-red-800 font-medium">Error</p>
+            </div>
+            <p className="text-red-700 mt-1">{error}</p>
+          </div>
+        )}
+
+        {/* Success Display */}
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                <span className="text-green-600 text-sm font-bold">✓</span>
+              </div>
+              <p className="text-green-800 font-medium">Success!</p>
+            </div>
+            <p className="text-green-700 mt-1">Driver updated successfully!</p>
+          </div>
+        )}
 
         {/* License Status Badge */}
         <div className="mb-6">
@@ -61,8 +234,8 @@ const DriverDetailsModal = ({ driver, onClose }) => {
           </span>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Basic Information */}
           <div className="space-y-6">
             {/* Driver Information */}
@@ -78,10 +251,23 @@ const DriverDetailsModal = ({ driver, onClose }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Contact Number:</span>
-                  <span className="text-slate-800 font-medium flex items-center gap-1">
-                    <Phone className="w-4 h-4" />
-                    {driver.contact?.phone || 'N/A'}
-                  </span>
+                  {isEditMode ? (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-slate-400" />
+                      <input
+                        type="tel"
+                        value={editData.phone}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        className="px-3 py-1 border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm"
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-slate-800 font-medium flex items-center gap-1">
+                      <Phone className="w-4 h-4" />
+                      {driver.contact?.phone || 'N/A'}
+                    </span>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">License Number:</span>
@@ -105,12 +291,24 @@ const DriverDetailsModal = ({ driver, onClose }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">License Expiry:</span>
-                  <span className={`font-medium flex items-center gap-1 ${
-                    isLicenseExpired ? 'text-red-600' : isLicenseExpiringSoon ? 'text-orange-600' : 'text-green-600'
-                  }`}>
-                    <Calendar className="w-4 h-4" />
-                    {driver.identification?.licenseExpiry || 'N/A'}
-                  </span>
+                  {isEditMode ? (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-slate-400" />
+                      <input
+                        type="date"
+                        value={editData.licenseExpiry}
+                        onChange={(e) => handleInputChange('licenseExpiry', e.target.value)}
+                        className="px-3 py-1 border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm"
+                      />
+                    </div>
+                  ) : (
+                    <span className={`font-medium flex items-center gap-1 ${
+                      isLicenseExpired ? 'text-red-600' : isLicenseExpiringSoon ? 'text-orange-600' : 'text-green-600'
+                    }`}>
+                      <Calendar className="w-4 h-4" />
+                      {driver.identification?.licenseExpiry || 'N/A'}
+                    </span>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">License Test Status:</span>
@@ -139,13 +337,20 @@ const DriverDetailsModal = ({ driver, onClose }) => {
               <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
                 <Eye className="w-5 h-5 text-orange-600" />
                 License Document
+                {isEditMode && (
+                  <span className="text-sm text-orange-600 font-normal">(Click to edit)</span>
+                )}
               </h3>
-              <div className="flex items-center justify-center p-8 bg-white rounded-lg border border-slate-200">
-                {driver.rawData?.custrecord_driving_license_attachment && driver.rawData.custrecord_driving_license_attachment.length > 0 ? (
-                  <div className="text-center">
-                    <div className="w-32 h-24 mx-auto mb-4 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden">
+              <div 
+                className="flex items-center justify-center p-8 bg-white rounded-lg border border-slate-200 relative"
+                onMouseEnter={() => setShowImageControls(true)}
+                onMouseLeave={() => setShowImageControls(false)}
+              >
+                {(editData.previewUrl || (driver.rawData?.custrecord_driving_license_attachment && driver.rawData.custrecord_driving_license_attachment.length > 0)) ? (
+                  <div className="text-center relative">
+                    <div className="w-32 h-24 mx-auto mb-4 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden relative">
                       <img 
-                        src={driver.rawData.custrecord_driving_license_attachment[0]} 
+                        src={editData.previewUrl || driver.rawData.custrecord_driving_license_attachment[0]} 
                         alt="Driving License Document"
                         className="w-full h-full object-cover rounded-lg"
                         onError={(e) => {
@@ -156,21 +361,65 @@ const DriverDetailsModal = ({ driver, onClose }) => {
                       <div className="hidden w-full h-full items-center justify-center">
                         <FileText className="w-8 h-8 text-slate-400" />
                       </div>
+                      
+                      {/* Image Edit Controls */}
+                      {isEditMode && (showImageControls || editData.newImage) && (
+                        <div className="absolute top-1 right-1 flex gap-1">
+                          <button
+                            onClick={handleRemoveImage}
+                            className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow-lg"
+                            title="Remove Image"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          <label className="w-8 h-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition-colors shadow-lg cursor-pointer">
+                            <Upload className="w-4 h-4" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileInput}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-slate-600 text-sm">Driving License Document</p>
-                    <button 
-                      onClick={() => window.open(driver.rawData.custrecord_driving_license_attachment[0], '_blank')}
-                      className="mt-2 px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors text-sm font-medium"
-                    >
-                      View Full Image
-                    </button>
+                    <p className="text-slate-600 text-sm">
+                      {editData.newImage ? 'New License Document (Preview)' : 'Driving License Document'}
+                    </p>
+                    {!isEditMode && (
+                      <button 
+                        onClick={() => window.open(driver.rawData.custrecord_driving_license_attachment[0], '_blank')}
+                        className="mt-2 px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors text-sm font-medium"
+                      >
+                        View Full Image
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center">
-                    <div className="w-24 h-24 mx-auto mb-4 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <FileText className="w-12 h-12 text-slate-400" />
-                    </div>
-                    <p className="text-slate-600 text-sm">No License Document Available</p>
+                    {isEditMode ? (
+                      <div className="border-2 border-dashed border-orange-300 rounded-lg p-8 hover:border-orange-400 transition-colors">
+                        <Upload className="w-12 h-12 text-orange-400 mx-auto mb-4" />
+                        <p className="text-slate-600 text-sm mb-2">Upload License Document</p>
+                        <label className="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors text-sm font-medium cursor-pointer">
+                          Choose File
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileInput}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-24 h-24 mx-auto mb-4 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <FileText className="w-12 h-12 text-slate-400" />
+                        </div>
+                        <p className="text-slate-600 text-sm">No License Document Available</p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -215,15 +464,41 @@ const DriverDetailsModal = ({ driver, onClose }) => {
 
           </div>
         </div>
-
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-center mt-8 pt-6 border-t border-slate-200">
-          <button className="flex items-center gap-2 px-6 py-3 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors font-medium">
-            <Edit className="w-4 h-4" />
-            Edit Driver
-          </button>
         </div>
+
+        {/* Sticky Action Buttons - Only show Save/Cancel in edit mode */}
+        {isEditMode && (
+          <div className="sticky bottom-0 bg-white border-t border-slate-200 p-6 mt-auto">
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors font-medium"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white rounded-lg transition-colors font-medium"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   )
