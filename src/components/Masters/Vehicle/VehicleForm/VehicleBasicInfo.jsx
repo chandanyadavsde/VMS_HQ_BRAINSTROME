@@ -169,6 +169,7 @@ const VehicleBasicInfo = ({ formData, setFormData, currentTheme = 'teal' }) => {
           />
         </div>
 
+
         {/* Engine Number - API: custrecord_engine_number_ag */}
         <div className="space-y-1.5">
           <label className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
@@ -240,8 +241,28 @@ const VehicleBasicInfo = ({ formData, setFormData, currentTheme = 'teal' }) => {
           </label>
           <input
             type="text"
-            value={formData.custrecord_vendor_name_ag || ''}
-            onChange={(e) => handleInputChange('custrecord_vendor_name_ag', e.target.value)}
+            value={(() => {
+              try {
+                const vendor = JSON.parse(formData.custrecord_vendor_name_ag || '{}')
+                return vendor.name || ''
+              } catch (e) {
+                return formData.custrecord_vendor_name_ag || ''
+              }
+            })()}
+            onChange={(e) => {
+              try {
+                const currentVendor = JSON.parse(formData.custrecord_vendor_name_ag || '{}')
+                const updatedVendor = { ...currentVendor, name: e.target.value }
+                handleInputChange('custrecord_vendor_name_ag', JSON.stringify(updatedVendor))
+              } catch (error) {
+                // If parsing fails, create new vendor object
+                handleInputChange('custrecord_vendor_name_ag', JSON.stringify({
+                  name: e.target.value,
+                  contact: '',
+                  isInactive: false
+                }))
+              }
+            }}
             placeholder="e.g., ABC Logistics"
             className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
             required

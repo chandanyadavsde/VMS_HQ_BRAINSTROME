@@ -260,6 +260,30 @@ const useMasters = () => {
     }
   }, [fetchDrivers])
 
+  const createVehicle = useCallback(async (vehicleData) => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      console.log('🚀 Creating vehicle with data:', vehicleData)
+      const response = await VehicleService.createVehicle(vehicleData)
+      
+      console.log('✅ Vehicle created successfully:', response)
+      
+      // Refresh the vehicle list
+      await fetchVehicles()
+      
+      return response.vehicle || response
+    } catch (err) {
+      const errorMessage = err.message || 'Failed to create vehicle'
+      setError(errorMessage)
+      console.error('❌ Error creating vehicle:', err)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [fetchVehicles])
+
   const updateVehicle = useCallback(async (vehicleId, vehicleData) => {
     try {
       setLoading(true)
@@ -349,52 +373,37 @@ const useMasters = () => {
       setLoading(true)
       setError(null)
       
-      // For now, use mock data
-      // In production, this would be: const response = await apiService.post(`/vehicles/${vehicleId}/drivers`, { driverId, ...assignmentData })
-      await new Promise(resolve => setTimeout(resolve, 800)) // Simulate API delay
+      console.log('🚀 Assigning driver to vehicle:', { vehicleId, driverId, assignmentData })
       
-      const driver = drivers.find(d => d.id === driverId)
+      // Find the vehicle and driver data
       const vehicle = vehicles.find(v => v.id === vehicleId)
+      const driver = drivers.find(d => d.id === driverId)
       
-      if (driver && vehicle) {
-        // Update vehicle with new driver assignment
-        setVehicles(prev => prev.map(v => 
-          v.id === vehicleId 
-            ? {
-                ...v,
-                drivers: [...v.drivers, {
-                  driverId: driver.id,
-                  driverName: driver.name,
-                  ...assignmentData,
-                  assignedDate: new Date().toISOString().split('T')[0]
-                }]
-              }
-            : v
-        ))
-        
-        // Update driver with new vehicle assignment
-        setDrivers(prev => prev.map(d => 
-          d.id === driverId 
-            ? {
-                ...d,
-                assignedVehicles: [...d.assignedVehicles, {
-                  vehicleId: vehicle.id,
-                  vehicleNumber: vehicle.vehicleNumber,
-                  ...assignmentData,
-                  assignedDate: new Date().toISOString().split('T')[0]
-                }]
-              }
-            : d
-        ))
+      if (!vehicle || !driver) {
+        throw new Error('Vehicle or driver not found')
       }
+      
+      // Use the real API to assign driver
+      const response = await DriverService.assignDriverToVehicle(
+        vehicle.vehicleNumber || vehicle.custrecord_vehicle_number,
+        driverId
+      )
+      
+      console.log('✅ Driver assignment successful:', response)
+      
+      // Refresh the vehicle data to get updated driver information
+      await fetchVehicles()
+      
+      return response
     } catch (err) {
-      setError('Failed to assign driver')
-      console.error('Error assigning driver:', err)
+      const errorMessage = err.message || 'Failed to assign driver'
+      setError(errorMessage)
+      console.error('❌ Error assigning driver:', err)
       throw err
     } finally {
       setLoading(false)
     }
-  }, [drivers, vehicles])
+  }, [drivers, vehicles, fetchVehicles])
 
   return {
     // Data
@@ -412,6 +421,7 @@ const useMasters = () => {
     fetchDrivers,
     fetchAssignments,
     createDriver,
+    createVehicle,
     updateVehicle,
     updateDriver,
     deleteVehicle,

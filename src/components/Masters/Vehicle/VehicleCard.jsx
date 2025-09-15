@@ -86,16 +86,21 @@ const VehicleCard = ({
         <div className="flex items-center gap-3 text-gray-600">
           <Users className="w-4 h-4 text-orange-500" />
           <span className="text-sm">
-            {vehicle.drivers.length} Driver{vehicle.drivers.length !== 1 ? 's' : ''}
-            {vehicle.drivers.length > 0 && (
+            {vehicle.drivers?.length || 0} Driver{(vehicle.drivers?.length || 0) !== 1 ? 's' : ''}
+            {vehicle.drivers && vehicle.drivers.length > 0 && (
               <span className="text-gray-500 ml-1">
-                ({vehicle.drivers.map(d => d.driverName).join(', ')})
+                ({vehicle.drivers.map(d => d.driverName || d.name).join(', ')})
+              </span>
+            )}
+            {vehicle.driverName && vehicle.driverName !== 'No Driver Assigned' && (
+              <span className="text-gray-500 ml-1">
+                ({vehicle.driverName})
               </span>
             )}
           </span>
         </div>
         
-        {vehicle.otherPersonnel.length > 0 && (
+        {vehicle.otherPersonnel && vehicle.otherPersonnel.length > 0 && (
           <div className="flex items-center gap-3 text-gray-600">
             <Wrench className="w-4 h-4 text-orange-500" />
             <span className="text-sm">

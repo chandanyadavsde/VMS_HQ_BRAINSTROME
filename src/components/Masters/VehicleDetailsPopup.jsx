@@ -82,33 +82,33 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Section */}
-        <div className="flex items-center justify-between mb-8">
+        {/* ENHANCED Header Section - Vehicle Focused */}
+        <div className="flex items-center justify-between mb-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg">
           <div className="flex items-center gap-6">
-            <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center">
-              <Car className="w-8 h-8 text-orange-600" />
+            <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Car className="w-10 h-10 text-white" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-slate-800">{vehicle.vehicleNumber}</h2>
-              <p className="text-lg text-slate-600">{vehicle.rawData?.custrecord_vehicle_name_ag || 'Vehicle'}</p>
-              <div className="flex items-center gap-3 mt-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+              <h2 className="text-4xl font-bold text-white mb-1">{vehicle.vehicleNumber}</h2>
+              <p className="text-xl text-orange-100 mb-3">{vehicle.rawData?.custrecord_vehicle_name_ag || 'Vehicle'}</p>
+              <div className="flex items-center gap-3">
+                <span className={`px-4 py-2 rounded-full text-sm font-bold shadow-sm ${
                   vehicle.rawData?.custrecord_vehicle_type_ag === 'ODC' 
-                    ? 'bg-blue-100 text-blue-800' 
-                    : 'bg-purple-100 text-purple-800'
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-purple-500 text-white'
                 }`}>
                   {vehicle.rawData?.custrecord_vehicle_type_ag || 'N/A'}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                  approvalStatus.color === 'green' ? 'bg-green-100 text-green-800' :
-                  approvalStatus.color === 'orange' ? 'bg-orange-100 text-orange-800' :
-                  approvalStatus.color === 'red' ? 'bg-red-100 text-red-800' :
-                  'bg-gray-100 text-gray-800'
+                <span className={`px-4 py-2 rounded-full text-sm font-bold shadow-sm ${
+                  approvalStatus.color === 'green' ? 'bg-green-500 text-white' :
+                  approvalStatus.color === 'orange' ? 'bg-amber-500 text-white' :
+                  approvalStatus.color === 'red' ? 'bg-red-500 text-white' :
+                  'bg-gray-500 text-white'
                 }`}>
                   <approvalStatus.icon className="w-4 h-4 inline mr-1" />
                   {approvalStatus.text}
                 </span>
-                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-800">
+                <span className="px-4 py-2 rounded-full text-sm font-bold bg-white/20 backdrop-blur-sm text-white shadow-sm">
                   <MapPin className="w-4 h-4 inline mr-1" />
                   {vehicle.currentPlant}
                 </span>
@@ -116,19 +116,19 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {/* Modify Button - Reusable Design */}
+            {/* Modify Button - Header Style */}
             <button
               onClick={() => console.log('Modify vehicle:', vehicle.vehicleNumber)}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 font-medium text-sm"
+              className="flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 font-bold text-sm"
             >
               <Edit className="w-4 h-4" />
-              Modify
+              Modify Vehicle
             </button>
             <button
               onClick={onClose}
-              className="p-3 hover:bg-orange-50 rounded-xl transition-colors"
+              className="p-3 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-colors"
             >
-              <X className="w-6 h-6 text-slate-400" />
+              <X className="w-6 h-6 text-white" />
             </button>
           </div>
         </div>
@@ -136,84 +136,55 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Left Column */}
+          {/* Left Column - VEHICLE FOCUSED */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Driver Information */}
-            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
-              <h3 className="text-xl font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-orange-600" />
-                Driver Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-slate-600">Driver Name</label>
-                  <p className="font-semibold text-slate-800">{vehicle.driverName}</p>
+            {/* PRIMARY: Vehicle Specifications - ENHANCED */}
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border-2 border-orange-200 shadow-md">
+              <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center">
+                  <Car className="w-6 h-6 text-white" />
                 </div>
-                <div>
-                  <label className="text-sm text-slate-600">Mobile Number</label>
-                  <p className="font-semibold text-slate-800 flex items-center gap-1">
-                    <Phone className="w-4 h-4" />
-                    {vehicle.mobileNumber}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm text-slate-600">License Number</label>
-                  <p className="font-semibold text-slate-800">{vehicle.rawData?.assignedDriver?.custrecord_driving_license_no || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-slate-600">License Category</label>
-                  <p className="font-semibold text-slate-800">{vehicle.rawData?.assignedDriver?.custrecord_license_category_ag || 'N/A'}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-sm text-slate-600">Driver Status</label>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                      driverApprovalStatus.color === 'green' ? 'bg-green-100 text-green-800' :
-                      driverApprovalStatus.color === 'orange' ? 'bg-orange-100 text-orange-800' :
-                      driverApprovalStatus.color === 'red' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      <driverApprovalStatus.icon className="w-4 h-4 inline mr-1" />
-                      {driverApprovalStatus.text}
-                    </span>
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                      vehicle.rawData?.driverConfirmed ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                    }`}>
-                      {vehicle.rawData?.driverConfirmed ? 'Confirmed' : 'Pending Confirmation'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Vehicle Specifications */}
-            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
-              <h3 className="text-xl font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-orange-600" />
                 Vehicle Specifications
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-slate-600">Age</label>
-                  <p className="font-semibold text-slate-800">{vehicle.rawData?.custrecord_age_of_vehicle || 'N/A'}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <label className="text-sm text-slate-600 font-medium">Vehicle Age</label>
+                  <p className="text-lg font-bold text-slate-800 mt-1">{vehicle.rawData?.custrecord_age_of_vehicle || 'N/A'}</p>
                 </div>
-                <div>
-                  <label className="text-sm text-slate-600">Chassis Number</label>
-                  <p className="font-semibold text-slate-800">{vehicle.rawData?.custrecord_chassis_number || 'N/A'}</p>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <label className="text-sm text-slate-600 font-medium">Chassis Number</label>
+                  <p className="text-lg font-bold text-slate-800 mt-1 font-mono">{vehicle.rawData?.custrecord_chassis_number || 'N/A'}</p>
                 </div>
-                <div>
-                  <label className="text-sm text-slate-600">Engine Number</label>
-                  <p className="font-semibold text-slate-800">{vehicle.rawData?.custrecord_engine_number_ag || 'N/A'}</p>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <label className="text-sm text-slate-600 font-medium">Engine Number</label>
+                  <p className="text-lg font-bold text-slate-800 mt-1 font-mono">{vehicle.rawData?.custrecord_engine_number_ag || 'N/A'}</p>
                 </div>
-                <div>
-                  <label className="text-sm text-slate-600">GPS Available</label>
-                  <p className="font-semibold text-slate-800 flex items-center gap-1">
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <label className="text-sm text-slate-600 font-medium">GPS Tracking</label>
+                  <p className="text-lg font-bold text-slate-800 mt-1 flex items-center gap-2">
                     {vehicle.rawData?.custrecord_vehicle_master_gps_available ? (
-                      <><CheckCircle className="w-4 h-4 text-green-600" /> Yes</>
+                      <><CheckCircle className="w-5 h-5 text-green-600" /> Available</>
                     ) : (
-                      <><AlertTriangle className="w-4 h-4 text-orange-600" /> No</>
+                      <><AlertTriangle className="w-5 h-5 text-orange-600" /> Not Available</>
                     )}
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <label className="text-sm text-slate-600 font-medium">Current Status</label>
+                  <p className="text-lg font-bold text-slate-800 mt-1 flex items-center gap-2">
+                    {vehicle.rawData?.inTrip ? (
+                      <><Car className="w-5 h-5 text-blue-600" /> In Trip</>
+                    ) : (
+                      <><MapPin className="w-5 h-5 text-green-600" /> Available</>
+                    )}
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <label className="text-sm text-slate-600 font-medium">Current Plant</label>
+                  <p className="text-lg font-bold text-slate-800 mt-1 flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-purple-600" />
+                    {vehicle.currentPlant}
                   </p>
                 </div>
               </div>
@@ -495,6 +466,73 @@ const VehicleDetailsPopup = ({ vehicle, onClose }) => {
                 )}
               </div>
             </div>
+
+            {/* Driver Assignment - MOVED BELOW LEGAL DOCUMENTS */}
+            {vehicle.rawData?.assignedDriver && (
+              <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+                <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-600" />
+                  Assigned Driver
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm text-slate-600">Driver Name</label>
+                    <p className="font-semibold text-slate-800">{vehicle.driverName}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-600">Mobile Number</label>
+                    <p className="font-semibold text-slate-800 flex items-center gap-1">
+                      <Phone className="w-4 h-4" />
+                      {vehicle.mobileNumber}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-600">License Category</label>
+                    <p className="font-semibold text-slate-800">{vehicle.rawData?.assignedDriver?.custrecord_license_category_ag || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                    driverApprovalStatus.color === 'green' ? 'bg-green-100 text-green-800' :
+                    driverApprovalStatus.color === 'orange' ? 'bg-orange-100 text-orange-800' :
+                    driverApprovalStatus.color === 'red' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    <driverApprovalStatus.icon className="w-4 h-4 inline mr-1" />
+                    {driverApprovalStatus.text}
+                  </span>
+                  <button
+                    onClick={() => console.log('View driver details:', vehicle.rawData?.assignedDriver)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md shadow-sm hover:shadow-md transition-all duration-300 font-medium text-xs"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    View Details
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* No Driver Assigned State */}
+            {!vehicle.rawData?.assignedDriver && (
+              <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
+                <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5 text-amber-600" />
+                  Driver Assignment
+                </h3>
+                <div className="text-center py-4">
+                  <User className="w-12 h-12 text-amber-400 mx-auto mb-3" />
+                  <p className="text-slate-600 font-medium">No driver assigned</p>
+                  <p className="text-slate-500 text-sm mb-4">This vehicle is available for driver assignment</p>
+                  <button
+                    onClick={() => console.log('Assign driver to vehicle:', vehicle.vehicleNumber)}
+                    className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 font-medium text-sm mx-auto"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Assign Driver
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column */}

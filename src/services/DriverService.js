@@ -543,6 +543,163 @@ class DriverService {
 
 
   /**
+   * Assign driver to vehicle by driver ID
+   * @param {string} vehicleNumber - Vehicle number
+   * @param {string} driverId - Driver ID (MongoDB ObjectId)
+   * @returns {Promise<Object>} Assignment response
+   */
+  async assignDriverToVehicle(vehicleNumber, driverId) {
+    try {
+      console.log('🚀 Assigning driver to vehicle:', { vehicleNumber, driverId })
+      
+      const response = await baseApiService.post(`/vms/vehicle/${vehicleNumber}/assign-driver`, {
+        driverId: driverId
+      })
+      
+      console.log('📥 Driver assignment response:', response)
+      return response
+    } catch (error) {
+      console.error('❌ Error assigning driver to vehicle:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
+   * Assign driver to vehicle by license number
+   * @param {string} vehicleNumber - Vehicle number
+   * @param {string} driverLicenseNo - Driver license number
+   * @returns {Promise<Object>} Assignment response
+   */
+  async assignDriverToVehicleByLicense(vehicleNumber, driverLicenseNo) {
+    try {
+      console.log('🚀 Assigning driver to vehicle by license:', { vehicleNumber, driverLicenseNo })
+      
+      // First, find the driver by license number
+      const driver = await this.searchDriver(driverLicenseNo)
+      if (!driver || !driver.driver) {
+        throw new Error('Driver not found with license number: ' + driverLicenseNo)
+      }
+      
+      // Then assign using the driver ID
+      return await this.assignDriverToVehicle(vehicleNumber, driver.driver.id)
+    } catch (error) {
+      console.error('❌ Error assigning driver to vehicle by license:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
+   * Assign driver to vehicle using driverLicenseNo in request body (API format)
+   * @param {string} vehicleNumber - Vehicle number
+   * @param {string} driverLicenseNo - Driver license number
+   * @returns {Promise<Object>} Assignment response
+   */
+  async assignDriverToVehicleWithLicenseBody(vehicleNumber, driverLicenseNo) {
+    try {
+      console.log('🚀 Assigning driver to vehicle with license body:', { vehicleNumber, driverLicenseNo })
+      
+      // Use the API format that expects driverLicenseNo in the body
+      const response = await baseApiService.post(`/vms/vehicle/${vehicleNumber}/assign-driver`, {
+        driverLicenseNo: driverLicenseNo
+      })
+      
+      console.log('📥 Driver assignment response:', response)
+      return response
+    } catch (error) {
+      console.error('❌ Error assigning driver to vehicle with license body:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
+   * Change vehicle driver
+   * @param {string} vehicleNumber - Vehicle number
+   * @param {string} newDriverId - New driver ID (MongoDB ObjectId)
+   * @returns {Promise<Object>} Change response
+   */
+  async changeVehicleDriver(vehicleNumber, newDriverId) {
+    try {
+      console.log('🚀 Changing vehicle driver:', { vehicleNumber, newDriverId })
+      
+      const response = await baseApiService.put(`/vms/vehicle/${vehicleNumber}/change-driver`, {
+        newDriverId: newDriverId
+      })
+      
+      console.log('📥 Driver change response:', response)
+      return response
+    } catch (error) {
+      console.error('❌ Error changing vehicle driver:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
+   * Remove driver from vehicle
+   * @param {string} vehicleNumber - Vehicle number
+   * @returns {Promise<Object>} Removal response
+   */
+  async removeDriverFromVehicle(vehicleNumber) {
+    try {
+      console.log('🚀 Removing driver from vehicle:', { vehicleNumber })
+      
+      const response = await baseApiService.delete(`/vms/vehicle/${vehicleNumber}/remove-driver`)
+      
+      console.log('📥 Driver removal response:', response)
+      return response
+    } catch (error) {
+      console.error('❌ Error removing driver from vehicle:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
+   * Get vehicle with driver information
+   * @param {string} vehicleNumber - Vehicle number
+   * @returns {Promise<Object>} Vehicle with driver data
+   */
+  async getVehicleWithDriver(vehicleNumber) {
+    try {
+      console.log('🚀 Getting vehicle with driver:', { vehicleNumber })
+      
+      const response = await baseApiService.get(`/vms/vehicle/${vehicleNumber}/with-driver`)
+      
+      console.log('📥 Vehicle with driver response:', response)
+      return response
+    } catch (error) {
+      console.error('❌ Error getting vehicle with driver:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
+   * Assign driver to vehicle and refresh vehicle data
+   * @param {string} vehicleNumber - Vehicle number
+   * @param {string} driverId - Driver ID (MongoDB ObjectId)
+   * @returns {Promise<Object>} Updated vehicle with driver data
+   */
+  async assignDriverAndRefresh(vehicleNumber, driverId) {
+    try {
+      console.log('🚀 Assigning driver and refreshing vehicle data:', { vehicleNumber, driverId })
+      
+      // First assign the driver
+      const assignmentResponse = await this.assignDriverToVehicle(vehicleNumber, driverId)
+      console.log('✅ Driver assigned successfully:', assignmentResponse)
+      
+      // Then get the updated vehicle with driver data
+      const vehicleWithDriver = await this.getVehicleWithDriver(vehicleNumber)
+      console.log('✅ Vehicle data refreshed:', vehicleWithDriver)
+      
+      return {
+        assignment: assignmentResponse,
+        vehicle: vehicleWithDriver
+      }
+    } catch (error) {
+      console.error('❌ Error assigning driver and refreshing:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
    * Handle API errors with user-friendly messages
    * @param {Error} error - API error
    * @returns {Error} Formatted error

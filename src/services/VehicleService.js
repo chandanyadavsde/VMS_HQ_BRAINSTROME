@@ -288,7 +288,7 @@ class VehicleService {
         'custrecord_insurance_attachment_ag',
         'custrecord_permit_attachment_ag',
         'custrecord_puc_attachment_ag',
-        'custrecord_tms_vehicle_fit_cert_attach'
+        'custrecord_vehicle_fit_cert_attachment_ag'
       ]
       
       fileFields.forEach(fieldName => {
@@ -303,15 +303,13 @@ class VehicleService {
       
       console.log('📤 Sending API request to create vehicle...')
       
-      // Debug FormData contents
-      console.log('📋 FormData contents:')
-      for (let [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`)
-        } else {
-          console.log(`  ${key}: ${value}`)
-        }
-      }
+      // Log summary instead of all FormData contents for better performance
+      const fileCount = fileFields.reduce((count, fieldName) => {
+        const files = vehicleData[fieldName]
+        return count + (files && Array.isArray(files) ? files.length : 0)
+      }, 0)
+      
+      console.log(`📋 Payload summary: ${Object.keys(apiData).length} fields, ${fileCount} files`)
       
       // Use fetch directly for FormData to avoid BaseApiService JSON handling
       const response = await fetch(`${baseApiService.baseURL}/vms/vehicle`, {
@@ -321,17 +319,25 @@ class VehicleService {
       })
       
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        // Handle API error response format: {"error": "Vehicle number already exists"}
+        try {
+          const errorData = await response.json()
+          if (errorData.error) {
+            throw new Error(errorData.error)
+          }
+        } catch (parseError) {
+          // If JSON parsing fails, fall back to status text
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
       }
       
       const responseData = await response.json()
       
       console.log('✅ Vehicle created successfully:', responseData)
-      return {
-        success: true,
-        message: 'Vehicle created successfully',
-        vehicle: responseData
-      }
+      
+      // Return the actual vehicle data directly (not wrapped)
+      // Based on the API response structure you provided
+      return responseData
       
     } catch (error) {
       console.error('❌ Error creating vehicle:', error)
@@ -345,13 +351,12 @@ class VehicleService {
    * @returns {Object} API-formatted data
    */
   transformFormDataToAPI(formData) {
-    console.log('🔄 Transforming form data to API format:', formData)
+    console.log('🔄 Transforming form data to API format...')
     
     const apiData = {
       // REQUIRED API Fields
       custrecord_vehicle_number: formData.custrecord_vehicle_number,
       custrecord_vehicle_type_ag: formData.custrecord_vehicle_type_ag,
-      custrecord_driving_license_no: formData.custrecord_driving_license_no,
       
       // Optional Basic Information
       custrecord_vehicle_name_ag: formData.custrecord_vehicle_name_ag || '',
@@ -400,15 +405,33 @@ class VehicleService {
       fcm_token: formData.fcm_token || '',
       
       // Vendor Information (JSON string as per API contract)
-      custrecord_vendor_name_ag: JSON.stringify({
-        id: 'VEN001',
-        name: formData.custrecord_vendor_name_ag || 'Default Vendor',
-        isInactive: false
-      }),
+      custrecord_vendor_name_ag: (() => {
+        // If it's already a JSON string, use it as is
+        if (typeof formData.custrecord_vendor_name_ag === 'string') {
+          try {
+            // Try to parse it to see if it's already valid JSON
+            JSON.parse(formData.custrecord_vendor_name_ag)
+            return formData.custrecord_vendor_name_ag
+          } catch (e) {
+            // If it's not valid JSON, treat it as a plain string and convert to JSON
+            return JSON.stringify({
+              name: formData.custrecord_vendor_name_ag || 'Default Vendor',
+              contact: formData.custrecord_vendor_contact || '+91-0000000000',
+              isInactive: false
+            })
+          }
+        }
+        // If it's an object, stringify it
+        return JSON.stringify(formData.custrecord_vendor_name_ag || {
+          name: 'Default Vendor',
+          contact: '+91-0000000000',
+          isInactive: false
+        })
+      })(),
       
     }
     
-    console.log('✅ Transformed API data:', apiData)
+    console.log('✅ API data transformation completed')
     return apiData
   }
 

@@ -4,11 +4,13 @@ import { Users, Search, Filter, Building2, Activity } from 'lucide-react'
 import { getThemeColors } from '../../utils/theme.js'
 import { BaseModal } from '../common'
 import useMasters from './hooks/useMasters.js'
+import VehicleService from '../../services/VehicleService.js'
 import MastersHeader from './MastersHeader.jsx'
 import MastersTabs from './MastersTabs.jsx'
 import VehicleGrid from './Vehicle/VehicleGrid.jsx'
 import DriverGrid from './Driver/DriverGrid.jsx'
 import DriverFormModal from './Driver/DriverForm/DriverFormModal.jsx'
+import VehicleFormModal from './Vehicle/VehicleForm/VehicleFormModal.jsx'
 import AssignmentModal from './Assignment/AssignmentModal.jsx'
 import UnifiedFormModal from './Unified/UnifiedFormModal.jsx'
 import PaginationControls from './PaginationControls.jsx'
@@ -25,6 +27,7 @@ const MastersContainer = ({ currentTheme = 'teal' }) => {
     error,
     pagination,
     createDriver,
+    createVehicle,
     assignDriver,
     updateVehicle,
     updateDriver,
@@ -42,6 +45,7 @@ const MastersContainer = ({ currentTheme = 'teal' }) => {
   const [selectedStatus, setSelectedStatus] = useState('all')
   
   // Modal State
+  const [showVehicleModal, setShowVehicleModal] = useState(false)
   const [showDriverModal, setShowDriverModal] = useState(false)
   const [showAssignmentModal, setShowAssignmentModal] = useState(false)
   const [showUnifiedModal, setShowUnifiedModal] = useState(false)
@@ -311,6 +315,16 @@ const MastersContainer = ({ currentTheme = 'teal' }) => {
       </div>
 
 
+
+      {/* Vehicle Form Modal */}
+      <VehicleFormModal
+        isOpen={showVehicleModal}
+        onClose={handleCloseModals}
+        vehicle={editingVehicle}
+        onCreateVehicle={createVehicle}
+        onUpdateVehicle={updateVehicle}
+        currentTheme={currentTheme}
+      />
 
       {/* Driver Form Modal */}
       <DriverFormModal

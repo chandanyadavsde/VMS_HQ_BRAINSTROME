@@ -33,15 +33,20 @@ const AssignmentModal = ({
     if (!selectedDriver || !vehicle) return
 
     try {
+      console.log('🚀 Submitting driver assignment:', { vehicle, selectedDriver })
+      
       await onAssignDriver(vehicle.id, selectedDriver, {
         type: driverType,
         status: assignmentStatus,
         notes,
         assignedDate: new Date().toISOString().split('T')[0]
       })
+      
+      console.log('✅ Driver assignment completed successfully')
       onClose()
     } catch (error) {
-      console.error('Error assigning driver:', error)
+      console.error('❌ Error assigning driver:', error)
+      // The error will be handled by the parent component
     }
   }
 
@@ -140,7 +145,7 @@ const AssignmentModal = ({
                 <option value="" className="bg-gray-800 text-white">Choose a driver</option>
                 {availableDrivers.map(driver => (
                   <option key={driver.id} value={driver.id} className="bg-gray-800 text-white">
-                    {driver.name} - {driver.identification.licenseNumber}
+                    {driver.name} - {driver.identification?.licenseNumber || 'No License'} - {driver.contact?.phone || 'No Phone'}
                   </option>
                 ))}
               </select>

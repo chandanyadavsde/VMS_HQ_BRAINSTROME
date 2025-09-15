@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Filter, MoreHorizontal, Plus, Car, User, Phone, MapPin, Building2, Calendar, UserCheck, Eye, FileText, AlertCircle, RefreshCw } from 'lucide-react'
 import VehicleDetailsPopup from './VehicleDetailsPopup'
 import ContactManagementModal from './ContactManagementModal'
-import DriverManagementModal from './DriverManagementModal'
+import DriverAssignmentModal from './DriverAssignmentModal'
 import DriverDetailsModal from './DriverDetailsModal'
 import DriverFormModal from './Driver/DriverForm/DriverFormModal'
 import VehicleFormModal from './Vehicle/VehicleForm/VehicleFormModal'
@@ -144,21 +144,55 @@ const MastersTable = () => {
     }
   }
 
-  const createVehicle = async (vehicleData) => {
+  const createVehicle = async (apiResponse) => {
     try {
-      console.log('🚗 MastersTable: Creating vehicle:', vehicleData)
-      const response = await VehicleService.createVehicle(vehicleData)
-      console.log('✅ MastersTable: Vehicle created successfully:', response)
+      console.log('🚗 MastersTable: Processing vehicle creation response:', apiResponse)
       
-      // Refresh the vehicle list
-      await fetchVehicles()
-      
-      // Close the modal
+      // Close the modal immediately for better UX
       setShowVehicleModal(false)
       
-      return response
+      // Transform the API response to match our UI structure
+      const transformedVehicle = {
+        id: apiResponse._id,
+        vehicleNumber: apiResponse.custrecord_vehicle_number,
+        driverName: apiResponse.assignedDriver?.custrecord_driver_name || 'No Driver Assigned',
+        mobileNumber: apiResponse.assignedDriver?.custrecord_driver_mobile_no || 'N/A',
+        status: apiResponse.approved_by_hq === 'approved' ? 'available' : 'pending',
+        currentPlant: apiResponse.currentPlant || 'N/A',
+        vendorName: (() => {
+          const vendor = apiResponse.custrecord_vendor_name_ag
+          if (typeof vendor === 'object' && vendor?.name) {
+            return vendor.name
+          }
+          return 'N/A'
+        })(),
+        arrivedAtPlant: apiResponse.custrecord_datecreate_vehicle_master 
+          ? new Date(apiResponse.custrecord_datecreate_vehicle_master).toLocaleDateString()
+          : 'Not Available',
+        createdBy: apiResponse.custrecord_create_by || 'N/A',
+        contactPersons: apiResponse.contactPersons || [],
+        rawData: apiResponse,
+        hasDriver: !!apiResponse.assignedDriver,
+        hasChecklist: apiResponse.checklistConfirmed || false,
+        hasContacts: apiResponse.contactPersons && apiResponse.contactPersons.length > 0,
+        approvalStatus: apiResponse.approved_by_hq,
+        approvalMeta: apiResponse.approvalMeta
+      }
+      
+      // Add the new vehicle to the list
+      setVehicles(prev => [transformedVehicle, ...prev])
+      
+      // Update pagination counts
+      setPagination(prev => ({
+        ...prev,
+        totalVehicles: prev.totalVehicles + 1
+      }))
+      
+      console.log('🎉 Vehicle created and added to list successfully!')
+      return apiResponse
+      
     } catch (err) {
-      console.error('❌ MastersTable: Error creating vehicle:', err)
+      console.error('❌ MastersTable: Error processing vehicle creation:', err)
       setError(err.message)
       throw err
     }
@@ -356,8 +390,22 @@ const MastersTable = () => {
   }
 
   const handleDriverAction = (vehicle) => {
-    setSelectedVehicleForAction(vehicle)
-    setShowDriverModal(true)
+    console.log('🚗 Driver action clicked for vehicle:', vehicle)
+    console.log('🚗 Vehicle driver data:', vehicle.rawData?.assignedDriver)
+    console.log('🚗 Vehicle driver name:', vehicle.driverName)
+    
+    // Check if vehicle has an actual assigned driver
+    const hasAssignedDriver = vehicle.rawData?.assignedDriver && 
+                             vehicle.driverName !== 'No Driver Assigned'
+    
+    if (hasAssignedDriver) {
+      // Open driver details modal for assigned driver
+      setSelectedDriver(vehicle.rawData.assignedDriver)
+    } else {
+      // Open driver assignment modal for vehicles with no driver
+      setSelectedVehicleForAction(vehicle)
+      setShowDriverModal(true)
+    }
   }
 
   const handleImageClick = (driver) => {
@@ -956,14 +1004,20 @@ const MastersTable = () => {
           )}
         </AnimatePresence>
 
-        {/* Driver Management Modal */}
+        {/* Driver Assignment Modal */}
         <AnimatePresence>
           {showDriverModal && selectedVehicleForAction && (
-            <DriverManagementModal
+            <DriverAssignmentModal
               vehicle={selectedVehicleForAction}
               onClose={() => {
                 setShowDriverModal(false)
                 setSelectedVehicleForAction(null)
+              }}
+              onDriverAssigned={(vehicle, driver) => {
+                console.log('🎉 Driver assigned:', { vehicle, driver })
+                // TODO: Update vehicle list with assigned driver
+                // Refresh the vehicle data or update the specific vehicle
+                fetchVehicles()
               }}
             />
           )}
