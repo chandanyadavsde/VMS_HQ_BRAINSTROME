@@ -255,6 +255,73 @@ const MastersTable = () => {
     }
   }
 
+  const handleVehicleUpdate = async (vehicleNumber, patchData) => {
+    try {
+      console.log('🔄 MastersTable: Updating vehicle:', vehicleNumber, patchData)
+      
+      // Use VehicleService to update the vehicle
+      const response = await VehicleService.updateVehicle(vehicleNumber, patchData)
+      console.log('✅ MastersTable: Vehicle updated successfully:', response)
+      
+      // Extract updated vehicle data from response
+      const updatedVehicleData = response.vehicle || response.data || response
+      
+      // Update the selected vehicle immediately with fresh data
+      if (selectedVehicle && (selectedVehicle.vehicleNumber === vehicleNumber || selectedVehicle.custrecord_vehicle_number === vehicleNumber)) {
+        console.log('🔄 Updating selected vehicle with fresh data:', updatedVehicleData)
+        console.log('📷 Image arrays in API response:', {
+          rc: updatedVehicleData.rawData?.custrecord_rc_doc_attach?.length || 0,
+          insurance: updatedVehicleData.rawData?.custrecord_insurance_attachment_ag?.length || 0,
+          permit: updatedVehicleData.rawData?.custrecord_permit_attachment_ag?.length || 0,
+          puc: updatedVehicleData.rawData?.custrecord_puc_attachment_ag?.length || 0
+        })
+        
+        // Merge the updated data with existing vehicle structure
+        const updatedSelectedVehicle = {
+          ...selectedVehicle,
+          ...updatedVehicleData,
+          // Ensure we update the current plant field specifically
+          currentPlant: updatedVehicleData.currentPlant || selectedVehicle.currentPlant,
+          // Update the rawData if available (this contains the document dates and image arrays)
+          rawData: {
+            ...selectedVehicle.rawData,
+            ...updatedVehicleData.rawData,
+            // Specifically update document end dates
+            custrecord_rc_end_date: updatedVehicleData.custrecord_rc_end_date || selectedVehicle.rawData?.custrecord_rc_end_date,
+            custrecord_insurance_end_date_ag: updatedVehicleData.custrecord_insurance_end_date_ag || selectedVehicle.rawData?.custrecord_insurance_end_date_ag,
+            custrecord_permit_end_date: updatedVehicleData.custrecord_permit_end_date || selectedVehicle.rawData?.custrecord_permit_end_date,
+            custrecord_puc_end_date_ag: updatedVehicleData.custrecord_puc_end_date_ag || selectedVehicle.rawData?.custrecord_puc_end_date_ag,
+            custrecord_fitness_end_date: updatedVehicleData.custrecord_fitness_end_date || selectedVehicle.rawData?.custrecord_fitness_end_date,
+            // 🔧 FIX: Specifically update image arrays from API response
+            custrecord_rc_doc_attach: updatedVehicleData.rawData?.custrecord_rc_doc_attach || selectedVehicle.rawData?.custrecord_rc_doc_attach,
+            custrecord_insurance_attachment_ag: updatedVehicleData.rawData?.custrecord_insurance_attachment_ag || selectedVehicle.rawData?.custrecord_insurance_attachment_ag,
+            custrecord_permit_attachment_ag: updatedVehicleData.rawData?.custrecord_permit_attachment_ag || selectedVehicle.rawData?.custrecord_permit_attachment_ag,
+            custrecord_puc_attachment_ag: updatedVehicleData.rawData?.custrecord_puc_attachment_ag || selectedVehicle.rawData?.custrecord_puc_attachment_ag
+          }
+        }
+        
+        console.log('📷 Updated image arrays in new state:', {
+          rc: updatedSelectedVehicle.rawData?.custrecord_rc_doc_attach?.length || 0,
+          insurance: updatedSelectedVehicle.rawData?.custrecord_insurance_attachment_ag?.length || 0,
+          permit: updatedSelectedVehicle.rawData?.custrecord_permit_attachment_ag?.length || 0,
+          puc: updatedSelectedVehicle.rawData?.custrecord_puc_attachment_ag?.length || 0
+        })
+        
+        setSelectedVehicle(updatedSelectedVehicle)
+      }
+      
+      // Refresh the vehicle list in background (no await to avoid blocking UI)
+      fetchVehicles(pagination.currentPage).catch(err => 
+        console.error('⚠️ Background refresh failed:', err)
+      )
+      
+      return updatedVehicleData
+    } catch (err) {
+      console.error('❌ MastersTable: Error updating vehicle:', err)
+      throw err
+    }
+  }
+
   const clearSearch = () => {
     setSearchQuery('')
     setSearchResult(null)
@@ -986,6 +1053,7 @@ const MastersTable = () => {
             <VehicleDetailsPopup
               vehicle={selectedVehicle}
               onClose={() => setSelectedVehicle(null)}
+              onVehicleUpdate={handleVehicleUpdate}
             />
           )}
         </AnimatePresence>

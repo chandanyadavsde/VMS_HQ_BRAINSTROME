@@ -236,6 +236,7 @@ const VehicleFormModal = ({
     { value: 'pune', label: 'Pune' },
     { value: 'solapur', label: 'Solapur' },
     { value: 'surat', label: 'Surat' },
+    { value: 'daman', label: 'Daman' },
     { value: 'free', label: 'Free (Not Assigned)' }
   ]
 

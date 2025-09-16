@@ -32,7 +32,7 @@ Content-Type: multipart/form-data (for file uploads)
   "custrecord_vehicle_number": "MH-12-AB-1234",
   "custrecord_vehicle_name_ag": "Blade Transport Vehicle",
   "custrecord_vehicle_type_ag": "ODC|Lattice Tower",
-  "currentPlant": "pune|solapur|surat|free",
+  "currentPlant": "pune|solapur|surat|daman|free",
   "custrecord_age_of_vehicle": "5 years",
   "custrecord_owner_name_ag": "Vehicle Owner Name",
   "custrecord_owner_no_ag": "+91-9876543210",
@@ -301,7 +301,7 @@ POST /vms/vehicle/{vehicleNumber}/set-in-transit
 **Request Body:**
 ```json
 {
-  "destinationPlant": "pune|solapur|surat",
+  "destinationPlant": "pune|solapur|surat|daman",
   "reason": "Plant transfer",
   "estimatedArrival": "2024-01-20T15:00:00.000Z"
 }
@@ -537,6 +537,7 @@ POST /vms/send-notification
 - `pune` - Pune Plant
 - `solapur` - Solapur Plant
 - `surat` - Surat Plant
+- `daman` - Daman Plant
 - `free` - Not assigned to any plant
 
 ### **License Categories**

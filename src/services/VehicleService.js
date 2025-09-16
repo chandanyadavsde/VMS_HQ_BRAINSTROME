@@ -244,12 +244,33 @@ class VehicleService {
           checklist: null, // No checklist
           custrecord_create_by: 'Supervisor',
           contactPersons: []
+        },
+        {
+          _id: 'mock-4',
+          custrecord_vehicle_number: 'MH12XX1004',
+          custrecord_vehicle_name_ag: 'Mock Vehicle 4',
+          currentPlant: 'daman',
+          assignedDriver: {
+            _id: 'driver-4',
+            custrecord_driver_name: 'Amit Patel',
+            custrecord_driver_mobile_no: '9876543214'
+          },
+          custrecord_vendor_name_ag: {
+            name: 'Daman Logistics'
+          },
+          checklist: {
+            date: '2024-01-25T00:00:00.000Z'
+          },
+          custrecord_create_by: 'Plant Manager',
+          contactPersons: [
+            { name: 'Ravi Kumar', phone: '9876543214' }
+          ]
         }
       ],
       pagination: {
         currentPage: 1,
         totalPages: 1,
-        totalVehicles: 3,
+        totalVehicles: 4,
         limit: 20,
         hasNext: false,
         hasPrev: false
@@ -258,6 +279,70 @@ class VehicleService {
 
     // Transform the mock data using the same method as real API
     return this.transformVehicleResponse(mockApiResponse)
+  }
+
+  /**
+   * Update vehicle with PATCH (partial update)
+   * @param {string} vehicleNumber - Vehicle number to update
+   * @param {Object} patchData - Fields to update
+   * @returns {Promise<Object>} Updated vehicle data
+   */
+  async updateVehicle(vehicleNumber, patchData) {
+    try {
+      console.log('🔄 Patching vehicle:', vehicleNumber, patchData)
+      
+      // Check if patchData is already FormData
+      let formData
+      if (patchData instanceof FormData) {
+        formData = patchData
+        console.log('📁 Using provided FormData directly')
+      } else {
+        // Build FormData for file uploads if needed
+        formData = new FormData()
+        
+        // Add only the fields that changed
+        Object.keys(patchData).forEach(key => {
+          if (patchData[key] instanceof File) {
+            formData.append(key, patchData[key])
+          } else if (patchData[key] !== null && patchData[key] !== undefined) {
+            formData.append(key, patchData[key])
+          }
+        })
+      }
+      
+      const response = await baseApiService.patch(
+        `/vms/vehicle/${vehicleNumber}`, 
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      )
+      
+      console.log('✅ Vehicle patched successfully:', response)
+      console.log('📷 Raw API response image arrays:', {
+        rc: response.rawData?.custrecord_rc_doc_attach?.length || response.vehicle?.rawData?.custrecord_rc_doc_attach?.length || response.data?.rawData?.custrecord_rc_doc_attach?.length || 'not found',
+        insurance: response.rawData?.custrecord_insurance_attachment_ag?.length || response.vehicle?.rawData?.custrecord_insurance_attachment_ag?.length || response.data?.rawData?.custrecord_insurance_attachment_ag?.length || 'not found',
+        permit: response.rawData?.custrecord_permit_attachment_ag?.length || response.vehicle?.rawData?.custrecord_permit_attachment_ag?.length || response.data?.rawData?.custrecord_permit_attachment_ag?.length || 'not found',
+        puc: response.rawData?.custrecord_puc_attachment_ag?.length || response.vehicle?.rawData?.custrecord_puc_attachment_ag?.length || response.data?.rawData?.custrecord_puc_attachment_ag?.length || 'not found'
+      })
+      
+      // Ensure consistent response format
+      const vehicleData = response.vehicle || response.data || response
+      return { 
+        vehicle: vehicleData, 
+        data: vehicleData,
+        ...response 
+      }
+    } catch (error) {
+      console.error('❌ Error patching vehicle:', error)
+      if (error.response?.data?.error === 'Vehicle not found') {
+        throw new Error('Vehicle not found')
+      }
+      if (error.response?.data?.error === 'Invalid field value') {
+        throw new Error('Invalid field value')
+      }
+      throw this.handleError(error)
+    }
   }
 
   /**

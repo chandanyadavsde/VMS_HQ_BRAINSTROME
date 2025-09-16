@@ -284,28 +284,29 @@ const useMasters = () => {
     }
   }, [fetchVehicles])
 
-  const updateVehicle = useCallback(async (vehicleId, vehicleData) => {
+  const updateVehicle = useCallback(async (vehicleNumber, patchData) => {
     try {
       setLoading(true)
       setError(null)
+      console.log('🔄 Updating vehicle:', vehicleNumber, patchData)
       
-      // For now, use mock data
-      // In production, this would be: const response = await apiService.put(`/vehicles/${vehicleId}`, vehicleData)
-      await new Promise(resolve => setTimeout(resolve, 800)) // Simulate API delay
+      // Use real API with PATCH
+      const response = await VehicleService.updateVehicle(vehicleNumber, patchData)
+      console.log('✅ Vehicle updated successfully:', response)
       
-      setVehicles(prev => prev.map(vehicle => 
-        vehicle.id === vehicleId 
-          ? { ...vehicle, ...vehicleData, updatedAt: new Date().toISOString().split('T')[0] }
-          : vehicle
-      ))
+      // Refresh the vehicle data after successful update
+      await fetchVehicles()
+      
+      return response
     } catch (err) {
-      setError('Failed to update vehicle')
-      console.error('Error updating vehicle:', err)
+      const errorMessage = err.message || 'Failed to update vehicle'
+      setError(errorMessage)
+      console.error('❌ Error updating vehicle:', err)
       throw err
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [fetchVehicles])
 
   const updateDriver = useCallback(async (driverId, driverData) => {
     try {
