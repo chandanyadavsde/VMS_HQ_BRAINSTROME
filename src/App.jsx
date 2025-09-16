@@ -42,7 +42,7 @@ const Header = ({ isScrolled, currentTheme, user, onLogout }) => {
   }
 
   return (
-    <div className={`${isScrolled ? 'fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' : 'relative bg-white/90 backdrop-blur-sm'} transition-all duration-300`}>
+    <div className={`${isScrolled ? 'fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200' : 'relative bg-white/90 backdrop-blur-sm border-b border-gray-200'} transition-all duration-300`}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className={`flex items-center justify-between transition-all duration-300 ${
           isScrolled ? 'h-14' : 'h-16'
@@ -508,11 +508,11 @@ const AppContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <Header isScrolled={isScrolled} currentTheme={currentTheme} user={user} onLogout={handleLogout} />
       
-      {/* Main Content with Conditional Top Spacing */}
-      <div className={`${isScrolled ? 'pt-16' : 'pt-8'} p-4 flex-1`}>
+      {/* Main Content - No padding, let components handle their own spacing */}
+      <div className={`${isScrolled ? 'pt-16' : 'pt-0'} flex-1`}>
         <Routes>
           <Route path="/" element={<Dashboard currentTheme={currentTheme} />} />
           <Route path="/approvals" element={<Approvals currentTheme={currentTheme} />} />
