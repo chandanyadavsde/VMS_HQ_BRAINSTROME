@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Filter, MoreHorizontal, Plus, Car, User, Phone, MapPin, Building2, Calendar, UserCheck, Eye, FileText, AlertCircle, RefreshCw } from 'lucide-react'
+import { Search, Car, User, Phone, MapPin, Building2, Calendar, UserCheck, Eye, FileText, AlertCircle, RefreshCw } from 'lucide-react'
 import VehicleDetailsPopup from './VehicleDetailsPopup'
 import ContactManagementModal from './ContactManagementModal'
 import DriverAssignmentModal from './DriverAssignmentModal'
@@ -567,7 +567,6 @@ const MastersTable = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Plus className="w-3.5 h-3.5" />
             {viewMode === 'vehicle' ? '+ Vehicle' : '+ Driver'}
           </motion.button>
         </div>
@@ -628,21 +627,7 @@ const MastersTable = () => {
               </button>
             </div>
 
-            {/* Filter and Group Buttons - Only show in Vehicle mode - Ultra Compact */}
-            {viewMode === 'vehicle' && (
-              <div className="flex items-center gap-1">
-                <button className="flex items-center gap-1 px-2 py-1 bg-white hover:bg-orange-50 border border-slate-200 rounded-md text-slate-700 transition-colors text-xs font-medium">
-                  <Filter className="w-3 h-3" />
-                  Filter
-                </button>
-                <button className="flex items-center gap-1 px-2 py-1 bg-white hover:bg-orange-50 border border-slate-200 rounded-md text-slate-700 transition-colors text-xs font-medium">
-                  Group
-                </button>
-                <button className="p-1 bg-white hover:bg-orange-50 border border-slate-200 rounded-md text-slate-700 transition-colors">
-                  <MoreHorizontal className="w-3 h-3" />
-                </button>
-              </div>
-            )}
+            {/* Filter, Group, and More buttons removed - not needed */}
           </div>
         </div>
 
@@ -653,6 +638,9 @@ const MastersTable = () => {
                       result={searchResult}
                       onClose={clearSearch}
                       viewMode={viewMode}
+                      onVehicleClick={handleVehicleClick}
+                      onDriverAction={handleDriverAction}
+                      onContactAction={handleContactAction}
                     />
                   )}
                 </AnimatePresence>

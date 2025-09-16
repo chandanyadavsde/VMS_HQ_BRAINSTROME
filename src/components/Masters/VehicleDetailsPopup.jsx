@@ -1316,14 +1316,7 @@ const VehicleDetailsPopup = ({ vehicle, onClose, onVehicleUpdate }) => {
                             Added: {formatDate(contact.addedDate)}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <button className="p-2 hover:bg-blue-50 rounded-lg transition-colors">
-                            <Edit className="w-4 h-4 text-blue-600" />
-                          </button>
-                          <button className="p-2 hover:bg-red-50 rounded-lg transition-colors">
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          </button>
-                        </div>
+                        {/* No edit/delete buttons - only add functionality available */}
                       </div>
                     </div>
                   ))}

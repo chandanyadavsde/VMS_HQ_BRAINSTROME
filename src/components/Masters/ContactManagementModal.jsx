@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { X, User, Phone, Plus, Trash2, Edit, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { X, User, Phone, Plus, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import baseApiService from '../../services/BaseApiService'
 
 const ContactManagementModal = ({ vehicle, onClose, onContactUpdate }) => {
@@ -86,9 +86,7 @@ const ContactManagementModal = ({ vehicle, onClose, onContactUpdate }) => {
     }
   }
 
-  const handleRemoveContact = (id) => {
-    setContacts(contacts.filter(contact => contact.id !== id))
-  }
+  // Note: Remove functionality not implemented - no API endpoint available
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -207,17 +205,7 @@ const ContactManagementModal = ({ vehicle, onClose, onContactUpdate }) => {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button className="p-1.5 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors">
-                      <Edit className="w-3 h-3 text-orange-600" />
-                    </button>
-                    <button 
-                      onClick={() => handleRemoveContact(contact.id)}
-                      className="p-1.5 bg-red-100 hover:bg-red-200 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-3 h-3 text-red-600" />
-                    </button>
-                  </div>
+                  {/* No edit/delete buttons - only add functionality available */}
                 </div>
               </div>
             ))

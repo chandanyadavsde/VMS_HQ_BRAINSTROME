@@ -2,7 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Search, CheckCircle, AlertCircle, Car, User, Phone, MapPin, Building2, Calendar, UserCheck } from 'lucide-react'
 
-const SearchResult = ({ result, onClose, viewMode }) => {
+const SearchResult = ({ result, onClose, viewMode, onVehicleClick, onDriverAction, onContactAction }) => {
   if (!result) return null
 
   const { vehicle, isSearchResult } = result
@@ -40,7 +40,10 @@ const SearchResult = ({ result, onClose, viewMode }) => {
             <>
               {/* Vehicle */}
               <div className="col-span-2">
-                <button className="flex items-center gap-2 text-left w-full hover:bg-orange-50 p-1.5 rounded-lg transition-colors">
+                <button 
+                  onClick={() => onVehicleClick(vehicle)}
+                  className="flex items-center gap-2 text-left w-full hover:bg-orange-50 p-1.5 rounded-lg transition-colors"
+                >
                   <div className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
                     <Car className="w-3.5 h-3.5 text-orange-600" />
                   </div>
@@ -53,7 +56,10 @@ const SearchResult = ({ result, onClose, viewMode }) => {
 
               {/* Driver */}
               <div className="col-span-2">
-                <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => onDriverAction(vehicle)}
+                  className="flex items-center gap-2 w-full hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
+                >
                   <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center">
                     <User className="w-3 h-3 text-blue-600" />
                   </div>
@@ -61,7 +67,7 @@ const SearchResult = ({ result, onClose, viewMode }) => {
                     <div className="font-medium text-slate-800 text-xs">{vehicle.driverName}</div>
                     <div className="text-xs text-slate-500">Driver</div>
                   </div>
-                </div>
+                </button>
               </div>
 
               {/* Mobile */}
@@ -118,9 +124,13 @@ const SearchResult = ({ result, onClose, viewMode }) => {
 
               {/* Other */}
               <div className="col-span-1 flex justify-center">
-                <div className="w-6 h-6 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <User className="w-3 h-3 text-purple-600" />
-                </div>
+                <button 
+                  onClick={() => onContactAction(vehicle)}
+                  className="p-1.5 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors"
+                  title="Manage Contacts"
+                >
+                  <User className="w-3 h-3 text-orange-600" />
+                </button>
               </div>
             </>
           ) : (
