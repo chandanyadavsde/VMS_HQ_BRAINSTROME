@@ -466,8 +466,9 @@ const MastersTable = () => {
                              vehicle.driverName !== 'No Driver Assigned'
     
     if (hasAssignedDriver) {
-      // Open driver details modal for assigned driver
-      setSelectedDriver(vehicle.rawData.assignedDriver)
+      // Driver is assigned - do nothing (no click functionality)
+      console.log('🚗 Driver is assigned - no action taken')
+      return
     } else {
       // Open driver assignment modal for vehicles with no driver
       setSelectedVehicleForAction(vehicle)
@@ -817,18 +818,33 @@ const MastersTable = () => {
 
                                      {/* Driver */}
                    <div className="col-span-2">
-                     <button
-                       onClick={() => handleDriverAction(vehicle)}
-                       className="flex items-center gap-2 text-left w-full group-hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
-                     >
-                       <div className="w-6 h-6 rounded-lg bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors">
-                         <User className="w-3 h-3 text-blue-600" />
+                     {/* Check if driver is assigned to determine if clickable */}
+                     {vehicle.rawData?.assignedDriver && vehicle.driverName !== 'No Driver Assigned' ? (
+                       // Driver is assigned - not clickable
+                       <div className="flex items-center gap-2 text-left w-full p-1.5 rounded-lg">
+                         <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center">
+                           <User className="w-3 h-3 text-slate-600" />
+                         </div>
+                         <div>
+                           <div className="font-medium text-slate-800 text-xs">{vehicle.driverName}</div>
+                           <div className="text-xs text-slate-500">Driver</div>
+                         </div>
                        </div>
-                       <div>
-                         <div className="font-medium text-slate-800 text-xs">{vehicle.driverName}</div>
-                         <div className="text-xs text-slate-500">Driver</div>
-                       </div>
-                     </button>
+                     ) : (
+                       // No driver assigned - clickable
+                       <button
+                         onClick={() => handleDriverAction(vehicle)}
+                         className="flex items-center gap-2 text-left w-full group-hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
+                       >
+                         <div className="w-6 h-6 rounded-lg bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors">
+                           <User className="w-3 h-3 text-blue-600" />
+                         </div>
+                         <div>
+                           <div className="font-medium text-slate-800 text-xs">{vehicle.driverName}</div>
+                           <div className="text-xs text-slate-500">Driver</div>
+                         </div>
+                       </button>
+                     )}
                    </div>
 
                                      {/* Mobile */}

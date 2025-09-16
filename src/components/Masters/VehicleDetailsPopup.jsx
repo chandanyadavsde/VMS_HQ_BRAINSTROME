@@ -1221,62 +1221,71 @@ const VehicleDetailsPopup = ({ vehicle, onClose, onVehicleUpdate }) => {
               </div>
             </div>
 
-            {/* Driver Assignment - MOVED BELOW LEGAL DOCUMENTS */}
+            {/* Driver Assignment - Simple Display */}
             {vehicle.rawData?.assignedDriver && (
-              <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-                <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-600" />
+              <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                <h3 className="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-orange-600" />
                   Assigned Driver
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-sm text-slate-600">Driver Name</label>
-                    <p className="font-semibold text-slate-800">{vehicle.driverName}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-slate-600">Mobile Number</label>
-                    <p className="font-semibold text-slate-800 flex items-center gap-1">
-                      <Phone className="w-4 h-4" />
-                      {vehicle.mobileNumber}
+                    <label className="text-xs text-slate-600">Name</label>
+                    <p className="text-xs font-semibold text-slate-800">
+                      {vehicle.rawData?.assignedDriver?.custrecord_driver_name || 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm text-slate-600">License Category</label>
-                    <p className="font-semibold text-slate-800">{vehicle.rawData?.assignedDriver?.custrecord_license_category_ag || 'N/A'}</p>
+                    <label className="text-xs text-slate-600">Mobile</label>
+                    <p className="text-xs font-semibold text-slate-800">
+                      {vehicle.rawData?.assignedDriver?.custrecord_driver_mobile_no || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-600">License</label>
+                    <p className="text-xs font-semibold text-slate-800">
+                      {vehicle.rawData?.assignedDriver?.custrecord_driving_license_no || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-600">Category</label>
+                    <p className="text-xs font-semibold text-slate-800">
+                      {vehicle.rawData?.assignedDriver?.custrecord_license_category_ag || 'N/A'}
+                    </p>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                    driverApprovalStatus.color === 'green' ? 'bg-green-100 text-green-800' :
-                    driverApprovalStatus.color === 'orange' ? 'bg-orange-100 text-orange-800' :
-                    driverApprovalStatus.color === 'red' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
+                
+                <div className="mt-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    vehicle.rawData?.assignedDriver?.approved_by_hq === 'approved' 
+                      ? 'bg-green-100 text-green-700' 
+                      : vehicle.rawData?.assignedDriver?.approved_by_hq === 'pending'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-red-100 text-red-700'
                   }`}>
-                    <driverApprovalStatus.icon className="w-4 h-4 inline mr-1" />
-                    {driverApprovalStatus.text}
+                    {vehicle.rawData?.assignedDriver?.approved_by_hq === 'approved' 
+                      ? 'Approved' 
+                      : vehicle.rawData?.assignedDriver?.approved_by_hq === 'pending'
+                      ? 'Pending Approval'
+                      : 'Rejected'
+                    }
                   </span>
-                  <button
-                    onClick={() => console.log('View driver details:', vehicle.rawData?.assignedDriver)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md shadow-sm hover:shadow-md transition-all duration-300 font-medium text-xs"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    View Details
-                  </button>
                 </div>
               </div>
             )}
 
             {/* No Driver Assigned State */}
             {!vehicle.rawData?.assignedDriver && (
-              <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
-                <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                  <User className="w-5 h-5 text-amber-600" />
+              <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                <h3 className="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-orange-600" />
                   Driver Assignment
                 </h3>
-                <div className="text-center py-4">
-                  <User className="w-12 h-12 text-amber-400 mx-auto mb-3" />
-                  <p className="text-slate-600 font-medium">No driver assigned</p>
-                  <p className="text-slate-500 text-sm">This vehicle is available for driver assignment</p>
+                <div className="text-center py-2">
+                  <User className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+                  <p className="text-xs text-slate-600 font-medium">No driver assigned</p>
+                  <p className="text-xs text-slate-500">Available for assignment</p>
                 </div>
               </div>
             )}
