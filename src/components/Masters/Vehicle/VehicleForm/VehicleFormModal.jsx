@@ -14,9 +14,11 @@ import {
   Building,
   Save,
   Eye,
-  Download
+  Download,
+  AlertCircle
 } from 'lucide-react'
 import VehicleService from '../../../../services/VehicleService.js'
+import useDateValidation from '../../../../hooks/useDateValidation.js'
 
 const VehicleFormModal = ({
   isOpen,
@@ -26,6 +28,17 @@ const VehicleFormModal = ({
   onUpdateVehicle,
   currentTheme = 'teal'
 }) => {
+  // Date validation hook
+  const {
+    dateValidation,
+    updateStartDate,
+    updateEndDate,
+    getMinEndDate,
+    isAllValid,
+    getAllErrors,
+    resetAllValidations
+  } = useDateValidation()
+
   const [formData, setFormData] = useState({
     // Basic Information
     custrecord_vehicle_number: '',
@@ -112,20 +125,20 @@ const VehicleFormModal = ({
         custrecord_rc_no: '',
         custrecord_rc_start_date: '',
         custrecord_rc_end_date: '',
-        custrecord_rc_doc_attach: [],
+    custrecord_rc_doc_attach: [],
         custrecord_insurance_company_name_ag: '',
         custrecord_insurance_number_ag: '',
         custrecord_insurance_start_date_ag: '',
         custrecord_insurance_end_date_ag: '',
-        custrecord_insurance_attachment_ag: [],
+    custrecord_insurance_attachment_ag: [],
         custrecord_permit_number_ag: '',
         custrecord_permit_start_date: '',
         custrecord_permit_end_date: '',
-        custrecord_permit_attachment_ag: [],
+    custrecord_permit_attachment_ag: [],
         custrecord_puc_number: '',
         custrecord_puc_start_date_ag: '',
         custrecord_puc_end_date_ag: '',
-        custrecord_puc_attachment_ag: [],
+    custrecord_puc_attachment_ag: [],
         custrecord_tms_vehicle_fit_cert_vld_upto: '',
         custrecord_vehicle_fit_cert_attachment_ag: [],
         custrecord_create_by: 'admin',
@@ -142,6 +155,21 @@ const VehicleFormModal = ({
       ...prev,
       [field]: value
     }))
+  }
+
+  // Handle date changes with validation
+  const handleDateChange = (field, value, documentType) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+
+    // Update validation based on field type
+    if (field.includes('_start_date')) {
+      updateStartDate(documentType, value)
+    } else if (field.includes('_end_date')) {
+      updateEndDate(documentType, value)
+    }
   }
 
   const handleFileUpload = (field, file) => {
@@ -196,15 +224,23 @@ const VehicleFormModal = ({
     setError(null)
     setSuccess(false)
     
+    // Check date validations before submission
+    if (!isAllValid()) {
+      const errors = getAllErrors()
+      setError(`Please fix date validation errors: ${errors.map(e => e.error).join(', ')}`)
+      setLoading(false)
+      return
+    }
+    
     try {
       console.log('📝 Submitting vehicle form data:', formData)
       
       if (isEditing) {
         await onUpdateVehicle(vehicle.id, formData)
       } else {
-        const response = await VehicleService.createVehicle(formData)
+      const response = await VehicleService.createVehicle(formData)
         // Call the parent's create callback if provided
-        if (onCreateVehicle) {
+      if (onCreateVehicle) {
           onCreateVehicle(response)
         }
       }
@@ -336,7 +372,7 @@ const VehicleFormModal = ({
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
                 <Car className="w-6 h-6 text-orange-600" />
-              </div>
+            </div>
               <div>
                 <h2 className="text-2xl font-bold text-slate-800">
                   {isEditing ? 'Edit Vehicle' : 'Add New Vehicle'}
@@ -344,12 +380,12 @@ const VehicleFormModal = ({
                 <p className="text-slate-600">Enter vehicle information and documents</p>
               </div>
             </div>
-            <button
+              <button
               onClick={onClose}
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
             >
               <X className="w-6 h-6 text-slate-400" />
-            </button>
+              </button>
           </div>
 
           {/* Error Display */}
@@ -358,11 +394,11 @@ const VehicleFormModal = ({
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
                   <span className="text-red-600 text-sm font-bold">!</span>
-                </div>
+                  </div>
                 <p className="text-red-800 font-medium">Error</p>
-              </div>
+                </div>
               <p className="text-red-700 mt-1">{error}</p>
-            </div>
+                </div>
           )}
 
           {/* Success Display */}
@@ -371,169 +407,169 @@ const VehicleFormModal = ({
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
                   <span className="text-green-600 text-sm font-bold">✓</span>
-                </div>
+                    </div>
                 <p className="text-green-800 font-medium">Success!</p>
-              </div>
+                  </div>
               <p className="text-green-700 mt-1">Vehicle {isEditing ? 'updated' : 'created'} successfully. Closing modal...</p>
-            </div>
-          )}
+                </div>
+            )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
+              {/* Basic Information */}
             <div className="bg-slate-50 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <Car className="w-5 h-5 text-orange-500" />
+                  <Car className="w-5 h-5 text-orange-500" />
                 Vehicle Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Vehicle Number *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.custrecord_vehicle_number}
+                      Vehicle Number *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.custrecord_vehicle_number}
                     onChange={(e) => handleInputChange('custrecord_vehicle_number', e.target.value.toUpperCase())}
                     placeholder="e.g., MH12AB1234"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors font-mono"
-                    required
-                  />
-                </div>
-                <div>
+                      required
+                    />
+                  </div>
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Vehicle Type *
-                  </label>
-                  <select
-                    value={formData.custrecord_vehicle_type_ag}
-                    onChange={(e) => handleInputChange('custrecord_vehicle_type_ag', e.target.value)}
+                      Vehicle Type *
+                    </label>
+                    <select
+                      value={formData.custrecord_vehicle_type_ag}
+                      onChange={(e) => handleInputChange('custrecord_vehicle_type_ag', e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                    required
-                  >
+                      required
+                    >
                     <option value="">Select Vehicle Type</option>
-                    {vehicleTypes.map(type => (
+                      {vehicleTypes.map(type => (
                       <option key={type.value} value={type.value}>
                         {type.label}
                       </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Vehicle Name / Model
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.custrecord_vehicle_name_ag}
-                    onChange={(e) => handleInputChange('custrecord_vehicle_name_ag', e.target.value)}
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.custrecord_vehicle_name_ag}
+                      onChange={(e) => handleInputChange('custrecord_vehicle_name_ag', e.target.value)}
                     placeholder="e.g., Tata 407, Mahindra Bolero"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                  />
-                </div>
-                <div>
+                    />
+                  </div>
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Current Plant
-                  </label>
-                  <select
-                    value={formData.currentPlant}
-                    onChange={(e) => handleInputChange('currentPlant', e.target.value)}
+                    </label>
+                    <select
+                      value={formData.currentPlant}
+                      onChange={(e) => handleInputChange('currentPlant', e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                  >
-                    <option value="">Select Plant</option>
-                    {plants.map(plant => (
+                    >
+                      <option value="">Select Plant</option>
+                      {plants.map(plant => (
                       <option key={plant.value} value={plant.value}>
                         {plant.label}
                       </option>
-                    ))}
-                  </select>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
-            </div>
 
             {/* Owner Information */}
             <div className="bg-slate-50 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-orange-500" />
+                  <User className="w-5 h-5 text-orange-500" />
                 Owner Information
-              </h3>
+                </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Owner Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.custrecord_owner_name_ag}
-                    onChange={(e) => handleInputChange('custrecord_owner_name_ag', e.target.value)}
+                      Owner Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.custrecord_owner_name_ag}
+                      onChange={(e) => handleInputChange('custrecord_owner_name_ag', e.target.value)}
                     placeholder="Owner's full name"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                  />
-                </div>
-                <div>
+                    />
+                  </div>
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Owner Phone Number
-                  </label>
-                  <input
+                    </label>
+                    <input
                     type="tel"
-                    value={formData.custrecord_owner_no_ag}
-                    onChange={(e) => handleInputChange('custrecord_owner_no_ag', e.target.value)}
+                      value={formData.custrecord_owner_no_ag}
+                      onChange={(e) => handleInputChange('custrecord_owner_no_ag', e.target.value)}
                     placeholder="+91 9876543210"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                  />
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
             {/* Technical Details */}
             <div className="bg-slate-50 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
                 <Settings className="w-5 h-5 text-orange-500" />
                 Technical Details
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Chassis Number
-                  </label>
-                  <input
-                    type="text"
+                    </label>
+                    <input
+                      type="text"
                     value={formData.custrecord_chassis_number}
                     onChange={(e) => handleInputChange('custrecord_chassis_number', e.target.value.toUpperCase())}
                     placeholder="Vehicle chassis number"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors font-mono"
-                  />
-                </div>
-                <div>
+                    />
+                  </div>
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Engine Number
-                  </label>
-                  <input
-                    type="text"
+                    </label>
+                    <input
+                      type="text"
                     value={formData.custrecord_engine_number_ag}
                     onChange={(e) => handleInputChange('custrecord_engine_number_ag', e.target.value.toUpperCase())}
                     placeholder="Vehicle engine number"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors font-mono"
-                  />
-                </div>
-                <div>
+                    />
+                  </div>
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Vehicle Age
-                  </label>
-                  <input
-                    type="text"
+                    </label>
+                    <input
+                      type="text"
                     value={formData.custrecord_age_of_vehicle}
                     onChange={(e) => handleInputChange('custrecord_age_of_vehicle', e.target.value)}
                     placeholder="e.g., 5 years"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                  />
-                </div>
-                <div>
+                    />
+                  </div>
+                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     GPS Availability
-                  </label>
+                    </label>
                   <div className="flex items-center space-x-4">
                     <label className="flex items-center">
-                      <input
+                    <input
                         type="radio"
                         name="gps"
                         checked={formData.custrecord_vehicle_master_gps_available === true}
@@ -543,7 +579,7 @@ const VehicleFormModal = ({
                       <span className="ml-2 text-sm text-slate-700">GPS Available</span>
                     </label>
                     <label className="flex items-center">
-                      <input
+                    <input
                         type="radio"
                         name="gps"
                         checked={formData.custrecord_vehicle_master_gps_available === false}
@@ -553,16 +589,16 @@ const VehicleFormModal = ({
                       <span className="ml-2 text-sm text-slate-700">No GPS</span>
                     </label>
                   </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
             {/* Documents Section */}
             <div className="bg-slate-50 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-orange-500" />
+                  <FileText className="w-5 h-5 text-orange-500" />
                 Vehicle Documents
-              </h3>
+                </h3>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {documentSections.map((section) => (
@@ -582,15 +618,15 @@ const VehicleFormModal = ({
                       <div className="mb-3">
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           {section.title} Number
-                        </label>
-                        <input
-                          type="text"
+                    </label>
+                    <input
+                      type="text"
                           value={formData[section.fields.number] || ''}
                           onChange={(e) => handleInputChange(section.fields.number, e.target.value)}
                           placeholder={`Enter ${section.title.toLowerCase()} number`}
                           className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm"
-                        />
-                      </div>
+                    />
+                  </div>
                     )}
                     
                     {/* Company Name (for insurance) */}
@@ -598,60 +634,72 @@ const VehicleFormModal = ({
                       <div className="mb-3">
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           Insurance Company
-                        </label>
-                        <input
+                    </label>
+                    <input
                           type="text"
                           value={formData[section.fields.company] || ''}
                           onChange={(e) => handleInputChange(section.fields.company, e.target.value)}
                           placeholder="Enter insurance company name"
                           className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm"
-                        />
-                      </div>
+                    />
+          </div>
                     )}
                     
                     {/* Date Fields */}
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       {section.fields.startDate && (
-                        <div>
+                  <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">
                             Start Date
-                          </label>
-                          <input
-                            type="date"
+                    </label>
+                    <input
+                      type="date"
                             value={formData[section.fields.startDate] || ''}
-                            onChange={(e) => handleInputChange(section.fields.startDate, e.target.value)}
+                            onChange={(e) => handleDateChange(section.fields.startDate, e.target.value, section.id)}
                             className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm"
-                          />
-                        </div>
+                    />
+                  </div>
                       )}
                       {section.fields.endDate && (
-                        <div>
+                  <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">
                             End Date
-                          </label>
-                          <input
-                            type="date"
+                    </label>
+                    <input
+                      type="date"
                             value={formData[section.fields.endDate] || ''}
-                            onChange={(e) => handleInputChange(section.fields.endDate, e.target.value)}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm"
+                            onChange={(e) => handleDateChange(section.fields.endDate, e.target.value, section.id)}
+                            min={getMinEndDate(section.id) || ''}
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm ${
+                              dateValidation[section.id]?.isValid === false 
+                                ? 'border-red-300 bg-red-50' 
+                                : 'border-slate-300'
+                            }`}
                           />
-                        </div>
+                          {/* Date validation error */}
+                          {dateValidation[section.id]?.isValid === false && (
+                            <div className="flex items-center gap-1 mt-1 text-red-600 text-xs">
+                              <AlertCircle className="w-3 h-3" />
+                              <span>{dateValidation[section.id].error}</span>
+                  </div>
+                          )}
+                  </div>
                       )}
                       {section.fields.validUpto && (
                         <div className="col-span-2">
                           <label className="block text-sm font-medium text-slate-700 mb-1">
                             Valid Upto
-                          </label>
-                          <input
+                    </label>
+                    <input
                             type="date"
                             value={formData[section.fields.validUpto] || ''}
                             onChange={(e) => handleInputChange(section.fields.validUpto, e.target.value)}
                             className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm"
                           />
-                        </div>
-                      )}
-                    </div>
-                    
+                      </div>
+                    )}
+        </div>
+
                     {/* File Upload */}
                     <div
                       className={`border-2 border-dashed rounded-lg p-3 text-center transition-colors ${
@@ -669,18 +717,18 @@ const VehicleFormModal = ({
                         Drop files here or{' '}
                         <label className="text-orange-600 cursor-pointer hover:underline">
                           browse
-                          <input
-                            type="file"
+                    <input
+                      type="file"
                             accept="image/*,.pdf"
                             onChange={(e) => handleFileInput(e, section.fields.attachment)}
                             className="hidden"
-                            multiple
+                      multiple
                           />
                         </label>
                       </p>
                       <p className="text-xs text-slate-500">JPG, PNG, PDF</p>
-                    </div>
-                    
+                  </div>
+
                     {/* Uploaded Files */}
                     {Array.isArray(formData[section.fields.attachment]) && formData[section.fields.attachment].length > 0 && (
                       <div className="mt-2 space-y-1">
@@ -694,7 +742,7 @@ const VehicleFormModal = ({
                               <span className="text-slate-700">
                                 {file.name || `File ${index + 1}`}
                               </span>
-                            </div>
+                          </div>
                             <button
                               type="button"
                               onClick={() => handleFileRemove(section.fields.attachment, index)}
@@ -706,39 +754,39 @@ const VehicleFormModal = ({
                         ))}
                       </div>
                     )}
-                  </div>
-                ))}
-              </div>
-            </div>
+                          </div>
+                        ))}
+        </div>
+      </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-              <button
-                type="button"
+                <button
+                  type="button"
                 onClick={onClose}
                 className="px-4 py-2 text-slate-600 hover:text-slate-800 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
                 disabled={loading}
                 className="px-6 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white rounded-lg transition-colors flex items-center gap-2"
-              >
+                >
                 {loading ? (
-                  <>
+                    <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Saving...
-                  </>
-                ) : (
-                  <>
+                    </>
+                  ) : (
+                    <>
                     <Save className="w-4 h-4" />
                     {isEditing ? 'Update Vehicle' : 'Create Vehicle'}
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
         </motion.div>
       </motion.div>
     </AnimatePresence>

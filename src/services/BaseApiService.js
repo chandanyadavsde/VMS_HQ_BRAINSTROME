@@ -268,4 +268,5 @@ baseApiService.addResponseInterceptor(async (response) => {
   return response
 })
 
+export { BaseApiService }
 export default baseApiService

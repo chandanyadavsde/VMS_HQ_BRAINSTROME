@@ -7,6 +7,8 @@ import LoginScreen from './components/LoginScreen.jsx'
 import LegalModal from './components/LegalModal.jsx'
 import MastersContainer from './components/Masters/MastersContainer.jsx'
 import MastersTable from './components/Masters/MastersTable.jsx'
+import OrdersTable from './components/Orders/OrdersTable.jsx'
+import Dashboard from './components/Dashboard.jsx'
 import { getCurrentTheme, setTheme, getThemeColors } from './utils/theme.js'
 
 // Header Component
@@ -18,8 +20,8 @@ const Header = ({ isScrolled, currentTheme, user, onLogout }) => {
   const themeColors = getThemeColors(currentTheme)
 
   const sections = [
-    { id: 'wbs', name: 'WBS', path: '/' },
-    { id: 'approvals', name: 'Approvals', path: '/approvals' },
+    { id: 'dashboard', name: 'Dashboard', path: '/' },
+    { id: 'orders', name: 'Orders', path: '/orders' },
     { id: 'masters', name: 'Masters', path: '/masters' }
   ]
 
@@ -34,10 +36,10 @@ const Header = ({ isScrolled, currentTheme, user, onLogout }) => {
 
   const getCurrentSection = () => {
     switch (location.pathname) {
-      case '/': return 'wbs'
-      case '/approvals': return 'approvals'
+      case '/': return 'dashboard'
+      case '/orders': return 'orders'
       case '/masters': return 'masters'
-      default: return 'wbs'
+      default: return 'dashboard'
     }
   }
 
@@ -91,16 +93,6 @@ const Header = ({ isScrolled, currentTheme, user, onLogout }) => {
             {/* Theme Toggle */}
            
 
-            {/* Notifications */}
-            <button className="w-8 h-8 rounded-lg bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center hover:bg-white hover:shadow-lg transition-all duration-300 hover:scale-105 relative">
-              <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-              </svg>
-              {/* Notification Badge */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">3</span>
-              </div>
-            </button>
 
             {/* User Profile */}
             <div className="flex items-center space-x-3">
@@ -113,7 +105,6 @@ const Header = ({ isScrolled, currentTheme, user, onLogout }) => {
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium text-gray-900">{user?.user || 'User'}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
-                  <p className="text-xs text-orange-600 font-medium">{user?.role} • {user?.plant}</p>
                 </div>
               </div>
               
@@ -208,8 +199,8 @@ const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlan
               </div>
             </div>
 
-            {/* Approval Stats - Right Side */}
-            {activeSection === 'approvals' && (
+            {/* Orders Stats - Right Side */}
+            {activeSection === 'orders' && (
               <div className="flex items-center space-x-3">
                 <button
                   onClick={() => onStatusChange && onStatusChange('pending')}
@@ -256,66 +247,10 @@ const SearchBar = ({ searchQuery, setSearchQuery, selectedPlant, setSelectedPlan
   )
 }
 
-// Dashboard Component (WBS)
-const Dashboard = ({ currentTheme }) => {
-  return (
-    <div className="flex items-center justify-center">
-      <AlternativeWindCard currentTheme={currentTheme} />
-    </div>
-  )
-}
 
-// Approvals Component
-const Approvals = ({ currentTheme }) => {
-  const [selectedPlant, setSelectedPlant] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [activeStatus, setActiveStatus] = useState('pending')
-  const [vehicleCounts, setVehicleCounts] = useState({ pending: 0, approved: 0, rejected: 0, 'in-transit': 0 })
-
-  const handleStatusChange = useCallback((newStatus) => {
-    setActiveStatus(newStatus)
-  }, [])
-
-  const handlePlantChange = useCallback((newPlant) => {
-    setSelectedPlant(newPlant)
-  }, [])
-
-  const handleVehicleCountsUpdate = useCallback((counts) => {
-    console.log('App.jsx: Received vehicle counts:', counts)
-    setVehicleCounts(counts)
-  }, [])
-
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery('')
-  }, [])
-
-  return (
-    <>
-      <SearchBar 
-        searchQuery={searchQuery} 
-        setSearchQuery={setSearchQuery} 
-        selectedPlant={selectedPlant} 
-        setSelectedPlant={handlePlantChange}
-        activeSection="approvals"
-        currentTheme={currentTheme}
-        activeStatus={activeStatus}
-        onStatusChange={handleStatusChange}
-        vehicleCounts={vehicleCounts}
-        onSearch={undefined} // Will be handled in ApprovalCard
-      />
-      <div className="flex items-center justify-center">
-        <ApprovalCard 
-          selectedPlant={selectedPlant} 
-          currentTheme={currentTheme}
-          activeStatus={activeStatus}
-          onStatusChange={handleStatusChange}
-          onVehicleCountsUpdate={handleVehicleCountsUpdate}
-          searchQuery={searchQuery}
-          onClearSearch={handleClearSearch}
-        />
-      </div>
-    </>
-  )
+// Orders Component
+const Orders = ({ currentTheme }) => {
+  return <OrdersTable currentTheme={currentTheme} />
 }
 
 // Masters Component
@@ -515,7 +450,7 @@ const AppContent = () => {
       <div className={`${isScrolled ? 'pt-16' : 'pt-0'} flex-1`}>
         <Routes>
           <Route path="/" element={<Dashboard currentTheme={currentTheme} />} />
-          <Route path="/approvals" element={<Approvals currentTheme={currentTheme} />} />
+          <Route path="/orders" element={<Orders currentTheme={currentTheme} />} />
           <Route path="/masters" element={<Masters currentTheme={currentTheme} />} />
         </Routes>
       </div>

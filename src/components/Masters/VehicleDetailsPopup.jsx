@@ -5,10 +5,22 @@ import {
   Edit, Trash2, UserPlus, UserCheck, Shield, Clock, CheckCircle, 
   AlertTriangle, ExternalLink, Image as ImageIcon, Download, Eye, Save, RotateCcw, Loader2, Plus
 } from 'lucide-react'
+import useDateValidation from '../../hooks/useDateValidation.js'
 
 const VehicleDetailsPopup = ({ vehicle, onClose, onVehicleUpdate }) => {
   const [activeTab, setActiveTab] = useState('rc')
   const [selectedImage, setSelectedImage] = useState(null)
+  
+  // Date validation hook
+  const {
+    dateValidation,
+    updateStartDate,
+    updateEndDate,
+    getMinEndDate,
+    isAllValid,
+    getAllErrors,
+    resetAllValidations
+  } = useDateValidation()
   
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false)
@@ -256,6 +268,14 @@ const VehicleDetailsPopup = ({ vehicle, onClose, onVehicleUpdate }) => {
       setIsLoading(true)
       setError(null)
 
+      // Check date validations before submission
+      if (!isAllValid()) {
+        const errors = getAllErrors()
+        setError(`Please fix date validation errors: ${errors.map(e => e.error).join(', ')}`)
+        setIsLoading(false)
+        return
+      }
+
       // Build comprehensive patch data and track changes
       const formData = new FormData()
       let hasChanges = false
@@ -384,6 +404,22 @@ const VehicleDetailsPopup = ({ vehicle, onClose, onVehicleUpdate }) => {
       ...prev,
       [field]: value
     }))
+  }
+
+  // Handle date changes with validation
+  const handleDateChange = (field, value, documentType) => {
+    setEditData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+
+    // Update validation based on field type
+    if (field.includes('EndDate')) {
+      // Get the corresponding start date from vehicle data
+      const startDateField = field.replace('EndDate', 'StartDate')
+      const startDate = vehicle.rawData?.[startDateField] || ''
+      updateEndDate(documentType, value)
+    }
   }
 
   // Helper function to calculate document status
@@ -779,14 +815,28 @@ const VehicleDetailsPopup = ({ vehicle, onClose, onVehicleUpdate }) => {
                     <div>
                       <label className="text-xs text-slate-600">End Date {isEditMode && <span className="text-slate-500 font-normal">(Editable)</span>}</label>
                       {isEditMode ? (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-2.5 h-2.5 text-slate-400" />
-                          <input
-                            type="date"
-                            value={editData.rcEndDate ? editData.rcEndDate.split('T')[0] : ''}
-                            onChange={(e) => handleInputChange('rcEndDate', e.target.value)}
-                            className="px-1.5 py-0.5 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-colors text-xs font-medium"
-                          />
+                        <div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-2.5 h-2.5 text-slate-400" />
+                            <input
+                              type="date"
+                              value={editData.rcEndDate ? editData.rcEndDate.split('T')[0] : ''}
+                              onChange={(e) => handleDateChange('rcEndDate', e.target.value, 'rc')}
+                              min={getMinEndDate('rc') || ''}
+                              className={`px-1.5 py-0.5 border rounded focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-colors text-xs font-medium ${
+                                dateValidation.rc?.isValid === false 
+                                  ? 'border-red-300 bg-red-50' 
+                                  : 'border-slate-300'
+                              }`}
+                            />
+                          </div>
+                          {/* Date validation error */}
+                          {dateValidation.rc?.isValid === false && (
+                            <div className="flex items-center gap-1 mt-1 text-red-600 text-xs">
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>{dateValidation.rc.error}</span>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <p className="text-xs font-semibold text-slate-800">{formatDate(vehicle.rawData?.custrecord_rc_end_date)}</p>
@@ -825,14 +875,28 @@ const VehicleDetailsPopup = ({ vehicle, onClose, onVehicleUpdate }) => {
                     <div>
                       <label className="text-sm text-slate-600">End Date {isEditMode && <span className="text-slate-500 font-normal">(Editable)</span>}</label>
                       {isEditMode ? (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-slate-400" />
-                          <input
-                            type="date"
-                            value={editData.insuranceEndDate ? editData.insuranceEndDate.split('T')[0] : ''}
-                            onChange={(e) => handleInputChange('insuranceEndDate', e.target.value)}
-                            className="px-3 py-2 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors text-sm font-semibold"
-                          />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-slate-400" />
+                            <input
+                              type="date"
+                              value={editData.insuranceEndDate ? editData.insuranceEndDate.split('T')[0] : ''}
+                              onChange={(e) => handleDateChange('insuranceEndDate', e.target.value, 'insurance')}
+                              min={getMinEndDate('insurance') || ''}
+                              className={`px-3 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors text-sm font-semibold ${
+                                dateValidation.insurance?.isValid === false 
+                                  ? 'border-red-300 bg-red-50' 
+                                  : 'border-slate-300'
+                              }`}
+                            />
+                          </div>
+                          {/* Date validation error */}
+                          {dateValidation.insurance?.isValid === false && (
+                            <div className="flex items-center gap-1 mt-1 text-red-600 text-xs">
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>{dateValidation.insurance.error}</span>
+                            </div>
+                          )}
                         </div>
                       ) : (
                       <p className="font-semibold text-slate-800">{formatDate(vehicle.rawData?.custrecord_insurance_end_date_ag)}</p>
@@ -867,14 +931,28 @@ const VehicleDetailsPopup = ({ vehicle, onClose, onVehicleUpdate }) => {
                     <div>
                       <label className="text-sm text-slate-600">End Date {isEditMode && <span className="text-slate-500 font-normal">(Editable)</span>}</label>
                       {isEditMode ? (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-slate-400" />
-                          <input
-                            type="date"
-                            value={editData.permitEndDate ? editData.permitEndDate.split('T')[0] : ''}
-                            onChange={(e) => handleInputChange('permitEndDate', e.target.value)}
-                            className="px-3 py-2 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors text-sm font-semibold"
-                          />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-slate-400" />
+                            <input
+                              type="date"
+                              value={editData.permitEndDate ? editData.permitEndDate.split('T')[0] : ''}
+                              onChange={(e) => handleDateChange('permitEndDate', e.target.value, 'permit')}
+                              min={getMinEndDate('permit') || ''}
+                              className={`px-3 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors text-sm font-semibold ${
+                                dateValidation.permit?.isValid === false 
+                                  ? 'border-red-300 bg-red-50' 
+                                  : 'border-slate-300'
+                              }`}
+                            />
+                          </div>
+                          {/* Date validation error */}
+                          {dateValidation.permit?.isValid === false && (
+                            <div className="flex items-center gap-1 mt-1 text-red-600 text-xs">
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>{dateValidation.permit.error}</span>
+                            </div>
+                          )}
                         </div>
                       ) : (
                       <p className="font-semibold text-slate-800">{formatDate(vehicle.rawData?.custrecord_permit_end_date)}</p>
@@ -909,14 +987,28 @@ const VehicleDetailsPopup = ({ vehicle, onClose, onVehicleUpdate }) => {
                     <div>
                       <label className="text-sm text-slate-600">End Date {isEditMode && <span className="text-slate-500 font-normal">(Editable)</span>}</label>
                       {isEditMode ? (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-slate-400" />
-                          <input
-                            type="date"
-                            value={editData.pucEndDate ? editData.pucEndDate.split('T')[0] : ''}
-                            onChange={(e) => handleInputChange('pucEndDate', e.target.value)}
-                            className="px-3 py-2 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors text-sm font-semibold"
-                          />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-slate-400" />
+                            <input
+                              type="date"
+                              value={editData.pucEndDate ? editData.pucEndDate.split('T')[0] : ''}
+                              onChange={(e) => handleDateChange('pucEndDate', e.target.value, 'puc')}
+                              min={getMinEndDate('puc') || ''}
+                              className={`px-3 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-colors text-sm font-semibold ${
+                                dateValidation.puc?.isValid === false 
+                                  ? 'border-red-300 bg-red-50' 
+                                  : 'border-slate-300'
+                              }`}
+                            />
+                          </div>
+                          {/* Date validation error */}
+                          {dateValidation.puc?.isValid === false && (
+                            <div className="flex items-center gap-1 mt-1 text-red-600 text-xs">
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>{dateValidation.puc.error}</span>
+                            </div>
+                          )}
                         </div>
                       ) : (
                       <p className="font-semibold text-slate-800">{formatDate(vehicle.rawData?.custrecord_puc_end_date_ag)}</p>

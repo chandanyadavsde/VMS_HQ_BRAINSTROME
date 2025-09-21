@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { X, User, Phone, FileText, Calendar, Car, UserCheck, Edit, Eye, Upload, Save, RotateCcw, Loader2 } from 'lucide-react'
+import { X, User, Phone, FileText, Calendar, Car, UserCheck, Edit, Eye, Upload, Save, RotateCcw, Loader2, AlertCircle } from 'lucide-react'
 import DriverService from '../../services/DriverService'
 
 const DriverDetailsModal = ({ driver, onClose, onDriverUpdate }) => {
@@ -18,6 +18,14 @@ const DriverDetailsModal = ({ driver, onClose, onDriverUpdate }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
+  
+  // Date validation state
+  const [dateValidation, setDateValidation] = useState({
+    licenseExpiry: {
+      isValid: true,
+      error: ''
+    }
+  })
 
   // Initialize edit data when driver changes
   useEffect(() => {
@@ -34,6 +42,38 @@ const DriverDetailsModal = ({ driver, onClose, onDriverUpdate }) => {
   const isLicenseExpired = new Date(driver.identification?.licenseExpiry) < new Date()
   const isLicenseExpiringSoon = new Date(driver.identification?.licenseExpiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
+  // Date validation functions
+  const validateLicenseExpiry = (dateValue) => {
+    if (!dateValue) {
+      return { isValid: true, error: '' }
+    }
+
+    const selectedDate = new Date(dateValue)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset time to start of day for accurate comparison
+
+    if (selectedDate < today) {
+      return { 
+        isValid: false, 
+        error: 'License expiry date cannot be in the past' 
+      }
+    }
+
+    return { isValid: true, error: '' }
+  }
+
+  const isAllValid = () => {
+    return dateValidation.licenseExpiry.isValid
+  }
+
+  const getAllErrors = () => {
+    const errors = []
+    if (!dateValidation.licenseExpiry.isValid) {
+      errors.push({ field: 'licenseExpiry', error: dateValidation.licenseExpiry.error })
+    }
+    return errors
+  }
+
   // Edit mode handlers
   const handleEditMode = () => {
     setIsEditMode(true)
@@ -47,12 +87,27 @@ const DriverDetailsModal = ({ driver, onClose, onDriverUpdate }) => {
       newImage: null,
       previewUrl: null
     })
+    // Reset date validation
+    setDateValidation({
+      licenseExpiry: {
+        isValid: true,
+        error: ''
+      }
+    })
   }
 
   const handleSaveEdit = async () => {
     setIsLoading(true)
     setError(null)
     setSuccess(false)
+    
+    // Check date validations before submission
+    if (!isAllValid()) {
+      const errors = getAllErrors()
+      setError(`Please fix date validation errors: ${errors.map(e => e.error).join(', ')}`)
+      setIsLoading(false)
+      return
+    }
     
     try {
       console.log('💾 Saving driver edit:', editData)
@@ -102,6 +157,15 @@ const DriverDetailsModal = ({ driver, onClose, onDriverUpdate }) => {
       ...prev,
       [field]: value
     }))
+
+    // Validate date fields
+    if (field === 'licenseExpiry') {
+      const validation = validateLicenseExpiry(value)
+      setDateValidation(prev => ({
+        ...prev,
+        licenseExpiry: validation
+      }))
+    }
   }
 
   const handleFileUpload = (file) => {
@@ -292,14 +356,28 @@ const DriverDetailsModal = ({ driver, onClose, onDriverUpdate }) => {
                 <div className="flex justify-between">
                   <span className="text-slate-600">License Expiry:</span>
                   {isEditMode ? (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-slate-400" />
-                      <input
-                        type="date"
-                        value={editData.licenseExpiry}
-                        onChange={(e) => handleInputChange('licenseExpiry', e.target.value)}
-                        className="px-3 py-1 border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm"
-                      />
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        <input
+                          type="date"
+                          value={editData.licenseExpiry}
+                          onChange={(e) => handleInputChange('licenseExpiry', e.target.value)}
+                          min={new Date().toISOString().split('T')[0]} // Set minimum date to today
+                          className={`px-3 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm ${
+                            dateValidation.licenseExpiry.isValid === false 
+                              ? 'border-red-300 bg-red-50' 
+                              : 'border-orange-300'
+                          }`}
+                        />
+                      </div>
+                      {/* Date validation error */}
+                      {dateValidation.licenseExpiry.isValid === false && (
+                        <div className="flex items-center gap-1 text-red-600 text-xs">
+                          <AlertCircle className="w-3 h-3" />
+                          <span>{dateValidation.licenseExpiry.error}</span>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <span className={`font-medium flex items-center gap-1 ${

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, User, Phone, CreditCard, Calendar, Upload, FileText, Save } from 'lucide-react'
+import { X, User, Phone, CreditCard, Calendar, Upload, FileText, Save, AlertCircle } from 'lucide-react'
 
 const DriverFormModal = ({
   isOpen,
@@ -31,6 +31,54 @@ const DriverFormModal = ({
   const [success, setSuccess] = useState(false)
   const isEditing = !!driver
 
+  // Date validation state
+  const [dateValidation, setDateValidation] = useState({
+    licenseExpiry: {
+      isValid: true,
+      error: ''
+    }
+  })
+
+  // Date validation functions
+  const validateLicenseExpiry = (expiryDate, startDate) => {
+    if (!expiryDate || !startDate) {
+      return { isValid: true, error: '' }
+    }
+
+    const start = new Date(startDate)
+    const expiry = new Date(expiryDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset time to start of day for accurate comparison
+
+    if (expiry < start) {
+      return { 
+        isValid: false, 
+        error: 'License expiry date must be after start date' 
+      }
+    }
+
+    if (expiry < today) {
+      return { 
+        isValid: false, 
+        error: 'License expiry date cannot be in the past' 
+      }
+    }
+
+    return { isValid: true, error: '' }
+  }
+
+  const isAllValid = () => {
+    return dateValidation.licenseExpiry.isValid
+  }
+
+  const getAllErrors = () => {
+    const errors = []
+    if (!dateValidation.licenseExpiry.isValid) {
+      errors.push({ field: 'licenseExpiry', error: dateValidation.licenseExpiry.error })
+    }
+    return errors
+  }
+
   // Initialize form data when driver is provided
   useEffect(() => {
     if (driver) {
@@ -55,6 +103,13 @@ const DriverFormModal = ({
     // Clear any errors and success when modal opens
     setError(null)
     setSuccess(false)
+    // Reset date validation
+    setDateValidation({
+      licenseExpiry: {
+        isValid: true,
+        error: ''
+      }
+    })
   }, [driver, isOpen])
 
   const handleInputChange = (field, value) => {
@@ -71,6 +126,22 @@ const DriverFormModal = ({
       setFormData(prev => ({
         ...prev,
         [field]: value
+      }))
+    }
+
+    // Validate date fields
+    if (field === 'identification.licenseExpiry') {
+      const validation = validateLicenseExpiry(value, formData.identification.licenseStartDate)
+      setDateValidation(prev => ({
+        ...prev,
+        licenseExpiry: validation
+      }))
+    } else if (field === 'identification.licenseStartDate') {
+      // Re-validate expiry date when start date changes
+      const validation = validateLicenseExpiry(formData.identification.licenseExpiry, value)
+      setDateValidation(prev => ({
+        ...prev,
+        licenseExpiry: validation
       }))
     }
   }
@@ -129,6 +200,14 @@ const DriverFormModal = ({
     setLoading(true)
     setError(null) // Clear any previous errors
     setSuccess(false) // Clear any previous success
+    
+    // Check date validations before submission
+    if (!isAllValid()) {
+      const errors = getAllErrors()
+      setError(`Please fix date validation errors: ${errors.map(e => e.error).join(', ')}`)
+      setLoading(false)
+      return
+    }
     
     try {
       // Clean the form data to only include required fields
@@ -337,9 +416,21 @@ const DriverFormModal = ({
                     type="date"
                     value={formData.identification.licenseExpiry}
                     onChange={(e) => handleInputChange('identification.licenseExpiry', e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    min={formData.identification.licenseStartDate || new Date().toISOString().split('T')[0]}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
+                      dateValidation.licenseExpiry.isValid === false 
+                        ? 'border-red-300 bg-red-50' 
+                        : 'border-slate-300'
+                    }`}
                     required
                   />
+                  {/* Date validation error */}
+                  {dateValidation.licenseExpiry.isValid === false && (
+                    <div className="flex items-center gap-1 mt-1 text-red-600 text-xs">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>{dateValidation.licenseExpiry.error}</span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">

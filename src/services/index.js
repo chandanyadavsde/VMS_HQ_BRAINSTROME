@@ -5,20 +5,24 @@
 
 import BaseApiService from './BaseApiService.js'
 import VehicleService from './VehicleService.js'
+import DriverService from './DriverService.js'
+import DashboardService from './DashboardService.js'
 
 // Export individual services
 export { default as BaseApiService } from './BaseApiService.js'
 export { default as VehicleService } from './VehicleService.js'
+export { default as DriverService } from './DriverService.js'
+export { default as DashboardService } from './DashboardService.js'
 
 // Export combined API service object
 export const apiService = {
   base: BaseApiService,
   vehicles: VehicleService,
+  drivers: DriverService,
+  dashboard: DashboardService,
   
   // Future services will be added here:
-  // drivers: DriverService,
   // plants: PlantService,
-  // dashboard: DashboardService,
   // auth: AuthService,
   // notifications: NotificationService,
 }
