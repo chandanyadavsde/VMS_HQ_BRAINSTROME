@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, Car, Building2, Activity, X } from 'lucide-react'
+import { Search, Filter, Car, Building2, Activity, X, Link, User } from 'lucide-react'
 import { getThemeColors } from '../../utils/theme.js'
 
 const MastersHeader = ({
@@ -13,6 +13,7 @@ const MastersHeader = ({
   availablePlants,
   availableStatuses,
   onAddNew,
+  onAddVehicleDriver,
   activeTab = 'vehicles',
   currentTheme = 'teal'
 }) => {
@@ -41,15 +42,29 @@ const MastersHeader = ({
             </p>
           </div>
           
-          <motion.button
-            onClick={onAddNew}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-semibold shadow-sm transition-all hover:scale-105 hover:shadow-md flex items-center gap-2"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Car className="w-4 h-4" />
-            {activeTab === 'drivers' ? 'Create Driver' : 'Create Vehicle'}
-          </motion.button>
+          <div className="flex items-center gap-3">
+            <motion.button
+              onClick={onAddNew}
+              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-semibold shadow-sm transition-all hover:scale-105 hover:shadow-md flex items-center gap-2"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Car className="w-4 h-4" />
+              {activeTab === 'drivers' ? 'Create Driver' : '+ Vehicle'}
+            </motion.button>
+            
+            {activeTab === 'vehicles' && (
+              <motion.button
+                onClick={onAddVehicleDriver}
+                className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-4 py-2 rounded-lg font-semibold shadow-sm transition-all hover:scale-105 hover:shadow-md flex items-center gap-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Link className="w-4 h-4" />
+                + Vehicle + Driver
+              </motion.button>
+            )}
+          </div>
         </div>
 
         {/* Search and Filters */}

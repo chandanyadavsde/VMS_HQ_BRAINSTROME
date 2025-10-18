@@ -13,6 +13,8 @@ import DriverFormModal from './Driver/DriverForm/DriverFormModal.jsx'
 import VehicleFormModal from './Vehicle/VehicleForm/VehicleFormModal.jsx'
 import AssignmentModal from './Assignment/AssignmentModal.jsx'
 import UnifiedFormModal from './Unified/UnifiedFormModal.jsx'
+import VehicleFlowModal from './VehicleFlowModal.jsx'
+import VehicleDriverFormModal from './VehicleDriverFormModal.jsx'
 import PaginationControls from './PaginationControls.jsx'
 
 const MastersContainer = ({ currentTheme = 'teal' }) => {
@@ -49,6 +51,8 @@ const MastersContainer = ({ currentTheme = 'teal' }) => {
   const [showDriverModal, setShowDriverModal] = useState(false)
   const [showAssignmentModal, setShowAssignmentModal] = useState(false)
   const [showUnifiedModal, setShowUnifiedModal] = useState(false)
+  const [showVehicleFlowModal, setShowVehicleFlowModal] = useState(false)
+  const [showVehicleDriverModal, setShowVehicleDriverModal] = useState(false)
   
   // Form State
   const [editingVehicle, setEditingVehicle] = useState(null)
@@ -120,9 +124,26 @@ const MastersContainer = ({ currentTheme = 'teal' }) => {
     setShowDriverModal(false)
     setShowAssignmentModal(false)
     setShowUnifiedModal(false)
+    setShowVehicleFlowModal(false)
+    setShowVehicleDriverModal(false)
     setEditingVehicle(null)
     setEditingDriver(null)
     setSelectedVehicleForAssignment(null)
+  }
+
+  // Handle vehicle flow selection
+  const handleVehicleFlowSelect = (flow) => {
+    setShowVehicleFlowModal(false)
+    if (flow === 'vehicle') {
+      setShowVehicleModal(true)
+    } else if (flow === 'vehicle-driver') {
+      setShowVehicleDriverModal(true)
+    }
+  }
+
+  // Handle vehicle + driver creation
+  const handleAddVehicleDriver = () => {
+    setShowVehicleDriverModal(true)
   }
 
 
@@ -202,9 +223,10 @@ const MastersContainer = ({ currentTheme = 'teal' }) => {
           if (activeTab === 'drivers') {
             setShowDriverModal(true)
           } else {
-            setShowVehicleModal(true)
+            setShowVehicleFlowModal(true)
           }
         }}
+        onAddVehicleDriver={handleAddVehicleDriver}
         activeTab={activeTab}
         currentTheme={currentTheme}
       />
@@ -350,6 +372,23 @@ const MastersContainer = ({ currentTheme = 'teal' }) => {
       <UnifiedFormModal
         isOpen={showUnifiedModal}
         onClose={handleCloseModals}
+        onCreateDriver={createDriver}
+        currentTheme={currentTheme}
+      />
+
+      {/* Vehicle Flow Selection Modal */}
+      <VehicleFlowModal
+        isOpen={showVehicleFlowModal}
+        onClose={handleCloseModals}
+        onFlowSelect={handleVehicleFlowSelect}
+        currentTheme={currentTheme}
+      />
+
+      {/* Vehicle + Driver Form Modal */}
+      <VehicleDriverFormModal
+        isOpen={showVehicleDriverModal}
+        onClose={handleCloseModals}
+        onCreateVehicle={createVehicle}
         onCreateDriver={createDriver}
         currentTheme={currentTheme}
       />
